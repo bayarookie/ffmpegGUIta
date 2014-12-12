@@ -1,0 +1,44 @@
+object frmSplash: TfrmSplash
+  Left = 271
+  Height = 88
+  Top = 311
+  Width = 600
+  BorderIcons = [biMinimize]
+  BorderStyle = bsNone
+  Caption = 'frmSplash'
+  ClientHeight = 88
+  ClientWidth = 600
+  DefaultMonitor = dmMainForm
+  FormStyle = fsSplash
+  KeyPreview = True
+  Position = poMainFormCenter
+  LCLVersion = '1.0.6.0'
+  object ProgressBar1: TProgressBar
+    Left = 8
+    Height = 20
+    Top = 8
+    Width = 584
+    TabOrder = 0
+  end
+  object Label1: TLabel
+    Left = 8
+    Height = 44
+    Top = 36
+    Width = 503
+    AutoSize = False
+    Caption = 'Label1'
+    ParentColor = False
+    WordWrap = True
+  end
+  object btnCancel: TButton
+    Left = 517
+    Height = 25
+    Top = 55
+    Width = 75
+    Cancel = True
+    Caption = 'btnCancel'
+    ModalResult = 2
+    OnClick = btnCancelClick
+    TabOrder = 1
+  end
+end

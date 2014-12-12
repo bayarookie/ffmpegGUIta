@@ -1,0 +1,86 @@
+object frmGrab: TfrmGrab
+  Left = 289
+  Height = 240
+  Top = 191
+  Width = 320
+  Caption = 'frmGrab'
+  ClientHeight = 240
+  ClientWidth = 320
+  KeyPreview = True
+  Position = poMainFormCenter
+  LCLVersion = '1.2.6.0'
+  object ComboBox1: TComboBox
+    Left = 40
+    Height = 20
+    Top = 21
+    Width = 96
+    ItemHeight = 0
+    ItemIndex = 0
+    Items.Strings = (
+      ':0.0'
+    )
+    TabOrder = 0
+    Text = ':0.0'
+  end
+  object ComboBox2: TComboBox
+    Left = 40
+    Height = 20
+    Top = 48
+    Width = 248
+    ItemHeight = 0
+    ItemIndex = 0
+    Items.Strings = (
+      '-f x11grab -video_size 1280x720 -framerate 25'
+    )
+    TabOrder = 1
+    Text = '-f x11grab -video_size 1280x720 -framerate 25'
+  end
+  object ComboBox3: TComboBox
+    Left = 40
+    Height = 20
+    Top = 77
+    Width = 96
+    ItemHeight = 0
+    ItemIndex = 0
+    Items.Strings = (
+      'hw:0,0'
+    )
+    TabOrder = 2
+    Text = 'hw:0,0'
+  end
+  object ComboBox4: TComboBox
+    Left = 40
+    Height = 20
+    Top = 104
+    Width = 248
+    ItemHeight = 0
+    ItemIndex = 0
+    Items.Strings = (
+      '-f alsa'
+    )
+    TabOrder = 3
+    Text = '-f alsa'
+  end
+  object BitBtn1: TBitBtn
+    Left = 18
+    Height = 30
+    Top = 185
+    Width = 75
+    Default = True
+    DefaultCaption = True
+    Kind = bkOK
+    ModalResult = 1
+    TabOrder = 4
+  end
+  object BitBtn2: TBitBtn
+    Left = 228
+    Height = 30
+    Top = 185
+    Width = 75
+    Cancel = True
+    DefaultCaption = True
+    Kind = bkCancel
+    ModalResult = 2
+    TabOrder = 5
+  end
+end
