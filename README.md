@@ -1,0 +1,4 @@
+ffmpegGUIta
+===========
+
+GUI for ffmpeg
