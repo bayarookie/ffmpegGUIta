@@ -1,7 +1,7 @@
 object frmGUIta: TfrmGUIta
-  Left = 252
+  Left = 242
   Height = 540
-  Top = 118
+  Top = 119
   Width = 800
   AllowDropFiles = True
   Caption = 'frmGUIta'
@@ -14,7 +14,6 @@ object frmGUIta: TfrmGUIta
   OnDestroy = FormDestroy
   OnDropFiles = FormDropFiles
   OnShow = FormShow
-  Position = poDefaultPosOnly
   LCLVersion = '1.2.6.0'
   object LVfiles: TListView
     Left = 0
@@ -562,7 +561,7 @@ object frmGUIta: TfrmGUIta
             Height = 26
             Hint = 'Concatenate audio and video streams, joining them together one after the other.'#13#10'The filter works on segments of synchronized video and audio streams.'#13#10'All segments must have the same number of streams of each type,'#13#10'and that will also be the number of streams at output.'#13#10'All segments must start at timestamp 0.'#13#10'All corresponding streams must have the same parameters in all segments.'#13#10'http://ffmpeg.org/ffmpeg-filters.html#concat'
             Top = 242
-            Width = 81
+            Width = 99
             HelpType = htKeyword
             HelpKeyword = 'concat'
             Caption = 'Concatenate'
@@ -1981,7 +1980,7 @@ object frmGUIta: TfrmGUIta
         Width = 148
         ItemHeight = 0
         OnChange = cmbLanguageChange
-        TabOrder = 28
+        TabOrder = 29
         Text = 'Default.lng'
       end
       object btnLanguage: TButton
@@ -1991,7 +1990,7 @@ object frmGUIta: TfrmGUIta
         Width = 75
         Caption = 'Language'
         OnClick = btnLanguageClick
-        TabOrder = 29
+        TabOrder = 30
       end
       object btnFindffmpeg: TBitBtn
         Left = 360
@@ -2334,7 +2333,7 @@ object frmGUIta: TfrmGUIta
         Width = 147
         Caption = 'Debug info to journal'
         OnChange = chkDebugChange
-        TabOrder = 26
+        TabOrder = 22
       end
       object cmbFont: TComboBox
         Left = 313
@@ -2344,7 +2343,7 @@ object frmGUIta: TfrmGUIta
         ItemHeight = 0
         OnGetItems = cmbFontGetItems
         OnSelect = cmbFontSelect
-        TabOrder = 27
+        TabOrder = 28
         Text = 'Tahoma'
       end
       object cmbDirLast: TComboBox
@@ -2374,10 +2373,10 @@ object frmGUIta: TfrmGUIta
         Top = 235
         Width = 127
         Caption = 'Separate process'
-        TabOrder = 22
+        TabOrder = 21
       end
       object lblTestStartDurationTime: TLabel
-        Left = 8
+        Left = 313
         Height = 14
         Top = 168
         Width = 146
@@ -2386,7 +2385,7 @@ object frmGUIta: TfrmGUIta
         ParentColor = False
       end
       object cmbTestDurationss: TComboBox
-        Left = 8
+        Left = 313
         Height = 20
         Top = 184
         Width = 75
@@ -2399,10 +2398,10 @@ object frmGUIta: TfrmGUIta
           '30:00'
           '1:00:00'
         )
-        TabOrder = 19
+        TabOrder = 23
       end
       object cmbTestDurationt: TComboBox
-        Left = 88
+        Left = 393
         Height = 20
         Top = 184
         Width = 75
@@ -2415,7 +2414,7 @@ object frmGUIta: TfrmGUIta
           '45'
           '60'
         )
-        TabOrder = 20
+        TabOrder = 24
         Text = '30'
       end
       object lblLangA: TLabel
@@ -2441,7 +2440,7 @@ object frmGUIta: TfrmGUIta
           'rus eng'
           ''
         )
-        TabOrder = 23
+        TabOrder = 25
       end
       object lblLangS: TLabel
         Left = 466
@@ -2464,7 +2463,7 @@ object frmGUIta: TfrmGUIta
           'en eng english'
           'rus eng'
         )
-        TabOrder = 24
+        TabOrder = 26
       end
       object cmbLangsList: TComboBox
         Tag = 1
@@ -2660,7 +2659,7 @@ object frmGUIta: TfrmGUIta
           'zha||za|Zhuang; Chuang|zhuang; chuang'
           'zul||zu|Zulu|zoulou'
         )
-        TabOrder = 25
+        TabOrder = 27
         Text = 'Langs List'
       end
       object chkAddTracks: TCheckBox
@@ -2679,7 +2678,15 @@ object frmGUIta: TfrmGUIta
         Width = 86
         Caption = '1 instance'
         OnChange = chk1instanceChange
-        TabOrder = 21
+        TabOrder = 20
+      end
+      object chkSaveFormPos: TCheckBox
+        Left = 8
+        Height = 26
+        Top = 178
+        Width = 141
+        Caption = 'Save form positions'
+        TabOrder = 19
       end
     end
     object TabJournal: TTabSheet

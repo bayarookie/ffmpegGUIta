@@ -54,6 +54,7 @@ type
     btnCrop: TButton;
     btnAddFileSplit: TButton;
     btnAddScreenGrab: TButton;
+    chkSaveFormPos: TCheckBox;
     chk1instance: TCheckBox;
     chkAddTracks: TCheckBox;
     chkRunInMem: TCheckBox;
@@ -785,7 +786,7 @@ end;
 
 function TfrmGUIta.myGetCmdFromJo(jo: TJob; test: boolean = False): string;
 var
-  i, k, cf, cv, ca, cs: integer;
+  k, cf, cv, ca, cs: integer;
   s, co, ty, si, ss, st, fc, fc2, f, fn, fb, ni, vi, au, su, ma, so, tmp,
   f1p, sp1, sp2, fn1, fn2, fno, fnoa: string;
   c: TCont;
@@ -1315,6 +1316,7 @@ end;
 
 procedure TfrmGUIta.myFormPosLoad(Form: TForm; Ini: TIniFile);
 begin
+  if chkSaveFormPos.Checked then
   with Form do
   begin
     Top := Ini.ReadInteger(Name, 'Top', Top);
@@ -1340,6 +1342,7 @@ end;
 
 procedure TfrmGUIta.myFormPosSave(Form: TForm; Ini: TIniFile);
 begin
+  if chkSaveFormPos.Checked then
   with Form do
     if (WindowState = wsMaximized) then
       myToIni(Ini, Name, 'Maximized', '1')

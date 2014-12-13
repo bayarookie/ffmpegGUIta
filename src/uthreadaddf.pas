@@ -78,12 +78,12 @@ var
   li: TListItem;
   b: boolean;
 begin
-  {$IFDEF MSWINDOWS}
+  //{$IFDEF MSWINDOWS}
   //m
-  {$ELSE}
+  //{$ELSE}
   //this code didnt work on windows 8, poUsePipes - infinite wait
-  frmGUIta.SynMemo6.Lines.LoadFromStream(pr.Output);
-  {$ENDIF}
+  //frmGUIta.SynMemo6.Lines.LoadFromStream(pr.Output);
+  //{$ENDIF}
   b := False;
   if jo.filecnt > 0 then
   begin
@@ -290,89 +290,149 @@ begin
 end;
 
 procedure TThreadAddF.Execute;
+//{$IFDEF MSWINDOWS}
+//var
+//  Buffer, s, s1, s2: string;
+//  BytesAvailable: DWord;
+//  BytesRead: longint;
+//  i, j: integer;
+//{$ELSE}
+const
+  READ_BYTES = 2048;
 var
-  Buffer, s, s1, s2: string;
-  BytesAvailable: DWord;
-  BytesRead: longint;
-  i, j: integer;
+  MemStream: TMemoryStream;
+  NumBytes, BytesRead: integer;
+  sl: TStringList;
+  i: integer;
+//{$ENDIF}
 begin
-  while (not Terminated) and True do
+  while (not Terminated) and True do //?
   begin
-    {$IFDEF MSWINDOWS}
-    Synchronize(@DataGet);
-    if fcmd = '' then
-      Exit;
-    fStatus := fcmd;
-    Synchronize(@ShowJournal);
-    Synchronize(@ShowSynMemo);
-    pr := TProcessUTF8.Create(nil);
-    pr.CommandLine := fcmd;
-    pr.Options := [poUsePipes, poStderrToOutPut];
-    pr.ShowWindow := swoHide;
-    pr.Execute;
-    s1 := '';
+    //{$IFDEF MSWINDOWS}
+    //This code returns empty string, sometimes
+    //Synchronize(@DataGet);
+    //if fcmd = '' then
+    //  Exit;
+    //fStatus := fcmd;
+    //Synchronize(@ShowJournal);
+    //Synchronize(@ShowSynMemo);
+    //pr := TProcessUTF8.Create(nil);
+    //pr.CommandLine := fcmd;
+    //pr.Options := [poUsePipes, poStderrToOutPut];
+    //pr.ShowWindow := swoHide;
+    //pr.Execute;
+    //s1 := '';
+    //
+    //while (not Terminated) and (pr.Running) do
+    //begin
+    //  BytesAvailable := pr.Output.NumBytesAvailable;
+    //  BytesRead := 0;
+    //  while BytesAvailable > 0 do
+    //  begin
+    //    SetLength(Buffer, BytesAvailable);
+    //    BytesRead := pr.OutPut.Read(Buffer[1], BytesAvailable);
+    //    s := copy(Buffer, 1, BytesRead);
+    //    if fOEM then
+    //      s := ConvertEncoding(s, scp, EncodingUTF8);
+    //    s2 := s1 + s;
+    //    repeat
+    //      i := Pos(#13, s2);
+    //      j := Pos(#10, s2);
+    //      if i = 0 then i:= j;
+    //      if j = 0 then j:= i;
+    //      if (i > 0) then
+    //      begin
+    //        fStatus := Copy(s2, 1, Min(i, j) - 1);
+    //        Delete(s2, 1, Max(i, j));
+    //        Synchronize(@ShowStatus1);
+    //        Synchronize(@ShowSynMemo);
+    //      end
+    //      else
+    //      begin
+    //        fStatus := s2;
+    //        s2 := '';
+    //        Synchronize(@ShowStatus1);
+    //        i := 0;
+    //      end;
+    //    until i = 0;
+    //    s1 := s2;
+    //    BytesAvailable := pr.Output.NumBytesAvailable;
+    //  end;
+    //  Sleep(2);
+    //end;
+    //if (s1 <> '') then
+    //begin
+    //  fStatus := s1;
+    //  Synchronize(@ShowSynMemo);
+    //end;
+    //Synchronize(@DataOut);
+    //pr.Free;
+    //{$ELSE}
 
-    while (not Terminated) and (pr.Running) do
-    begin
-      BytesAvailable := pr.Output.NumBytesAvailable;
-      BytesRead := 0;
-      while BytesAvailable > 0 do
-      begin
-        SetLength(Buffer, BytesAvailable);
-        BytesRead := pr.OutPut.Read(Buffer[1], BytesAvailable);
-        s := copy(Buffer, 1, BytesRead);
-        if fOEM then
-          s := ConvertEncoding(s, scp, EncodingUTF8);
-        s2 := s1 + s;
-        repeat
-          i := Pos(#13, s2);
-          j := Pos(#10, s2);
-          if i = 0 then i:= j;
-          if j = 0 then j:= i;
-          if (i > 0) then
-          begin
-            fStatus := Copy(s2, 1, Min(i, j) - 1);
-            Delete(s2, 1, Max(i, j));
-            Synchronize(@ShowStatus1);
-            Synchronize(@ShowSynMemo);
-          end
-          else
-          begin
-            fStatus := s2;
-            s2 := '';
-            Synchronize(@ShowStatus1);
-            i := 0;
-          end;
-        until i = 0;
-        s1 := s2;
-        BytesAvailable := pr.Output.NumBytesAvailable;
-      end;
-      Sleep(2);
-    end;
-    if (s1 <> '') then
-    begin
-      fStatus := s1;
-      Synchronize(@ShowSynMemo);
-    end;
-    Synchronize(@DataOut);
-    pr.Free;
-    {$ELSE}
-    //this code didnt work on windows 8, poUsePipes - infinite wait
-    Synchronize(@DataGet);
-    if fcmd = '' then
-      Exit;
-    fStatus := fcmd;
-    Synchronize(@ShowJournal);
-    Synchronize(@ShowStatus1);
-    Synchronize(@ShowSynMemo);
+    //This code didnt work on windows 8, poUsePipes - infinite wait
+    //Synchronize(@DataGet);
+    //if fcmd = '' then
+    //  Exit;
+    //fStatus := fcmd;
+    //Synchronize(@ShowJournal);
+    //Synchronize(@ShowStatus1);
+    //Synchronize(@ShowSynMemo);
+    //pr := TProcessUTF8.Create(nil);
+    //pr.CommandLine := fcmd;
+    //pr.Options := [poWaitOnExit, poUsePipes, poStderrToOutPut];
+    //pr.ShowWindow := swoHide;
+    //pr.Execute;
+    //Synchronize(@DataOut);
+    //pr.Free;
+
+    BytesRead := 0;
+    sl := Nil;
+    MemStream := TMemoryStream.Create;
     pr := TProcessUTF8.Create(nil);
-    pr.CommandLine := fcmd;
-    pr.Options := [poWaitOnExit, poUsePipes, poStderrToOutPut];
-    pr.ShowWindow := swoHide;
-    pr.Execute;
-    Synchronize(@DataOut);
-    pr.Free;
-    {$ENDIF}
+    try
+      Synchronize(@DataGet);
+      if fcmd = '' then
+        Exit;
+      fStatus := fcmd;
+      Synchronize(@ShowJournal);
+      Synchronize(@ShowStatus1);
+      Synchronize(@ShowSynMemo);
+      pr.CommandLine := fcmd;
+      pr.Options := [poUsePipes, poStderrToOutPut];
+      pr.ShowWindow := swoHide;
+      pr.Execute;
+      // read while the process is running
+      while pr.Running do begin
+        MemStream.SetSize(BytesRead + READ_BYTES); // make sure we have room
+        // try reading it
+        NumBytes := pr.Output.Read((MemStream.Memory + BytesRead)^, READ_BYTES);
+        if NumBytes > 0 then
+          Inc(BytesRead, NumBytes)
+        else                                       // no data, wait 100 ms
+          Sleep(100);
+      end;
+      // read last part
+      repeat
+        MemStream.SetSize(BytesRead + READ_BYTES);
+        NumBytes := pr.Output.Read((MemStream.Memory + BytesRead)^, READ_BYTES);
+        if NumBytes > 0 then
+          Inc(BytesRead, NumBytes);
+      until NumBytes <= 0;
+      MemStream.SetSize(BytesRead);
+      sl := TStringList.Create;
+      sl.LoadFromStream(MemStream);
+      for i := 0 to sl.Count - 1 do
+      begin
+        fStatus := sl[i];
+        Synchronize(@ShowSynMemo);
+      end;
+      Synchronize(@DataOut);
+    finally
+      sl.Free;
+      pr.Free;
+      MemStream.Free;
+    end;
+    //{$ENDIF}
   end;
 end;
 
