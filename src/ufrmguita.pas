@@ -654,7 +654,6 @@ begin
     s := files[i];
     d := myStrReplace('"$ffprobe"') + ' -show_streams "' + s + '"';
     myGetDosOut(d, '', '', SynMemo2, StatusBar1);
-    //myGetDosOut2(d, SynMemo2);
     d := SynMemo2.Text;
     d := myBetween(d, 'Duration: ', ',');
     j := myTimeStrToReal(d);
@@ -1040,7 +1039,7 @@ end;
 function TfrmGUIta.myGetDosOut(cmd, beg, fin: string; mem: TSynMemo;
   stb: TStatusBar; OEM: boolean = True): integer;
 var
-  Buffer, s, s1, s2, scp: string;
+  Buffer, s, t, scp: string;
   BytesAvailable: DWord;
   BytesRead: longint;
   i, j: integer;
@@ -1053,12 +1052,12 @@ begin
   scp := GetConsoleTextEncoding;
   mem.Lines.Add(sdiv);
   pr := TProcessUTF8.Create(nil);
-  pr.CommandLine := cmd;
-  pr.Options := [poUsePipes, poStderrToOutPut];
-  pr.ShowWindow := swoHide;
   try
+    pr.CommandLine := cmd;
+    pr.Options := [poUsePipes, poStderrToOutPut];
+    pr.ShowWindow := swoHide;
     pr.Execute;
-    s1 := '';
+    t := '';
     while pr.Running do
     begin
       BytesAvailable := pr.Output.NumBytesAvailable;
@@ -1070,35 +1069,35 @@ begin
         s := copy(Buffer, 1, BytesRead);
         if OEM then
           s := ConvertEncoding(s, scp, EncodingUTF8);
-        s2 := s1 + s;
+        t := t + s;
         repeat
-          i := Pos(#13, s2);
-          j := Pos(#10, s2);
-          if i = 0 then i:= j;
-          if j = 0 then j:= i;
-          if (i > 0) then
+          i := Pos(#13, t);
+          j := Pos(#10, t);
+          if (i > 0) and (j <> i + 1) then //carrier return, no line feed
           begin
-            s1 := Copy(s2, 1, Min(i, j) - 1);
-            Delete(s2, 1, Max(i, j));
-            stb.SimpleText := s1;
-            if (s1 <> '') then
-              mem.Lines.Add(s1);
-          end
-          else
+            if (j > i + 1) then j := i;
+            s := Copy(t, 1, i - 1);
+            Delete(t, 1, Max(i, j));
+            stb.SimpleText := s;
+          end else
+          if ((i > 0) and (j = i + 1))  //crlf
+          or ((i = 0) and (j > 0))      //lf
+          or ((i > j) and (j > 0)) then //lf, cr
           begin
-            stb.SimpleText := s2;
-            s2 := '';
-            i := 0;
+            if (i = 0) or (i > j) then i := j;
+            s := Copy(t, 1, Min(i, j) - 1);
+            Delete(t, 1, Max(i, j));
+            stb.SimpleText := s;
+            mem.Lines.Add(s);
           end;
           Application.ProcessMessages;
         until i = 0;
-        s1 := s2;
         BytesAvailable := pr.Output.NumBytesAvailable;
       end;
       Sleep(2);
     end;
-    if (s1 <> '') then
-      mem.Lines.Add(s1);
+    if (t <> '') then
+      mem.Lines.Add(t);
   except
     on E: Exception do
       ShowMessage(E.Message);
@@ -1319,6 +1318,7 @@ begin
   if chkSaveFormPos.Checked then
   with Form do
   begin
+    Position := poDesigned;
     Top := Ini.ReadInteger(Name, 'Top', Top);
     Left := Ini.ReadInteger(Name, 'Left', Left);
     Height := Ini.ReadInteger(Name, 'Height', Height);
@@ -1337,7 +1337,9 @@ begin
       Left := 0;
     if Ini.ReadBool(Name, 'Maximized', False) then
       Form.WindowState := wsMaximized;
-  end;
+  end
+  else
+    Position := poDefault;
 end;
 
 procedure TfrmGUIta.myFormPosSave(Form: TForm; Ini: TIniFile);
@@ -2062,7 +2064,6 @@ begin
   cmbEncoderS.Items.Clear;
   s := myStrReplace('"$ffmpeg"') + ' -encoders';
   myGetDosOut(s, '', '', SynMemo2, StatusBar1);
-  //myGetDosOut2(s, SynMemo2);
   for i := 0 to SynMemo2.Lines.Count - 1 do
   begin
     s := SynMemo2.Lines[i];
@@ -2100,7 +2101,6 @@ begin
   cmbExt.Items.Add('');
   s := myStrReplace('"$ffmpeg"') + ' -formats';
   myGetDosOut(s, '', '', SynMemo2, StatusBar1);
-  //myGetDosOut2(s, SynMemo2);
   for i := 0 to SynMemo2.Lines.Count - 1 do
   begin
     s := SynMemo2.Lines[i];
@@ -2129,7 +2129,7 @@ begin
           else if s = 'f64le' then
             s := 'wav'
           else if s = 'image2' then
-            s := 'jpeg'
+            s := 'jpg'
           else if s = 's16be' then
             s := 'wav'
           else if s = 's16le' then
@@ -2232,7 +2232,6 @@ begin
     myExecProc1(s)
   else
     myGetDosOut(s, '', '', sm, st);
-    //myGetDosOut2(s, sm);
 end;
 
 function TfrmGUIta.myValFPS(a: array of string): extended;
@@ -2316,7 +2315,6 @@ begin
     m := ' -map ' + co.getval('filenum') + ':' + co.getval('index');
   si := si + ' -frames:v 20 -vf "framestep=60, cropdetect" -an -sn' + m + ' -y NUL.mkv';
   myGetDosOut(si, '', '', SynMemo2, StatusBar1);
-  //myGetDosOut2(si, SynMemo2);
   s := SynMemo2.Text;
   sl := TStringList.Create;
   repeat

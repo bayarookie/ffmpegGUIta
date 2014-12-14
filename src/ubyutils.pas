@@ -115,10 +115,10 @@ begin
       Continue;
     key := Copy(s, 1, j - 1);
     va1 := Copy(s, j + 1, maxint);
-    {$IFDEF UNIX}
-    Result := StringReplace(Result, '$' + key, va1, [rfReplaceAll, rfIgnoreCase]);
-    {$ELSE}
+    {$IFDEF MSWINDOWS}
     Result := StringReplace(Result, '%' + key + '%', va1, [rfReplaceAll, rfIgnoreCase]);
+    {$ELSE}
+    Result := StringReplace(Result, '$' + key, va1, [rfReplaceAll, rfIgnoreCase]);
     {$ENDIF}
   end;
 end;
@@ -474,8 +474,8 @@ begin
   p.Executable := UTF8ToSys(Path);
   for i := Low(ComLine) to High(ComLine) do
     p.Parameters.Add(UTF8ToSys(ComLine[i]));
-  p.Execute;
   p.ShowWindow := sw;
+  p.Execute;
   p.Free;
 end;
 
@@ -485,15 +485,19 @@ var
 begin
   p := TProcessUTF8.Create(nil);
   p.CommandLine := ComLine;
-  p.Execute;
   p.ShowWindow := sw;
+  p.Execute;
   p.Free;
 end;
 
 procedure myOpenDoc(Path: string);
 begin
   if not OpenDocument(UTF8ToSys(Path)) then
+  {$IFDEF MSWINDOWS}
     myExecProc('cmd.exe', ['/c', 'start', '""', Path], swoshowMinNOActive);
+  {$ELSE}
+    ;
+  {$ENDIF}
 end;
 
 function myCompareInt(List: TStringList; Index1, Index2: integer): integer;

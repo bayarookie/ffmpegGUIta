@@ -16,11 +16,10 @@ type
   private
     dt: TDateTime;
     li: TListItem;
-    fOEM: boolean;
     fcmd: TStringList;
     fdir: string;
     fStatus: string;
-    d, t: double;
+    d, e: double;
     fExitStatus: integer;
     procedure DataGet;
     procedure DataOut;
@@ -43,38 +42,13 @@ uses ufrmGUIta;
 procedure TThreadTest.DataGet;
 var
   jo: TJob;
-  //s, s1, s2: string;
-  //ss: double;
 begin
   dt := Now;
   fcmd.Clear;
   frmGUIta.SynMemo5.Clear;
   jo := TJob(li.Data);
-  //s1 := jo.getval(frmGUIta.cmbDurationss.Name);
-  //s2 := jo.getval(frmGUIta.cmbDurationt.Name);
-  //r := myTimeStrToReal(jo.getval('duration'));
-  //if r = 0 then
-  //  r := 1;
-  //t := myTimeStrToReal(frmGUIta.cmbTestDurationt.Text);
-  //if t > r then
-  //  t := r;
-  //s := IntToStr(Trunc(t));
-  //jo.setval(frmGUIta.cmbDurationt.Name, s);
-  //frmGUIta.SynMemo1.Lines.Add('test ' + s + ' sec');
-  //if (s1 <> '') then
-  //  s := s1
-  //else
-  //  s := frmGUIta.cmbTestDurationss.Text;
-  //ss := myTimeStrToReal(s);
-  //if r < (ss + t) then
-  //  ss := r - t;
-  //s := myRealToTimeStr(ss);
-  //jo.setval(frmGUIta.cmbDurationss.Name, s);
-  //frmGUIta.myGetss4Compare(jo);
   frmGUIta.SynMemo1.Lines.Add(DateTimeToStr(dt) + ' - ' + jo.files[0]);
   fcmd.Text := frmGUIta.myGetCmdFromJo(jo, True);
-  //jo.setval(frmGUIta.cmbDurationss.Name, s1);
-  //jo.setval(frmGUIta.cmbDurationt.Name, s2);
   jo.setval('Completed', '2');
   frmGUIta.LVfiles.Refresh;
 end;
@@ -111,11 +85,11 @@ begin
   s := DateTimeToStr(Now) + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
   i := SecondsBetween(dt, Now);
   d := myTimeStrToReal(jo.getval('duration'));
-  t := myTimeStrToReal(frmGUIta.cmbTestDurationt.Text);
-  if (d <> 0) and (t > d) then
-    t := d;
-  if t <> 0 then
-    t := d / t * i;
+  e := myTimeStrToReal(frmGUIta.cmbTestDurationt.Text);
+  if (d <> 0) and (e > d) then
+    e := d;
+  if e <> 0 then
+    e := d / e * i;
   if fExitStatus <> 0 then
   begin
     s := s + ' - ' + mes[6] + ': ' + IntToStr(pr.ExitStatus);
@@ -131,7 +105,7 @@ begin
   end;
   frmGUIta.SynMemo1.Lines.Add(s);
   frmGUIta.StatusBar1.SimpleText := s;
-  frmGUIta.SynMemo1.Lines.Add(mes[19] + ' ' + myRealToTimeStr(t));
+  frmGUIta.SynMemo1.Lines.Add(mes[19] + ' ' + myRealToTimeStr(e));
   frmGUIta.SynMemo1.Lines.Add(sdiv);
   frmGUIta.SynMemo5.Lines.Add(sdiv);
   if li.Selected then
@@ -158,17 +132,17 @@ end;
 
 procedure TThreadTest.Execute;
 var
-  scmd, Buffer, s, s1, s2, scp: string;
+  scmd, Buffer, t: string;
   BytesAvailable: DWord;
   BytesRead: longint;
-  i: integer;
+  i, j: integer;
 begin
-  scp := GetConsoleTextEncoding;
   Synchronize(@DataGet);
   if fcmd.Count = 0 then
     Exit;
   while (not Terminated) and (fcmd.Count > 0) and (fExitStatus = 0) do
   begin
+    fExitStatus := -1;
     scmd := fcmd[0];
     fcmd.Delete(0);
     if scmd = '' then
@@ -182,71 +156,57 @@ begin
     Synchronize(@Showstatus1);
     Synchronize(@ShowSynMemo);
     pr := TProcessUTF8.Create(nil);
-    pr.CommandLine := scmd;
-    //pr.CurrentDirectory := fdir;
-    pr.Options := [poUsePipes, poStderrToOutPut];
-    pr.ShowWindow := swoHide;
-    pr.Execute;
-    s1 := '';
+    try
+      pr.CommandLine := scmd;
+      //pr.CurrentDirectory := fdir;
+      pr.Options := [poUsePipes, poStderrToOutPut];
+      pr.ShowWindow := swoHide;
+      pr.Execute;
+      t := '';
 
-    while (not Terminated) and (pr.Running) do
-    begin
-      BytesAvailable := pr.Output.NumBytesAvailable;
-      BytesRead := 0;
-      while BytesAvailable > 0 do
+      while (not Terminated) and (pr.Running) do
       begin
-        SetLength(Buffer, BytesAvailable);
-        BytesRead := pr.OutPut.Read(Buffer[1], BytesAvailable);
-        s := copy(Buffer, 1, BytesRead);
-        if fOEM then
-          s := ConvertEncoding(s, scp, EncodingUTF8);
-        s2 := s1 + s;
-        repeat
-          {$IFDEF MSWINDOWS}
-          i := Pos(#13, s2);
-          if (i > 0) and (i < Length(s2)) then
-          begin
-            fStatus := Copy(s2, 1, i - 1);
-            Delete(s2, 1, i);
-            Synchronize(@Showstatus1);
-            if (s2[1] = #10) then
+        BytesAvailable := pr.Output.NumBytesAvailable;
+        BytesRead := 0;
+        while BytesAvailable > 0 do
+        begin
+          SetLength(Buffer, BytesAvailable);
+          BytesRead := pr.OutPut.Read(Buffer[1], BytesAvailable);
+          t := t + copy(Buffer, 1, BytesRead);
+          repeat
+            i := Pos(#13, t);
+            j := Pos(#10, t);
+            if (i > 0) and (j <> i + 1) then //carrier return, no line feed
             begin
-              Delete(s2, 1, 1);
+              if (j > i + 1) then j := i;
+              fStatus := Copy(t, 1, i - 1);
+              Delete(t, 1, Max(i, j));
+              Synchronize(@ShowStatus1);
+            end else
+            if ((i > 0) and (j = i + 1))  //crlf
+            or ((i = 0) and (j > 0))      //lf
+            or ((i > j) and (j > 0)) then //lf, cr
+            begin
+              if (i = 0) or (i > j) then i := j;
+              fStatus := Copy(t, 1, Min(i, j) - 1);
+              Delete(t, 1, Max(i, j));
+              Synchronize(@ShowStatus1);
               Synchronize(@ShowSynMemo);
             end;
-          end
-          else
-            i := 0;
-          {$ELSE}
-          i := Pos(#10, s2);
-          if (i > 0) then
-          begin
-            fStatus := Copy(s2, 1, i - 1);
-            Delete(s2, 1, i);
-            Synchronize(@ShowStatus1);
-            Synchronize(@ShowSynMemo);
-          end
-          else
-          begin
-            fStatus := s2;
-            s2 := '';
-            Synchronize(@ShowStatus1);
-            i := 0;
-          end;
-          {$ENDIF}
-        until i = 0;
-        s1 := s2;
-        BytesAvailable := pr.Output.NumBytesAvailable;
+          until i = 0;
+          BytesAvailable := pr.Output.NumBytesAvailable;
+        end;
+        Sleep(2);
       end;
-      Sleep(2);
+      if (t <> '') then
+      begin
+        fStatus := t;
+        Synchronize(@ShowSynMemo);
+      end;
+      fExitStatus := pr.ExitStatus;
+    finally
+      pr.Free;
     end;
-    if (s1 <> '') then
-    begin
-      fStatus := s1;
-      Synchronize(@ShowSynMemo);
-    end;
-    fExitStatus := pr.ExitStatus;
-    pr.Free;
   end;
   Synchronize(@DataOut);
 end;
@@ -258,7 +218,6 @@ begin
   fdir := dir;
   li := Item;
   fExitStatus := 0;
-  fOEM := False;
   inherited Create(CreateSuspended);
 end;
 

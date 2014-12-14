@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, utf8process, Process, LConvEncoding, fileutil,
-  ujobinfo, ubyutils;
+  Math, ujobinfo, ubyutils;
 
 type
 
@@ -137,10 +137,10 @@ end;
 
 procedure TThreadConv.Execute;
 var
-  scmd, Buffer, s, s1, s2, scp: string;
+  scmd, Buffer, s, t, scp: string;
   BytesAvailable: DWord;
   BytesRead: longint;
-  i: integer;
+  i, j: integer;
 begin
   scp := GetConsoleTextEncoding;
   while (not Terminated) and True do
@@ -150,6 +150,7 @@ begin
       Exit;
     while (not Terminated) and (fcmd.Count > 0) and (fExitStatus = 0) do
     begin
+      fExitStatus := -1;
       scmd := fcmd[0];
       fcmd.Delete(0);
       if scmd = '' then
@@ -163,71 +164,59 @@ begin
       Synchronize(@ShowStatus1);
       Synchronize(@ShowSynMemo);
       pr := TProcessUTF8.Create(nil);
-      pr.CommandLine := scmd;
-      //pr.CurrentDirectory := fdir;
-      pr.Options := [poUsePipes, poStderrToOutPut];
-      pr.ShowWindow := swoHide;
-      pr.Execute;
-      s1 := '';
-
-      while (not Terminated) and (pr.Running) do
-      begin
-        BytesAvailable := pr.Output.NumBytesAvailable;
-        BytesRead := 0;
-        while BytesAvailable > 0 do
+      try
+        pr.CommandLine := scmd;
+        //pr.CurrentDirectory := fdir;
+        pr.Options := [poUsePipes, poStderrToOutPut];
+        pr.ShowWindow := swoHide;
+        pr.Execute;
+        t := '';
+        while (not Terminated) and (pr.Running) do
         begin
-          SetLength(Buffer, BytesAvailable);
-          BytesRead := pr.OutPut.Read(Buffer[1], BytesAvailable);
-          s := copy(Buffer, 1, BytesRead);
-          if fOEM then
-            s := ConvertEncoding(s, scp, EncodingUTF8);
-          s2 := s1 + s;
-          repeat
-            {$IFDEF MSWINDOWS}
-            i := Pos(#13, s2);
-            if (i > 0) and (i < Length(s2)) then
-            begin
-              fStatus := Copy(s2, 1, i - 1);
-              Delete(s2, 1, i);
-              Synchronize(@Showstatus1);
-              if (s2[1] = #10) then
+          BytesAvailable := pr.Output.NumBytesAvailable;
+          BytesRead := 0;
+          while BytesAvailable > 0 do
+          begin
+            SetLength(Buffer, BytesAvailable);
+            BytesRead := pr.OutPut.Read(Buffer[1], BytesAvailable);
+            s := copy(Buffer, 1, BytesRead);
+            if fOEM then
+              s := ConvertEncoding(s, scp, EncodingUTF8);
+            t := t + s;
+            repeat
+              i := Pos(#13, t);
+              j := Pos(#10, t);
+              if (i > 0) and (j <> i + 1) then //carrier return, no line feed
               begin
-                Delete(s2, 1, 1);
+                if (j > i + 1) then j := i;
+                fStatus := Copy(t, 1, i - 1);
+                Delete(t, 1, Max(i, j));
+                Synchronize(@ShowStatus1);
+              end else
+              if ((i > 0) and (j = i + 1))  //crlf
+              or ((i = 0) and (j > 0))      //lf
+              or ((i > j) and (j > 0)) then //lf, cr
+              begin
+                if (i = 0) or (i > j) then i := j;
+                fStatus := Copy(t, 1, Min(i, j) - 1);
+                Delete(t, 1, Max(i, j));
+                Synchronize(@ShowStatus1);
                 Synchronize(@ShowSynMemo);
               end;
-            end
-            else
-              i := 0;
-            {$ELSE}
-            i := Pos(#10, s2);
-            if (i > 0) then
-            begin
-              fStatus := Copy(s2, 1, i - 1);
-              Delete(s2, 1, i);
-              Synchronize(@ShowStatus1);
-              Synchronize(@ShowSynMemo);
-            end
-            else
-            begin
-              fStatus := s2;
-              s2 := '';
-              Synchronize(@ShowStatus1);
-              i := 0;
-            end;
-            {$ENDIF}
-          until i = 0;
-          s1 := s2;
-          BytesAvailable := pr.Output.NumBytesAvailable;
+            until i = 0;
+            BytesAvailable := pr.Output.NumBytesAvailable;
+          end;
+          Sleep(2);
         end;
-        Sleep(2);
+        if (t <> '') then
+        begin
+          fStatus := t;
+          Synchronize(@ShowSynMemo);
+        end;
+        fExitStatus := pr.ExitStatus;
+      finally
+        pr.Free;
       end;
-      if (s1 <> '') then
-      begin
-        fStatus := s1;
-        Synchronize(@ShowSynMemo);
-      end;
-      fExitStatus := pr.ExitStatus;
-      pr.Free;
     end;
     Synchronize(@DataOut);
   end;
