@@ -30,7 +30,7 @@ type
     procedure Execute; override;
   public
     pr: TProcessUTF8;
-    constructor Create(CreateSuspended: boolean; dir: string);
+    constructor Create(dir: string);
   end;
 
 implementation
@@ -51,7 +51,7 @@ begin
     begin
       frmGUIta.SynMemo3.Clear;
       jo := TJob(frmGUIta.LVfiles.Items[i].Data);
-      frmGUIta.SynMemo1.Lines.Add(DateTimeToStr(dt) + ' - ' + jo.files[0]);
+      frmGUIta.memJournal.Lines.Add(DateTimeToStr(dt) + ' - ' + jo.files[0]);
       fcmd.Text := frmGUIta.myGetCmdFromJo(jo);
       jo.setval('Completed', '2');
       frmGUIta.LVfiles.Refresh;
@@ -113,16 +113,16 @@ begin
     frmGUIta.SynMemo3.Lines.SaveToFile(fno);
     {$ENDIF}
   end;
-  frmGUIta.SynMemo1.Lines.Add(s);
+  frmGUIta.memJournal.Lines.Add(s);
   frmGUIta.StatusBar1.SimpleText := s;
-  frmGUIta.SynMemo1.Lines.Add(sdiv);
+  frmGUIta.memJournal.Lines.Add(sdiv);
   frmGUIta.SynMemo3.Lines.Add(sdiv);
   frmGUIta.LVfiles.Refresh;
 end;
 
 procedure TThreadConv.ShowJournal;
 begin
-  frmGUIta.SynMemo1.Lines.Add(fStatus);
+  frmGUIta.memJournal.Lines.Add(fStatus);
 end;
 
 procedure TThreadConv.ShowStatus1;
@@ -165,8 +165,8 @@ begin
       Synchronize(@ShowSynMemo);
       pr := TProcessUTF8.Create(nil);
       try
-        pr.CommandLine := scmd;
         //pr.CurrentDirectory := fdir;
+        pr.CommandLine := scmd;
         pr.Options := [poUsePipes, poStderrToOutPut];
         pr.ShowWindow := swoHide;
         pr.Execute;
@@ -222,14 +222,14 @@ begin
   end;
 end;
 
-constructor TThreadConv.Create(CreateSuspended: boolean; dir: string);
+constructor TThreadConv.Create(dir: string);
 begin
   FreeOnTerminate := True;
   fcmd := TStringList.Create;
   fdir := dir;
   fExitStatus := 0;
   fOEM := False;
-  inherited Create(CreateSuspended);
+  inherited Create(True);
 end;
 
 end.

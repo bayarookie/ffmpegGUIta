@@ -270,7 +270,7 @@ end;
 
 procedure TThreadAddF.ShowJournal;
 begin
-  frmGUIta.SynMemo1.Lines.Add(fStatus);
+  frmGUIta.memJournal.Lines.Add(fStatus);
 end;
 
 procedure TThreadAddF.ShowStatus1;

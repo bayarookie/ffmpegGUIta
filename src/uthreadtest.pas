@@ -21,6 +21,7 @@ type
     fStatus: string;
     d, e: double;
     fExitStatus: integer;
+    //fsep: boolean;
     procedure DataGet;
     procedure DataOut;
     procedure ShowJournal;
@@ -30,7 +31,7 @@ type
     procedure Execute; override;
   public
     pr: TProcessUTF8;
-    constructor Create(CreateSuspended: boolean; dir: string; Item: TListItem);
+    constructor Create(dir: string; Item: TListItem);
   end;
 
 implementation
@@ -47,7 +48,7 @@ begin
   fcmd.Clear;
   frmGUIta.SynMemo5.Clear;
   jo := TJob(li.Data);
-  frmGUIta.SynMemo1.Lines.Add(DateTimeToStr(dt) + ' - ' + jo.files[0]);
+  frmGUIta.memJournal.Lines.Add(DateTimeToStr(dt) + ' - ' + jo.files[0]);
   fcmd.Text := frmGUIta.myGetCmdFromJo(jo, True);
   jo.setval('Completed', '2');
   frmGUIta.LVfiles.Refresh;
@@ -103,10 +104,10 @@ begin
     frmGUIta.SynMemo5.Lines.SaveToFile(fno);
     {$ENDIF}
   end;
-  frmGUIta.SynMemo1.Lines.Add(s);
+  frmGUIta.memJournal.Lines.Add(s);
   frmGUIta.StatusBar1.SimpleText := s;
-  frmGUIta.SynMemo1.Lines.Add(mes[19] + ' ' + myRealToTimeStr(e));
-  frmGUIta.SynMemo1.Lines.Add(sdiv);
+  frmGUIta.memJournal.Lines.Add(mes[19] + ' ' + myRealToTimeStr(e));
+  frmGUIta.memJournal.Lines.Add(sdiv);
   frmGUIta.SynMemo5.Lines.Add(sdiv);
   if li.Selected then
     frmGUIta.LVfilesSelectItem(nil, li, True);
@@ -117,7 +118,7 @@ end;
 
 procedure TThreadTest.ShowJournal;
 begin
-  frmGUIta.SynMemo1.Lines.Add(fStatus);
+  frmGUIta.memJournal.Lines.Add(fStatus);
 end;
 
 procedure TThreadTest.ShowStatus1;
@@ -138,8 +139,6 @@ var
   i, j: integer;
 begin
   Synchronize(@DataGet);
-  if fcmd.Count = 0 then
-    Exit;
   while (not Terminated) and (fcmd.Count > 0) and (fExitStatus = 0) do
   begin
     fExitStatus := -1;
@@ -157,8 +156,8 @@ begin
     Synchronize(@ShowSynMemo);
     pr := TProcessUTF8.Create(nil);
     try
-      pr.CommandLine := scmd;
       //pr.CurrentDirectory := fdir;
+      pr.CommandLine := scmd;
       pr.Options := [poUsePipes, poStderrToOutPut];
       pr.ShowWindow := swoHide;
       pr.Execute;
@@ -211,14 +210,14 @@ begin
   Synchronize(@DataOut);
 end;
 
-constructor TThreadTest.Create(CreateSuspended: boolean; dir: string; Item: TListItem);
+constructor TThreadTest.Create(dir: string; Item: TListItem);
 begin
   FreeOnTerminate := True;
   fcmd := TStringList.Create;
   fdir := dir;
   li := Item;
   fExitStatus := 0;
-  inherited Create(CreateSuspended);
+  inherited Create(True);
 end;
 
 end.

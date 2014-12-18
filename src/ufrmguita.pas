@@ -59,7 +59,6 @@ type
     chkAddTracks: TCheckBox;
     chkRunInMem: TCheckBox;
     chkConcat: TCheckBox;
-    chkSeparate: TCheckBox;
     chkRunInWindow: TCheckBox;
     chkDebug: TCheckBox;
     chkOEM: TCheckBox;
@@ -72,6 +71,7 @@ type
     cmbBitrateV: TComboBox;
     cmbChannels: TComboBox;
     cmbDurationss1: TComboBox;
+    cmbDurationt1: TComboBox;
     cmbhqdn3d: TComboBox;
     cmbLangA: TComboBox;
     cmbLangS: TComboBox;
@@ -98,7 +98,7 @@ type
     cmbFont: TComboBox;
     cmbDirLast: TComboBox;
     cmbDurationss2: TComboBox;
-    cmbDurationt: TComboBox;
+    cmbDurationt2: TComboBox;
     cmbTestDurationss: TComboBox;
     cmbTestDurationt: TComboBox;
     cmbLangsList: TComboBox;
@@ -111,11 +111,14 @@ type
     edtFileExts: TLabeledEdit;
     edtMediaInfo: TLabeledEdit;
     edtOfn: TLabeledEdit;
+    edtxterm: TLabeledEdit;
+    edtxtermopts: TLabeledEdit;
     ImageList1: TImageList;
     edtBitrateV: TLabeledEdit;
     edtOfna: TLabeledEdit;
     lblAddOptsI: TLabel;
     lblDurationss1: TLabel;
+    lblDurationt1: TLabel;
     lblLangA: TLabel;
     lblLangS: TLabel;
     lblTestStartDurationTime: TLabel;
@@ -148,7 +151,7 @@ type
     lblx264tune: TLabel;
     LVfiles: TListView;
     LVstreams: TListView;
-    Memo1: TMemo;
+    memCmdlines: TMemo;
     memInputfn: TMemo;
     mnuPasteTracks: TMenuItem;
     mnuMediaInfo: TMenuItem;
@@ -165,18 +168,20 @@ type
     Panel1: TPanel;
     Panel2: TPanel;
     Panel3: TPanel;
+    Panel4: TPanel;
+    Panel5: TPanel;
+    Panel6: TPanel;
     PopupMenu1: TPopupMenu;
     PopupMenu2: TPopupMenu;
     spnKoefA: TSpinEdit;
     spnKoefV: TSpinEdit;
     StatusBar1: TStatusBar;
-    SynMemo1: TSynMemo;
+    memJournal: TSynMemo;
     SynMemo2: TSynMemo;
     SynMemo3: TSynMemo;
     SynMemo4: TSynMemo;
     SynMemo5: TSynMemo;
     SynMemo6: TSynMemo;
-    SynMemo7: TSynMemo;
     SynUNIXShellScriptSyn1: TSynUNIXShellScriptSyn;
     TabDefSets: TTabSheet;
     TabJournal: TTabSheet;
@@ -188,7 +193,6 @@ type
     TabContRows: TTabSheet;
     TabConsole3: TTabSheet;
     TabConsole4: TTabSheet;
-    TabConsole5: TTabSheet;
     TabCmdline: TTabSheet;
     TabInput: TTabSheet;
     TabVideo: TTabSheet;
@@ -235,6 +239,7 @@ type
     procedure cmbExtSelect(Sender: TObject);
     procedure cmbFontGetItems(Sender: TObject);
     procedure cmbFontSelect(Sender: TObject);
+    procedure cmbFormatChange(Sender: TObject);
     procedure cmbFormatSelect(Sender: TObject);
     procedure cmbLanguageChange(Sender: TObject);
     procedure cmbProfileChange(Sender: TObject);
@@ -267,8 +272,6 @@ type
     procedure onAddFTerminate(Sender: TObject);
     procedure onCmdrTerminate(Sender: TObject);
     procedure onConvTerminate(Sender: TObject);
-    procedure onPlayTerminate(Sender: TObject);
-    procedure onPlazTerminate(Sender: TObject);
     procedure onTestTerminate(Sender: TObject);
     procedure ontAutoStart(Sender: TObject);
     procedure PopupMenu1Popup(Sender: TObject);
@@ -279,8 +282,8 @@ type
     procedure UniqueInstance1OtherInstance(Sender: TObject;
       ParamCount: Integer; Parameters: array of String);
     procedure xmyChange0(Sender: TObject);
-    procedure xmyChange0o(Sender: TObject);
     procedure xmyChange0i(Sender: TObject);
+    procedure xmyChange0o(Sender: TObject);
     procedure xmyChange1(Sender: TObject);
     procedure xmyChange1v(Sender: TObject);
     procedure xmyChange1a(Sender: TObject);
@@ -358,7 +361,7 @@ var
   ThreadConv: TThreadConv;
   ThreadTest: TThreadTest;
   ThreadAddF: TThreadAddF;
-  ThreadPlay, ThreadPlaz, ThreadCmdr: TThreadExec;
+  ThreadCmdr: TThreadExec;
   sdiv: string =
   '--------------------------------------------------------------------------------';
   DuraAll: double;
@@ -653,7 +656,8 @@ begin
   begin
     s := files[i];
     d := myStrReplace('"$ffprobe"') + ' -show_streams "' + s + '"';
-    myGetDosOut(d, '', '', SynMemo2, StatusBar1);
+    //myGetDosOut(d, '', '', SynMemo2, StatusBar1);
+    myGetDosOut2(d, SynMemo2);
     d := SynMemo2.Text;
     d := myBetween(d, 'Duration: ', ',');
     j := myTimeStrToReal(d);
@@ -775,7 +779,7 @@ begin
     6: s := s + 'hflip, vflip';
     else
       if chkDebug.Checked then
-        SynMemo1.Lines.Add('rotate not in range: ' + IntToStr(i));
+        memJournal.Lines.Add('rotate not in range: ' + IntToStr(i));
   end;
   my1(cmbSetDAR);
   my2(v.getval(cmbFiltersV.Name));
@@ -785,12 +789,14 @@ end;
 
 function TfrmGUIta.myGetCmdFromJo(jo: TJob; test: boolean = False): string;
 var
-  k, cf, cv, ca, cs: integer;
-  s, co, ty, si, ss, st, fc, fc2, f, fn, fb, ni, vi, au, su, ma, so, tmp,
-  f1p, sp1, sp2, fn1, fn2, fno, fnoa: string;
+  i, k, cf, cv, ca, cs, iv: integer;
   c: TCont;
-  rd, rt, rs: double;
-  //ai: TStringList;
+  rd,
+  rsi, rso, rst, rti, rto, rtt: double;
+  ssi, sso, sst, sti, sto, stt,
+  s, co, ty, si, fc, fc2, f, fn, fb, ni, vi, au, su, ma,
+  so, tmp, f1p, sp1, sp2, fn1, fn2, fno, fnoa: string;
+  ai: TStringList;
 
   procedure my1v;
   begin
@@ -878,49 +884,44 @@ var
   end;
 
 begin
-  ss := jo.getval(cmbDurationss2.Name);
-  st := jo.getval(cmbDurationt.Name);
-  if test then begin
-    st := Trim(cmbTestDurationt.Text);
-    rt := myTimeStrToReal(st);
-    rd := myTimeStrToReal(jo.getval('duration'));
-    if (rd <> 0) and (rt > rd) then
-      rt := rd;
-    if ss = '' then
-      ss := Trim(cmbTestDurationss.Text);
-    rs := myTimeStrToReal(ss);
-    if rs > (rd - rt) then
-      rs := rd - rt;
-    ss := myRealToTimeStr(rs);
-    st := myRealToTimeStr(rt);
-    myGetss4Compare(jo, rs, rt);
+  // -ss input, output, test
+  ssi := '';
+  sso := jo.getval(cmbDurationss2.Name);
+  sst := IfThen(test, Trim(cmbTestDurationss.Text));
+  // -t input, output, test
+  sti := '';
+  sto := jo.getval(cmbDurationt2.Name);
+  stt := IfThen(test, Trim(cmbTestDurationt.Text));
+  // calc time range for test, output
+  rd := myTimeStrToReal(jo.getval('duration'));
+  rso := myTimeStrToReal(sso);
+  rto := myTimeStrToReal(sto);
+  if test then
+  begin
+    rst := myTimeStrToReal(sst);
+    rtt := myTimeStrToReal(stt);
+    if (rd > 0) and (rd < rtt) then
+      rtt := rd;
+    if rst > (rd - rtt) then
+      rst := rd - rtt;
+    if rst <> 0 then
+      sst := myRealToTimeStr(rst)
+    else
+      sst := '';
+    if rtt <> 0 then
+      stt := myRealToTimeStr(rtt)
+    else
+      stt := '';
+    myGetss4Compare(jo, rst, rtt);
+  end
+  else
+  begin
+    rst := 0;
+    rtt := 0;
   end;
+  // init vars
+  ai := TStringList.Create;
   si := '"$ffmpeg"';
-  //ai := TStringList.Create;
-  so := IfThen(ss <> '', ' -ss ' + ss) + IfThen(st <> '', ' -t ' + st);
-  s := jo.getval(cmbAddOptsO.Name);
-  so := so + IfThen(s <> '', ' ' + s);
-  s := jo.getval(cmbFormat.Name);
-  so := so + IfThen(s <> '', ' -f ' + s);
-  fno := jo.getval(edtOfn.Name);
-  if FileExistsUTF8(fno) then
-  begin
-    fno := myGetOutFN(ExtractFilePath(fno), jo.files[0],  ExtractFileExt(fno));
-    jo.setval(edtOfn.Name, fno);
-  end;
-  {$IFDEF MSWINDOWS}
-  fnoa := jo.getval(edtOfna.Name); //short filename
-  if FileExistsUTF8(fnoa) then
-  begin
-    fnoa := myGetOutFNa(ExtractFilePath(fnoa), jo.files[0], ExtractFileExt(fnoa));
-    jo.setval(edtOfna.Name, fnoa);
-  end;
-  fn1 := ' -y NUL' + jo.getval(cmbExt.Name);
-  {$ELSE}
-  fnoa := fno;
-  fn1 := ' -y /dev/null';
-  {$ENDIF}
-  fn2 := ' -y "' + fnoa +'"';
   fc := '';
   fc2 := '';
   f := '';
@@ -930,12 +931,14 @@ begin
   sp1 := '';
   sp2 := '';
   ma := '';
+  so := '';
   cf := 0;
   cv := -1;
   ca := -1;
   cs := -1;
   fn := '';
   fb := '-';
+  iv := -1;
   //--- concat ---
   if (jo.getval(chkConcat.Name) = '1') then
   begin
@@ -977,57 +980,120 @@ begin
     end;
     fc := fc + 'concat=n=' + IntToStr(cf) + ':v=' + IntToStr(cv + 1) +
       ':a=' + IntToStr(ca + 1) + fc2 + '"';
+    for k := 0 to jo.files.Count - 1 do
+    begin
+      c := TCont(jo.files.Objects[k]);
+      ssi := c.getval(cmbDurationss1.Name);
+      rsi := myTimeStrToReal(ssi);
+      if (rsi < rst) and (rso = 0) then
+        ssi := sst;
+      si := si + IfThen(ssi <> '', ' -ss ' + ssi);
+      sti := c.getval(cmbDurationt1.Name);
+      rti := myTimeStrToReal(sti);
+      if (rto = 0) and (rti > rtt) then
+        sti := stt;
+      si := si + IfThen(sti <> '', ' -t ' + sti);
+      s := c.getval(cmbAddOptsI.Name);
+      si := si + IfThen(s <> '', ' ' + s);
+      si := si + ' -i "' + myGetAnsiFN(jo.files[k]) + '"';
+    end;
   end
   else //mix mux
   begin
+    //only files with checked tracks
     for k := 0 to High(jo.a) do
     begin
       c := jo.a[k];
       if c.getval('Checked') = '1' then
       begin
         s := c.getval('filenum');
-        //if ai.IndexOf(s) < 0 then
-        //  ai.Add(s);
+        if ai.IndexOf(s) < 0 then
+          ai.Add(s);
+      end;
+    end;
+    //map and params for every track
+    for k := 0 to High(jo.a) do
+    begin
+      c := jo.a[k];
+      if c.getval('Checked') = '1' then
+      begin
+        s := c.getval('filenum');
+        i := ai.IndexOf(s);
+        s := IntToStr(i);
         ma := ma + ' -map ' + s + ':' + c.getval('index');
         ty := c.getval('codec_type');
         if ty = 'video' then
-          my1v
+        begin
+          if iv < 0 then
+            iv := i; //remember first filenum with video
+          my1v;
+        end
         else if ty = 'audio' then
           my1a
         else if ty = 'subtitle' then
           my1s;
       end;
     end;
+    for i := 0 to ai.Count - 1 do
+    begin
+      k := StrToIntDef(ai[i], -1);
+      if k >= 0 then
+      begin
+        c := TCont(jo.files.Objects[k]);
+        ssi := c.getval(cmbDurationss1.Name);
+        rsi := myTimeStrToReal(ssi);
+        if (rsi < rst) and (rso = 0) then
+          ssi := sst;
+        si := si + IfThen(ssi <> '', ' -ss ' + ssi);
+        sti := c.getval(cmbDurationt1.Name);
+        rti := myTimeStrToReal(sti);
+        if (rto = 0) and (rti > rtt) and (iv = i) then
+          sti := stt;
+        si := si + IfThen(sti <> '', ' -t ' + sti);
+        s := c.getval(cmbAddOptsI.Name);
+        si := si + IfThen(s <> '', ' ' + s);
+        si := si + ' -i "' + myGetAnsiFN(jo.files[k]) + '"';
+      end;
+    end;
   end;
-  for k := 0 to jo.files.Count - 1 do
+  ai.Free;
+  if vi = '' then vi := ' -vn'; //no video
+  if au = '' then au := ' -an'; //no audio
+  if su = '' then su := ' -sn'; //no subtitle
+  // params for output file
+  if test then
   begin
-    c := TCont(jo.files.Objects[k]);
-    s := c.getval(cmbDurationss1.Name);
-    si := si + IfThen(s <> '', ' -ss ' + s);
-    s := c.getval(cmbAddOptsI.Name);
-    si := si + IfThen(s <> '', ' ' + s);
-    si := si + ' -i "' + myGetAnsiFN(jo.files[k]) + '"';
+    if (rso > 0) and (rso < rst) then
+      sso := sst;
+    if (rtt > 0) and ((rtt < rto) or (rto = 0)) then
+      sto := stt;
   end;
-  //for i := 0 to ai.Count - 1 do
-  //begin
-  //  k := StrToIntDef(ai[i], -1);
-  //  if k >= 0 then
-  //  begin
-  //    c := TCont(jo.files.Objects[k]);
-  //    s := c.getval(cmbDurationss1.Name);
-  //    si := si + IfThen(s <> '', ' -ss ' + s);
-  //    s := c.getval(cmbAddOptsI.Name);
-  //    si := si + IfThen(s <> '', ' ' + s);
-  //    si := si + ' -i "' + myGetAnsiFN(jo.files[k]) + '"';
-  //  end;
-  //end;
-  //ai.Free;
-  if vi = '' then
-    vi := ' -vn';
-  if au = '' then
-    au := ' -an';
-  if su = '' then
-    su := ' -sn';
+  so := IfThen(sso <> '', ' -ss ' + sso) + IfThen(sto <> '', ' -t ' + sto);
+  s := jo.getval(cmbAddOptsO.Name);
+  so := so + IfThen(s <> '', ' ' + s);
+  s := jo.getval(cmbFormat.Name);
+  so := so + IfThen(s <> '', ' -f ' + s);
+  // output filename
+  fno := jo.getval(edtOfn.Name);
+  if FileExistsUTF8(fno) then
+  begin
+    fno := myGetOutFN(ExtractFilePath(fno), jo.files[0],  ExtractFileExt(fno));
+    jo.setval(edtOfn.Name, fno);
+  end;
+  {$IFDEF MSWINDOWS}
+  fnoa := jo.getval(edtOfna.Name); //short filename
+  if FileExistsUTF8(fnoa) then
+  begin
+    fnoa := myGetOutFNa(ExtractFilePath(fnoa), jo.files[0], ExtractFileExt(fnoa));
+    jo.setval(edtOfna.Name, fnoa);
+  end;
+  fn1 := ' -y NUL' + jo.getval(cmbExt.Name);
+  {$ELSE}
+  fnoa := fno;
+  fn1 := ' -y /dev/null';
+  {$ENDIF}
+  fn2 := ' -y "' + fnoa +'"';
+  // final
   if sp1 <> '' then
     Result := si + fc + f + vi + au + su + ma + sp1 + so + fn1 + LineEnding
             + si + fc + f + vi + au + su + ma + sp2 + so + fn2
@@ -1111,17 +1177,63 @@ begin
 end;
 
 function TfrmGUIta.myGetDosOut2(cmd: string; mem: TSynMemo): integer;
+const
+  READ_BYTES = 2048;
 var
+  MemStream: TMemoryStream;
+  NumBytes, BytesRead: integer;
+  //sl: TStringList;
+  //i: integer;
   pr: TProcessUTF8;
 begin
+  //pr := TProcessUTF8.Create(nil);
+  //pr.CommandLine := cmd;
+  //pr.Options := [poWaitOnExit, poUsePipes, poStderrToOutPut];
+  //pr.ShowWindow := swoHide;
+  //pr.Execute;
+  //mem.Lines.LoadFromStream(pr.Output);
+  //Result := pr.ExitStatus;
+  //pr.Free;
+
+  Result := -1;
+  BytesRead := 0;
+  //sl := Nil;
+  MemStream := TMemoryStream.Create;
   pr := TProcessUTF8.Create(nil);
-  pr.CommandLine := cmd;
-  pr.Options := [poWaitOnExit, poUsePipes, poStderrToOutPut];
-  pr.ShowWindow := swoHide;
-  pr.Execute;
-  mem.Lines.LoadFromStream(pr.Output);
-  Result := pr.ExitStatus;
-  pr.Free;
+  try
+    pr.CommandLine := cmd;
+    pr.Options := [poUsePipes, poStderrToOutPut];
+    pr.ShowWindow := swoHide;
+    pr.Execute;
+    // read while the process is running
+    while pr.Running do begin
+      MemStream.SetSize(BytesRead + READ_BYTES); // make sure we have room
+      // try reading it
+      NumBytes := pr.Output.Read((MemStream.Memory + BytesRead)^, READ_BYTES);
+      if NumBytes > 0 then
+        Inc(BytesRead, NumBytes)
+      else                                       // no data, wait 10 ms
+        Sleep(10);
+    end;
+    // read last part
+    repeat
+      MemStream.SetSize(BytesRead + READ_BYTES);
+      NumBytes := pr.Output.Read((MemStream.Memory + BytesRead)^, READ_BYTES);
+      if NumBytes > 0 then
+        Inc(BytesRead, NumBytes);
+    until NumBytes <= 0;
+    MemStream.SetSize(BytesRead);
+    mem.Lines.LoadFromStream(MemStream);
+    //sl := TStringList.Create;
+    //sl.LoadFromStream(MemStream);
+    //for i := 0 to sl.Count - 1 do
+    //  mem.Lines.Add(sl[i]);
+    Result := pr.ExitStatus;
+  finally
+    //sl.Free;
+    pr.Free;
+    MemStream.Free;
+  end;
 end;
 
 procedure TfrmGUIta.myFindFiles(dir: string; c: array of TObject);
@@ -1568,8 +1680,8 @@ begin
     Exit;
   Ini := TIniFile.Create(UTF8ToSys(sInifile));
   s := 'Main';
-  mySets2(Ini, s, [TabDefSets], bRead);
-  mySets1(Ini, s, [cmbProfile, chkOEM], bRead);
+  mySets2(Ini, s, [TabDefSets, TabConsole1], bRead);
+  mySets1(Ini, s, [cmbProfile], bRead);
   mySets3(Ini, s, [cmbRunCmd, cmbExtPlayer], bRead);
   if bRead then
   begin
@@ -1721,7 +1833,7 @@ begin
       else
         q := 0;
       if chkDebug.Checked then
-        SynMemo1.Lines.Add('calc out size: ' + t + ' bitrate=' + FloatToStr(q));
+        memJournal.Lines.Add('calc out size: ' + t + ' bitrate=' + FloatToStr(q));
       r := r + q;
     end;
   sExt := LowerCase(ExtractFileExt(jo.getval(edtOfn.Name)));
@@ -1737,16 +1849,16 @@ begin
     q := 10000;  //other files?
   r := r + q;
   if chkDebug.Checked then
-    SynMemo1.Lines.Add('calc out size: out br=' + FloatToStr(r));
-  if jo.getval(cmbDurationt.Name) <> '' then
-    q := myTimeStrToReal(jo.getval(cmbDurationt.Name))
+    memJournal.Lines.Add('calc out size: out br=' + FloatToStr(r));
+  if jo.getval(cmbDurationt2.Name) <> '' then
+    q := myTimeStrToReal(jo.getval(cmbDurationt2.Name))
   else
     q := myTimeStrToReal(jo.getval('duration'));
   if chkDebug.Checked then
-    SynMemo1.Lines.Add('calc out size: duration=' + FloatToStr(q));
+    memJournal.Lines.Add('calc out size: duration=' + FloatToStr(q));
   r := r / 8 * q;
   if chkDebug.Checked then
-    SynMemo1.Lines.Add('calc out size: out size=' + FloatToStr(r));
+    memJournal.Lines.Add('calc out size: out size=' + FloatToStr(r));
   Result := Trim(Format('%12.0n', [r], fs));
 end;
 
@@ -1771,7 +1883,7 @@ begin
     Result := '1';
   Result := Result + 'k';
   if chkDebug.Checked then
-    SynMemo1.Lines.Add('calculate bitratev=' + Result + ' ' +
+    memJournal.Lines.Add('calculate bitratev=' + Result + ' ' +
       StringReplace(s, LineEnding, ' ', [rfReplaceAll]));
 end;
 
@@ -1787,7 +1899,7 @@ begin
   i := myValInt(a.getval(cmbBitrateA.Name), s);
   Result := IntToStr(i) + 'k';
   if chkDebug.Checked then
-    SynMemo1.Lines.Add('calculate bitratea=' + Result + ' ' +
+    memJournal.Lines.Add('calculate bitratea=' + Result + ' ' +
       StringReplace(s, LineEnding, ' ', [rfReplaceAll]));
 end;
 
@@ -1808,7 +1920,7 @@ begin
     h := i;
   end;
   if chkDebug.Checked then
-    SynMemo1.Lines.Add('calculate ' + mes[22] + '=' + IntToStr(w) +
+    memJournal.Lines.Add('calculate ' + mes[22] + '=' + IntToStr(w) +
       ' ' + mes[23] + '=' + IntToStr(h));
 end;
 
@@ -1875,7 +1987,7 @@ begin
   if h = 0 then
     h := ih;
   if chkDebug.Checked then
-    SynMemo1.Lines.Add('calculate crop ' + s + ' ' + mes[22] + '=' +
+    memJournal.Lines.Add('calculate crop ' + s + ' ' + mes[22] + '=' +
       IntToStr(w) + ' ' + mes[23] + '=' + IntToStr(h) + ' x=' +
       IntToStr(x) + ' y=' + IntToStr(y) + ' ' + StringReplace(vars,
       #13#10, ' ', [rfReplaceAll]));
@@ -1926,7 +2038,7 @@ begin
   w := i;
   h := j;
   if chkDebug.Checked then
-    SynMemo1.Lines.Add('calculate scale ' + mes[22] + '=' + IntToStr(w) +
+    memJournal.Lines.Add('calculate scale ' + mes[22] + '=' + IntToStr(w) +
       ' ' + mes[23] + '=' + IntToStr(h) + ' ' + StringReplace(vars,
       #13#10, ' ', [rfReplaceAll]));
   if (w <= 0) or (h <= 0) then
@@ -1970,7 +2082,7 @@ begin
   begin
     StatusBar1.SimpleText := c.CalcErrorText;
     if chkDebug.Checked then
-      SynMemo1.Lines.Add(c.CalcErrorText);
+      memJournal.Lines.Add(c.CalcErrorText);
   end;
 end;
 
@@ -2050,7 +2162,7 @@ begin
       Result := 6;
     end;
   end;
-  SynMemo1.Lines.Add(mes[6] + ': ' + w2 + ' ' + w);
+  memJournal.Lines.Add(mes[6] + ': ' + w2 + ' ' + w);
   PageControl1.ActivePage := TabJournal;
 end;
 
@@ -2063,7 +2175,8 @@ begin
   cmbEncoderA.Items.Clear;
   cmbEncoderS.Items.Clear;
   s := myStrReplace('"$ffmpeg"') + ' -encoders';
-  myGetDosOut(s, '', '', SynMemo2, StatusBar1);
+  //myGetDosOut(s, '', '', SynMemo2, StatusBar1);
+  myGetDosOut2(s, SynMemo2);
   for i := 0 to SynMemo2.Lines.Count - 1 do
   begin
     s := SynMemo2.Lines[i];
@@ -2100,7 +2213,8 @@ begin
   cmbExt.Items.Clear;
   cmbExt.Items.Add('');
   s := myStrReplace('"$ffmpeg"') + ' -formats';
-  myGetDosOut(s, '', '', SynMemo2, StatusBar1);
+  //myGetDosOut(s, '', '', SynMemo2, StatusBar1);
+  myGetDosOut2(s, SynMemo2);
   for i := 0 to SynMemo2.Lines.Count - 1 do
   begin
     s := SynMemo2.Lines[i];
@@ -2182,7 +2296,7 @@ begin
   if rs = 0 then
     rs := myTimeStrToReal(jo.getval(cmbDurationss2.Name));
   if rt = 0 then
-    rt := myTimeStrToReal(jo.getval(cmbDurationt.Name));
+    rt := myTimeStrToReal(jo.getval(cmbDurationt2.Name));
   rm := 300;
   if (rs = 0) and (rt = 0) and (rd > rm) then
   begin
@@ -2228,10 +2342,8 @@ begin
     ss := '0';
   s := myStrReplace('"$ffmpeg"') + ' -ss ' + ss + ' -i "' + sf + '"' +
     fv + ' -frames 1 -f image2 -y "' + Result + '"';
-  if chkSeparate.Checked then
-    myExecProc1(s)
-  else
-    myGetDosOut(s, '', '', sm, st);
+  myGetDosOut(s, '', '', sm, st);
+  //myGetDosOut2(s, sm);
 end;
 
 function TfrmGUIta.myValFPS(a: array of string): extended;
@@ -2314,11 +2426,12 @@ begin
   if (co.getval('codec_type') = 'video') then
     m := ' -map ' + co.getval('filenum') + ':' + co.getval('index');
   si := si + ' -frames:v 20 -vf "framestep=60, cropdetect" -an -sn' + m + ' -y NUL.mkv';
-  myGetDosOut(si, '', '', SynMemo2, StatusBar1);
+  //myGetDosOut(si, '', '', SynMemo2, StatusBar1);
+  myGetDosOut2(si, SynMemo2);
   s := SynMemo2.Text;
   sl := TStringList.Create;
   repeat
-    c := myBetween(s, 'crop=', #13);
+    c := myBetween(s, 'crop=', LineEnding);
     sl.Add(c);
   until c = '';
   sl.CustomSort(@myCompareInt);
@@ -2327,10 +2440,11 @@ begin
   else
     Result := '';
   if chkDebug.Checked then
-    SynMemo1.Lines.AddStrings(sl);
+  begin
+    memJournal.Lines.Add(si);
+    memJournal.Lines.AddStrings(sl);
+  end;
   sl.Free;
-  if chkDebug.Checked then
-    SynMemo1.Lines.Add(si);
 end;
 
 procedure TfrmGUIta.myGetClipboardFileNames(files: TStrings; test: boolean = False);
@@ -2631,6 +2745,7 @@ begin
   if chkRunInWindow.Checked then
   begin
     sl := TStringList.Create;
+    s := edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + s;
     process.CommandToList(s, sl);
     for i := 1 to sl.Count - 1 do
     begin
@@ -2914,20 +3029,9 @@ end;
 procedure TfrmGUIta.btnPlayInClick(Sender: TObject);
 var
   jo: TJob;
-  s, ss, si, vf, af, vn, an, sn, filenum: string;
+  s, ss, t, si, vf, af, vn, an, sn, filenum: string;
   k: integer;
-  sl: TStringList;
-  i: integer;
-  st: array of string;
 begin
-  if (ThreadPlay <> nil) then
-  begin
-    {$IFDEF MSWINDOWS}
-    if ThreadPlay.Suspended then
-      ThreadPlay.Resume;
-    {$ENDIF}
-    Exit;
-  end;
   if LVfiles.Selected = nil then
     Exit;
   jo := TJob(LVfiles.Selected.Data);
@@ -2972,34 +3076,15 @@ begin
   si := si + IfThen(ss <> '', ' -ss ' + ss);
   s := TCont(jo.files.Objects[k]).getval(cmbDurationss1.Name);
   si := si + IfThen((ss = '') and (s <> ''), ' -ss ' + s);
-  s := jo.getval(cmbDurationt.Name);
-  si := si + IfThen(s <> '', ' -t ' + s);
+  t := jo.getval(cmbDurationt2.Name);
+  si := si + IfThen(t <> '', ' -t ' + t);
+  s := TCont(jo.files.Objects[k]).getval(cmbDurationt1.Name);
+  si := si + IfThen((t = '') and (s <> ''), ' -ss ' + s);
   si := si + ' -i "' + myGetAnsiFN(jo.files[k]) + '" -autoexit';
   s := myStrReplace(si + vf + af + vn + an + sn);
-  PageControl3.ActivePage := TabConsole5;
-  if chkSeparate.Checked then
-  begin
-    //myExecProc1(s)
-    sl := TStringList.Create;
-    process.CommandToList(s, sl);
-    for i := 1 to sl.Count - 1 do
-    begin
-      SetLength(st, i);
-      st[i - 1] := sl[i];
-    end;
-    ExecuteProcess(sl[0], st);
-    sl.Free;
-  end
-  else
-  begin
-    SynMemo7.Clear;
-    ThreadPlay := TThreadExec.Create(s, False, SynMemo7);
-    if Assigned(ThreadPlay.FatalException) then
-      raise ThreadPlay.FatalException;
-    ThreadPlay.OnTerminate := @onPlayTerminate;
-    ThreadPlay.Start;
-    btnPlayIn.Enabled := False;
-  end;
+  if chkDebug.Checked then
+    memJournal.Lines.Add(s);
+  myExecProc1(s);
 end;
 
 procedure TfrmGUIta.btnPlayOutClick(Sender: TObject);
@@ -3008,39 +3093,31 @@ var
 begin
   s := myGetAnsiFN(edtOfn.Text);
   if not FileExistsUTF8(s) then
+  begin
+    if chkDebug.Checked then
+      memJournal.Lines.Add(mes[12] + ' ' + s);
     Exit;
+  end;
   if chkPlayer2.Checked then
     myOpenDoc(s)
-  else if chkPlayer3.Checked and FileExistsUTF8(myExpandFN(cmbExtPlayer.Text)) then
+  else
+  if chkPlayer3.Checked and FileExistsUTF8(myExpandFN(cmbExtPlayer.Text)) then
   begin
     sx := myExpandFN(cmbExtPlayer.Text);
     if not FileExistsUTF8(sx) then
+    begin
       xmySelFile(cmbExtPlayer);
-    sx := myExpandFN(cmbExtPlayer.Text);
+      sx := myExpandFN(cmbExtPlayer.Text);
+    end;
     if FileExistsUTF8(sx) then
-      myExecProc(sx, [s]);
+      myExecProc(sx, [s])
+    else if chkDebug.Checked then
+      memJournal.Lines.Add(mes[12] + ' ' + sx);
   end
   else
   begin
-    if (ThreadPlaz <> nil) then
-    begin
-      {$IFDEF MSWINDOWS}
-      if ThreadPlaz.Suspended then
-        ThreadPlaz.Resume;
-      {$ENDIF}
-      Exit;
-    end;
     s := myStrReplace('"$ffplay"') + ' -i "' + s + '" -autoexit';
-    if chkSeparate.Checked then
-      myExecProc1(s)
-    else
-    begin
-      ThreadPlaz := TThreadExec.Create(s, False, SynMemo2);
-      if Assigned(ThreadPlaz.FatalException) then
-        raise ThreadPlaz.FatalException;
-      ThreadPlaz.OnTerminate := @onPlazTerminate;
-      ThreadPlaz.Start;
-    end;
+    myExecProc1(s);
   end;
 end;
 
@@ -3077,11 +3154,9 @@ begin
     Ini := TIniFile.Create(UTF8ToSys(s));
     myToIni(Ini, '1', cmbFormat.Name, cmbFormat.Text);
     myToIni(Ini, '1', cmbExt.Name, cmbExt.Text);
-    //myToIni(Ini, '1', cmbAddOptsI.Name, cmbAddOptsI.Text);
     myToIni(Ini, '1', cmbAddOptsO.Name, cmbAddOptsO.Text);
-    //myToIni(Ini, '1', cmbDurationss1.Name, cmbDurationss1.Text);
     myToIni(Ini, '1', cmbDurationss2.Name, cmbDurationss2.Text);
-    myToIni(Ini, '1', cmbDurationt.Name, cmbDurationt.Text);
+    myToIni(Ini, '1', cmbDurationt2.Name, cmbDurationt2.Text);
     mySets2(Ini, 'input', [TabInput], False);
     mySets2(Ini, 'video', [TabVideo], False);
     mySets2(Ini, 'audio', [TabAudio], False);
@@ -3106,7 +3181,7 @@ begin
     {$ENDIF}
     Exit;
   end;
-  ThreadConv := TThreadConv.Create(True, myStrReplace('$dirtmp'));
+  ThreadConv := TThreadConv.Create(myStrReplace('$dirtmp'));
   if Assigned(ThreadConv.FatalException) then
     raise ThreadConv.FatalException;
   ThreadConv.OnTerminate := @onConvTerminate;
@@ -3158,7 +3233,7 @@ begin
     {$ENDIF}
     Exit;
   end;
-  ThreadTest := TThreadTest.Create(True, myStrReplace('$dirtmp'), LVfiles.Selected);
+  ThreadTest := TThreadTest.Create(myStrReplace('$dirtmp'), LVfiles.Selected);
   if Assigned(ThreadTest.FatalException) then
     raise ThreadTest.FatalException;
   ThreadTest.OnTerminate := @onTestTerminate;
@@ -3184,8 +3259,9 @@ procedure TfrmGUIta.btnTestStopClick(Sender: TObject);
 begin
   if ThreadTest <> nil then
   begin
-    ThreadTest.pr.Input.WriteAnsiString('q');
-    Sleep(2000);
+    if ThreadTest.pr.Input <> nil then
+      ThreadTest.pr.Input.WriteAnsiString('q');
+    Sleep(1000);
     ThreadTest.Terminate;
     if ThreadTest.pr <> nil then
       ThreadTest.pr.Terminate(-2);
@@ -3236,6 +3312,7 @@ procedure TfrmGUIta.chkPlayer3Change(Sender: TObject);
 begin
   if chkPlayer3.Checked then
     chkPlayer2.Checked := False;
+  cmbExtPlayer.Enabled := chkPlayer3.Checked;
 end;
 
 procedure TfrmGUIta.cmbBitrateAChange(Sender: TObject);
@@ -3270,6 +3347,14 @@ var
   i: integer;
   c: TWinControl;
 begin
+  if (Sender is TComboBox) then
+  begin
+    with (Sender as TComboBox) do
+    if Items.IndexOf(Text) < 0 then
+      Font.Color := clRed
+    else
+      Font.Color := clWindowText;
+  end;
   b := (TComboBox(Sender).Text <> 'copy');
   b2 := b and ((TComboBox(Sender).Text = 'libx264') or
     (TComboBox(Sender).Text = 'libx264rgb'));
@@ -3290,6 +3375,13 @@ var
   i: integer;
 begin
   s := cmbExt.Text;
+  if cmbExt.Items.IndexOf(s) < 0 then
+  begin
+    cmbExt.Font.Color := clRed;
+    Exit;
+  end
+  else
+    cmbExt.Font.Color := clWindowText;
   if (Length(s) = 0) or ((Length(s) > 0) and (s[1] <> '.')) then
     s := '.' + s;
   edtOfn.Text := ChangeFileExt(edtOfn.Text, s);
@@ -3326,6 +3418,15 @@ end;
 procedure TfrmGUIta.cmbFontSelect(Sender: TObject);
 begin
   frmGUIta.Font.Name := cmbFont.Text;
+end;
+
+procedure TfrmGUIta.cmbFormatChange(Sender: TObject);
+begin
+  if cmbFormat.Items.IndexOf(cmbFormat.Text) < 0 then
+    cmbFormat.Font.Color := clRed
+  else
+    cmbFormat.Font.Color := clWindowText;
+  xmyChange0(Sender);
 end;
 
 procedure TfrmGUIta.cmbFormatSelect(Sender: TObject);
@@ -3371,7 +3472,7 @@ begin
   //jo.setval(cmbAddOptsI.Name, Ini.ReadString('1', cmbAddOptsI.Name, ''));
   jo.setval(cmbAddOptsO.Name, Ini.ReadString('1', cmbAddOptsO.Name, ''));
   jo.setval(cmbDurationss2.Name, Ini.ReadString('1', cmbDurationss2.Name, ''));
-  jo.setval(cmbDurationt.Name, Ini.ReadString('1', cmbDurationt.Name, ''));
+  jo.setval(cmbDurationt2.Name, Ini.ReadString('1', cmbDurationt2.Name, ''));
   for k := 0 to jo.files.Count - 1 do
   begin
     f := TCont(jo.files.Objects[k]);
@@ -3460,30 +3561,25 @@ var
   end;
 
 begin
-  SynMemo1.Clear;
+  memJournal.Clear;
   sCap := 'ffmpegGUIta ' + taVersion + '.' + taRevision + ' alpha';
   frmGUIta.Caption := sCap;
-  SynMemo1.Lines.Add(sCap + ' - ' + taBuildDate + ' - Free Pascal ' +
+  memJournal.Lines.Add(sCap + ' - ' + taBuildDate + ' - Free Pascal ' +
     fpcVersion + ' - Lazarus ' + lazVersion + '-' + lazRevision +
     ' - ' + TargetCPU + ' ' + TargetOS);
-
+  frmGUIta.Constraints.MinWidth := 800;
+  frmGUIta.Constraints.MinHeight := 480;
   SynMemo2.Clear;
   SynMemo3.Clear;
   SynMemo4.Clear;
   SynMemo5.Clear;
   SynMemo6.Clear;
-  SynMemo7.Clear;
   Files2Add := TList.Create;
   Counter := 0;
-  cmbDirLast.Text := GetCurrentDir;
   fs.DecimalSeparator := '.';
   fs.ThousandSeparator := ' ';
   DuraAll := 0;
   {$IFDEF MSWINDOWS}
-  s := 'C:\TEMP';
-  if DirectoryExistsUTF8(s) then
-    edtDirOut.Text := s;
-  cmbExtPlayer.Items.Add('%ProgramFiles%\Windows Media Player\wmplayer.exe');
   {$ELSE}
   btnAddFilesAsAvs1.Visible := False;
   btnAddFilesAsAvs2.Visible := False;
@@ -3495,15 +3591,6 @@ begin
   mnuPasteAsAvs1.Visible := False;
   mnuPasteAsAvs2.Visible := False;
   edtOfna.Visible := False;
-  edtffmpeg.Text := 'ffmpeg';
-  edtffplay.Text := 'ffplay';
-  edtffprobe.Text:= 'ffprobe';
-  edtDirTmp.Text := '/tmp';
-  edtDirOut.Text := '$HOME';
-  edtMediaInfo.Text:='mediainfo-gui';
-  my1(['vlc', 'dragon', 'avplay', 'ffplay', 'mplayer', 'totem', 'xine']);
-  cmbDirLast.Text := '$HOME';
-  cmbFont.Text := 'Ubuntu';
   {$ENDIF}
   sDirApp := ExtractFilePath(Application.ExeName);
   if DirectoryIsWritable(sDirApp) then
@@ -3527,6 +3614,34 @@ begin
   end
   else
   begin
+    cmbDirLast.Text := GetCurrentDir;
+    {$IFDEF MSWINDOWS}
+    s := 'C:\TEMP';
+    if DirectoryExistsUTF8(s) then
+      edtDirOut.Text := s;
+    cmbExtPlayer.Items.Add('%ProgramFiles%\Windows Media Player\wmplayer.exe');
+    edtxterm.Text := 'cmd.exe';
+    edtxtermopts.Text := '/c';
+    {$ELSE}
+    edtffmpeg.Text := 'ffmpeg';
+    edtffplay.Text := 'ffplay';
+    edtffprobe.Text:= 'ffprobe';
+    edtDirTmp.Text := '/tmp';
+    edtDirOut.Text := '$HOME';
+    edtMediaInfo.Text:= 'mediainfo-gui';
+    my1(['vlc', 'dragon', 'avplay', 'ffplay', 'mplayer', 'totem', 'xine']);
+    cmbDirLast.Text := '$HOME';
+    cmbFont.Text := 'Ubuntu';
+    edtxterm.Text := '/usr/bin/xterm';
+    edtxtermopts.Text := '-e';
+    if FileExists('/usr/bin/x-terminal-emulator') then
+      edtxterm.Text := '/usr/bin/x-terminal-emulator';
+    if FileExists('/usr/bin/gnome-terminal') then
+    begin
+      edtxterm.Text :='/usr/bin/gnome-terminal';
+      edtxtermopts.Text := '-x';
+    end;
+    {$ENDIF}
     s := myGetLocaleLanguage;
     if s <> '' then
     begin
@@ -3599,7 +3714,7 @@ begin
     if cmbProfile.Items.Count > 0 then
       cmbProfile.ItemIndex := 0;
   end;
-  if not b and not FileExistsUTF8(myExpandFN(edtffmpeg.Text)) then
+  if not b then
   begin
     myFindFiles(sDirApp, [edtffmpeg, edtffprobe, edtffplay, edtMediaInfo, cmbExtPlayer]);
     {$IFDEF MSWINDOWS}
@@ -3966,7 +4081,7 @@ begin
   begin
     li := LVstreams.Items.Add;
     li.Checked := jo.a[k].getval('Checked') = '1';
-    li.Caption := jo.a[k].getval('index');
+    li.Caption := jo.a[k].getval('filenum') + ':' + jo.a[k].getval('index');
     li.SubItems.Add(myGetCaptionCont(jo.a[k]));
     li.Data := Pointer(jo.a[k]);
   end;
@@ -4010,6 +4125,8 @@ begin
   TCont(Item.Data).setval('Checked', s);
   TJob(LVfiles.Selected.Data).a[Item.Index].setval('Checked', s);
   LVfiles.Selected.SubItems[2] := myCalcOutSize(TJob(LVfiles.Selected.Data));
+  if PageControl2.ActivePage = TabCmdline then
+    TabCmdlineShow(Sender);
 end;
 
 procedure TfrmGUIta.LVstreamsSelectItem(Sender: TObject; Item: TListItem;
@@ -4059,11 +4176,15 @@ begin
     PageControl2.ActivePage := ts
   else if (PageControl2.ActivePage = TabInput) then
     TabInputShow(nil)
+  else if (PageControl2.ActivePage = TabOutput) then
+  begin
+    cmbFormatChange(cmbFormat);
+    cmbExtChange(cmbExt);
+  end
   else if (PageControl2.ActivePage = TabContRows) then
     TabContRowsShow(nil)
   else if (PageControl2.ActivePage = TabCmdline) then
     TabCmdlineShow(nil);
-  StatusBar1.SimpleText := '$inpu' + c.getval('filenum') + ':si=' + c.getval('index');
   bUpdFromCode := False;
 end;
 
@@ -4154,17 +4275,6 @@ begin
   btnStop.Enabled := False;
 end;
 
-procedure TfrmGUIta.onPlayTerminate(Sender: TObject);
-begin
-  ThreadPlay := nil;
-  btnPlayIn.Enabled := True;
-end;
-
-procedure TfrmGUIta.onPlazTerminate(Sender: TObject);
-begin
-  ThreadPlaz := nil;
-end;
-
 procedure TfrmGUIta.onTestTerminate(Sender: TObject);
 begin
   ThreadTest := nil;
@@ -4201,7 +4311,7 @@ end;
 procedure TfrmGUIta.TabCmdlineShow(Sender: TObject);
 begin
   if (LVfiles.Selected <> nil) then
-    Memo1.Text := myGetCmdFromJo(TJob(LVfiles.Selected.Data));
+    memCmdlines.Text := myGetCmdFromJo(TJob(LVfiles.Selected.Data));
 end;
 
 procedure TfrmGUIta.TabContRowsShow(Sender: TObject);
@@ -4282,7 +4392,13 @@ begin
     i := -1;
   bUpdFromCode := False;
   if (i >= 0) then
-    LVstreams.Items[i].Selected := True;
+    LVstreams.Items[i].Selected := True
+  else
+  if (Sender = TabOutput) then
+  begin
+    cmbFormatChange(cmbFormat);
+    cmbExtChange(cmbExt);
+  end;
 end;
 
 procedure TfrmGUIta.UniqueInstance1OtherInstance(Sender: TObject;
@@ -4298,26 +4414,6 @@ begin
     myAddFiles(sl);
   sl.Free;
   BringToFront;
-end;
-
-procedure TfrmGUIta.xmyChange0(Sender: TObject);
-var
-  s1, s2: string;
-begin
-  if myCantUpd(0) then
-    Exit;
-  s1 := (Sender as TControl).Name;
-  s2 := myGet2(Sender);
-  TJob(LVfiles.Selected.Data).setval(s1, s2);
-  myDisComp;
-end;
-
-procedure TfrmGUIta.xmyChange0o(Sender: TObject);
-begin
-  if myCantUpd(0) then
-    Exit;
-  xmyChange0(Sender);
-  LVfiles.Selected.SubItems[2] := myCalcOutSize(TJob(LVfiles.Selected.Data));
 end;
 
 procedure TfrmGUIta.xmyChange0i(Sender: TObject);
@@ -4338,6 +4434,26 @@ begin
   i := StrToIntDef(s, -1);
   if (i >= 0) and (i < jo.files.Count) then
     TCont(TJob(LVfiles.Selected.Data).files.Objects[i]).setval(s1, s2);
+end;
+
+procedure TfrmGUIta.xmyChange0(Sender: TObject);
+var
+  s1, s2: string;
+begin
+  if myCantUpd(0) then
+    Exit;
+  s1 := (Sender as TControl).Name;
+  s2 := myGet2(Sender);
+  TJob(LVfiles.Selected.Data).setval(s1, s2);
+  myDisComp;
+end;
+
+procedure TfrmGUIta.xmyChange0o(Sender: TObject);
+begin
+  if myCantUpd(0) then
+    Exit;
+  xmyChange0(Sender);
+  LVfiles.Selected.SubItems[2] := myCalcOutSize(TJob(LVfiles.Selected.Data));
 end;
 
 procedure TfrmGUIta.xmyChange1(Sender: TObject);

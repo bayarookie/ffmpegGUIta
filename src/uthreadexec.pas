@@ -37,7 +37,7 @@ uses ufrmGUIta;
 procedure TThreadExec.ShowJournal;
 begin
   if frmGUIta.chkDebug.Checked then
-    frmGUIta.SynMemo1.Lines.Add(fStatus);
+    frmGUIta.memJournal.Lines.Add(fStatus);
 end;
 
 procedure TThreadExec.ShowStatus1;
