@@ -789,7 +789,7 @@ end;
 
 function TfrmGUIta.myGetCmdFromJo(jo: TJob; test: boolean = False): string;
 var
-  i, k, cf, cv, ca, cs, iv: integer;
+  i, k, cf, cv, ca, cs: integer;
   c: TCont;
   rd,
   rsi, rso, rst, rti, rto, rtt: double;
@@ -938,7 +938,6 @@ begin
   cs := -1;
   fn := '';
   fb := '-';
-  iv := -1;
   //--- concat ---
   if (jo.getval(chkConcat.Name) = '1') then
   begin
@@ -984,14 +983,20 @@ begin
     begin
       c := TCont(jo.files.Objects[k]);
       ssi := c.getval(cmbDurationss1.Name);
-      rsi := myTimeStrToReal(ssi);
-      if (rsi < rst) and (rso = 0) then
-        ssi := sst;
+      if test and (rso = 0) then
+      begin
+        rsi := myTimeStrToReal(ssi);
+        if (rsi < rst) then
+          ssi := sst;
+      end;
       si := si + IfThen(ssi <> '', ' -ss ' + ssi);
       sti := c.getval(cmbDurationt1.Name);
-      rti := myTimeStrToReal(sti);
-      if (rto = 0) and (rti > rtt) then
-        sti := stt;
+      if test and (rto = 0) then
+      begin
+        rti := myTimeStrToReal(sti);
+        if (rti = 0) or (rti > rtt) then
+          sti := stt;
+      end;
       si := si + IfThen(sti <> '', ' -t ' + sti);
       s := c.getval(cmbAddOptsI.Name);
       si := si + IfThen(s <> '', ' ' + s);
@@ -1023,17 +1028,14 @@ begin
         ma := ma + ' -map ' + s + ':' + c.getval('index');
         ty := c.getval('codec_type');
         if ty = 'video' then
-        begin
-          if iv < 0 then
-            iv := i; //remember first filenum with video
-          my1v;
-        end
+          my1v
         else if ty = 'audio' then
           my1a
         else if ty = 'subtitle' then
           my1s;
       end;
     end;
+    //input params
     for i := 0 to ai.Count - 1 do
     begin
       k := StrToIntDef(ai[i], -1);
@@ -1041,14 +1043,20 @@ begin
       begin
         c := TCont(jo.files.Objects[k]);
         ssi := c.getval(cmbDurationss1.Name);
-        rsi := myTimeStrToReal(ssi);
-        if (rsi < rst) and (rso = 0) then
-          ssi := sst;
+        if test and (rso = 0) then
+        begin
+          rsi := myTimeStrToReal(ssi);
+          if (rsi < rst) then
+            ssi := sst;
+        end;
         si := si + IfThen(ssi <> '', ' -ss ' + ssi);
         sti := c.getval(cmbDurationt1.Name);
-        rti := myTimeStrToReal(sti);
-        if (rto = 0) and (rti > rtt) and (iv = i) then
-          sti := stt;
+        if test and (rto = 0) then
+        begin
+          rti := myTimeStrToReal(sti);
+          if (rti = 0) or (rti > rtt) then
+            sti := stt;
+        end;
         si := si + IfThen(sti <> '', ' -t ' + sti);
         s := c.getval(cmbAddOptsI.Name);
         si := si + IfThen(s <> '', ' ' + s);

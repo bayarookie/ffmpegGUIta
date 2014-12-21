@@ -471,9 +471,9 @@ var
   i: integer;
 begin
   p := TProcessUTF8.Create(nil);
-  p.Executable := UTF8ToSys(Path);
+  p.Executable := Path;
   for i := Low(ComLine) to High(ComLine) do
-    p.Parameters.Add(UTF8ToSys(ComLine[i]));
+    p.Parameters.Add(ComLine[i]);
   p.ShowWindow := sw;
   p.Execute;
   p.Free;
@@ -492,11 +492,11 @@ end;
 
 procedure myOpenDoc(Path: string);
 begin
-  if not OpenDocument(UTF8ToSys(Path)) then
+  if not OpenDocument(Path) then
   {$IFDEF MSWINDOWS}
     myExecProc('cmd.exe', ['/c', 'start', '""', Path], swoshowMinNOActive);
   {$ELSE}
-    ;
+    myExecProc('/usr/bin/xdg-open', [Path], swoShowNormal);
   {$ENDIF}
 end;
 

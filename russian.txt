@@ -1,16 +1,20 @@
 ﻿ffmpegGUIta - GUI для ffmpeg
-в принципе должен был бы облегчить процесс конвертирования файлов,
+В принципе должен был бы облегчить процесс конвертирования файлов,
 один раз настроить и потом только закидывать файлы и нажимать кнопку старт.
+Но, как всегда, получилось не так как хотелось, вы должны понимать что вы делаете.
+Это скорее дополнение для тех, кто работает с командной строки.
+В винде решает проблему с файлами с юникод символами, получая DOS имена файлов.
+
 
 Для работы нужны в windows:
-ffmpeg.exe, ffprobe.exe, ffplay.exe 2.4.3 - http://ffmpeg.zeranoe.com/builds/win32/shared/
+ffmpeg.exe, ffprobe.exe, ffplay.exe 2.5.0 - http://ffmpeg.zeranoe.com/builds/win32/shared/
 mediainfo.exe или mediainfo.dll - http://sourceforge.net/projects/mediainfo/files/binary/mediainfo-gui/
 Дополнительно, но не обязательно, можно использовать:
 Avisynth - http://sourceforge.net/projects/avisynth2/
 плагин для Avisynth - https://code.google.com/p/ffmpegsource/downloads/list
 
 Для работы нужны в linux:
-ffmpeg, ffprobe, ffplay 2.4.3 - https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media - ppa:mc3man/trusty-media
+ffmpeg, ffprobe, ffplay 2.5.0 - https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media - ppa:mc3man/trusty-media
 
 Ключи:
 -o:"D:\Путь\к папке\назначения"
