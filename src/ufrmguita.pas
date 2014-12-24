@@ -65,8 +65,10 @@ type
     chkx264Pass1fast: TCheckBox;
     chkPlayer2: TCheckBox;
     chkPlayer3: TCheckBox;
+    cmbAddOptsS: TComboBox;
     cmbAddOptsI: TComboBox;
     cmbAddOptsO: TComboBox;
+    cmbAddOptsA: TComboBox;
     cmbBitrateA: TComboBox;
     cmbBitrateV: TComboBox;
     cmbChannels: TComboBox;
@@ -102,6 +104,7 @@ type
     cmbTestDurationss: TComboBox;
     cmbTestDurationt: TComboBox;
     cmbLangsList: TComboBox;
+    cmbAddOptsV: TComboBox;
     edtBitrateA: TLabeledEdit;
     edtDirOut: TLabeledEdit;
     edtDirTmp: TLabeledEdit;
@@ -153,6 +156,7 @@ type
     LVstreams: TListView;
     memCmdlines: TMemo;
     memInputfn: TMemo;
+    mnuCheck: TMenuItem;
     mnuPasteTracks: TMenuItem;
     mnuMediaInfo: TMenuItem;
     mnuView: TMenuItem;
@@ -265,6 +269,7 @@ type
     procedure LVstreamsItemChecked(Sender: TObject; Item: TListItem);
     procedure LVstreamsSelectItem(Sender: TObject; Item: TListItem;
       Selected: boolean);
+    procedure mnuCheckClick(Sender: TObject);
     procedure mnuCopyAsAvsClick(Sender: TObject);
     procedure mnuEditAvsClick(Sender: TObject);
     procedure mnuOpenClick(Sender: TObject);
@@ -390,7 +395,7 @@ end;
 
 procedure mySets1(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean);
 var
-  k: integer;
+  k, i: integer;
 begin
   for k := Low(c) to High(c) do
     if TWinControl(c[k]).Enabled and (TWinControl(c[k]).Tag = 0) then
@@ -433,7 +438,10 @@ begin
           if bRead then
             Checked := Ini.ReadBool(s, Name, Checked)
           else
-            myToIni(Ini, s, Name, IfThen(Checked, '1', ''));
+            myToIni(Ini, s, Name, IfThen(Checked, '1', ''))
+      else if c[k] is TPanel then
+        for i := 0 to TPanel(c[k]).ControlCount - 1 do
+          mySets1(Ini, s, [TPanel(c[k]).Controls[i]], bRead);
 end;
 
 procedure mySets2(Ini: TIniFile; s: string; ts: array of TTabSheet; bRead: boolean);
@@ -546,7 +554,9 @@ begin
       else if TTabSheet(ts[j]).Controls[i] is TSpinEdit then
         TSpinEdit(TTabSheet(ts[j]).Controls[i]).Text := '1'
       else if TTabSheet(ts[j]).Controls[i] is TSynMemo then
-        TSynMemo(TTabSheet(ts[j]).Controls[i]).Clear;
+        TSynMemo(TTabSheet(ts[j]).Controls[i]).Clear
+      else if TTabSheet(ts[j]).Controls[i] is TMemo then
+        TMemo(TTabSheet(ts[j]).Controls[i]).Clear;
   end;
 end;
 
@@ -789,7 +799,7 @@ end;
 
 function TfrmGUIta.myGetCmdFromJo(jo: TJob; test: boolean = False): string;
 var
-  i, k, cf, cv, ca, cs: integer;
+  i, k, cf, cv, ca, cs, ct, cd: integer;
   c: TCont;
   rd,
   rsi, rso, rst, rti, rto, rtt: double;
@@ -805,34 +815,35 @@ var
     if co <> '' then
     begin
       ni := IntToStr(cv);
-      if (co <> 'copy') then
-        s := myGetFilter(jo, c)
-      else
-        s := '';
-      if s <> '' then
-        f := f + ' -filter:v:' + ni + ' "' + s + '"';
       vi := vi + ' -c:v:' + ni + ' ' + co;
-      if (co <> 'copy') and (c.getval(edtBitrateV.Name) <> '') then
-        vi := vi + ' -b:v:' + ni + ' ' + c.getval(edtBitrateV.Name);
-      if (co = 'libx264') or (co = 'libx264rgb') then
+      if (co <> 'copy') then
       begin
-        if c.getval(cmbx264preset.Name) <> '' then
-          vi := vi + ' -preset ' + c.getval(cmbx264preset.Name);
-        if c.getval(cmbx264tune.Name) <> '' then
-          vi := vi + ' -tune ' + c.getval(cmbx264tune.Name);
-        f1p := IfThen(c.getval(chkx264Pass1fast.Name) = '1', ' -fastfirstpass 1');
-      end;
-      if (co <> 'copy') and (c.getval(cmbPass.Name) = '2') then
-      begin
-        tmp := myStrReplace('$dirtmp');
-        if tmp <> '' then
+        s := myGetFilter(jo, c);
+        f := f + IfThen(s <> '', ' -filter:v:' + ni + ' "' + s + '"');
+        s := c.getval(edtBitrateV.Name);
+        vi := vi + IfThen(s <> '', ' -b:v:' + ni + ' ' + s);
+        if (co = 'libx264') or (co = 'libx264rgb') then
         begin
-          if not myDirExists(tmp, '') then
-            Exit;
-          tmp := AppendPathDelim(tmp);
+          s := c.getval(cmbx264preset.Name);
+          vi := vi + IfThen(s <> '', ' -preset ' + s);
+          s := c.getval(cmbx264tune.Name);
+          vi := vi + IfThen(s <> '', ' -tune ' + s);
+          f1p := IfThen(c.getval(chkx264Pass1fast.Name) = '1', ' -fastfirstpass 1');
         end;
-        sp1 := ' -pass 1 -passlogfile "' + tmp + 'ff-tmp"' + f1p;
-        sp2 := ' -pass 2 -passlogfile "' + tmp + 'ff-tmp"';
+        if (c.getval(cmbPass.Name) = '2') then
+        begin
+          tmp := myStrReplace('$dirtmp');
+          if tmp <> '' then
+          begin
+            if not myDirExists(tmp, '') then
+              Exit;
+            tmp := AppendPathDelim(tmp);
+          end;
+          sp1 := ' -pass 1 -passlogfile "' + tmp + 'ff-tmp"' + f1p;
+          sp2 := ' -pass 2 -passlogfile "' + tmp + 'ff-tmp"';
+        end;
+        s := c.getval(cmbAddOptsV.Name);
+        vi := vi + IfThen(s <> '', ' ' + s);
       end;
     end
     else
@@ -846,24 +857,19 @@ var
     if co <> '' then
     begin
       ni := IntToStr(ca);
-      if (co <> 'copy') then
-        s := myGetFilter(jo, c)
-      else
-        s := '';
-      if s <> '' then
-        f := f + ' -filter:a:' + ni + ' "' + s + '"';
       au := au + ' -c:a:' + ni + ' ' + co;
       if (co <> 'copy') then
       begin
+        s := myGetFilter(jo, c);
+        f := f + IfThen(s <> '', ' -filter:a:' + ni + ' "' + s + '"');
         s := c.getval(edtBitrateA.Name);
-        if (s <> '') then
-          au := au + ' -b:a:' + ni + ' ' + s;
+        au := au + IfThen(s <> '', ' -b:a:' + ni + ' ' + s);
         s := c.getval(cmbSRate.Name);
-        if (s <> '') then
-          au := au + ' -ar:a:' + ni + ' ' + s;
+        au := au + IfThen(s <> '', ' -ar:a:' + ni + ' ' + s);
         s := c.getval(cmbChannels.Name);
-        if (s <> '') then
-          au := au + ' -ac:a:' + ni + ' ' + s;
+        au := au + IfThen(s <> '', ' -ac:a:' + ni + ' ' + s);
+        s := c.getval(cmbAddOptsA.Name);
+        au := au + IfThen(s <> '', ' ' + s);
       end;
     end
     else
@@ -878,9 +884,30 @@ var
     begin
       ni := IntToStr(cs);
       su := su + ' -c:s:' + ni + ' ' + co;
+      if (co <> 'copy') then
+      begin
+        s := c.getval(cmbAddOptsS.Name);
+        su := su + IfThen(s <> '', ' ' + s);
+      end;
     end
     else
       su := su + ' ';
+  end;
+
+  procedure my1t;
+  begin
+    Inc(ct);
+    co := 'copy';
+    ni := IntToStr(ct);
+    su := su + ' -c:t:' + ni + ' ' + co;
+  end;
+
+  procedure my1d;
+  begin
+    Inc(cd);
+    co := 'copy';
+    ni := IntToStr(cd);
+    su := su + ' -c:d:' + ni + ' ' + co;
   end;
 
 begin
@@ -892,7 +919,7 @@ begin
   sti := '';
   sto := jo.getval(cmbDurationt2.Name);
   stt := IfThen(test, Trim(cmbTestDurationt.Text));
-  // calc time range for test, output
+  // calc time range for test
   rd := myTimeStrToReal(jo.getval('duration'));
   rso := myTimeStrToReal(sso);
   rto := myTimeStrToReal(sto);
@@ -904,20 +931,9 @@ begin
       rtt := rd;
     if rst > (rd - rtt) then
       rst := rd - rtt;
-    if rst <> 0 then
-      sst := myRealToTimeStr(rst)
-    else
-      sst := '';
-    if rtt <> 0 then
-      stt := myRealToTimeStr(rtt)
-    else
-      stt := '';
+    sst := IfThen(rst <> 0, myRealToTimeStr(rst));
+    stt := IfThen(rtt <> 0, myRealToTimeStr(rtt));
     myGetss4Compare(jo, rst, rtt);
-  end
-  else
-  begin
-    rst := 0;
-    rtt := 0;
   end;
   // init vars
   ai := TStringList.Create;
@@ -936,6 +952,8 @@ begin
   cv := -1;
   ca := -1;
   cs := -1;
+  ct := -1;
+  cd := -1;
   fn := '';
   fb := '-';
   //--- concat ---
@@ -1032,7 +1050,11 @@ begin
         else if ty = 'audio' then
           my1a
         else if ty = 'subtitle' then
-          my1s;
+          my1s
+        else if ty = 'attachment' then
+          my1t
+        else if ty = 'data' then
+          my1d;
       end;
     end;
     //input params
@@ -1073,10 +1095,10 @@ begin
   begin
     if (rso > 0) and (rso < rst) then
       sso := sst;
-    if (rtt > 0) and ((rtt < rto) or (rto = 0)) then
+    if (rto = 0) or (rto > rtt) and (rtt > 0) then
       sto := stt;
   end;
-  so := IfThen(sso <> '', ' -ss ' + sso) + IfThen(sto <> '', ' -t ' + sto);
+  so := so + IfThen(sso <> '', ' -ss ' + sso) + IfThen(sto <> '', ' -t ' + sto);
   s := jo.getval(cmbAddOptsO.Name);
   so := so + IfThen(s <> '', ' ' + s);
   s := jo.getval(cmbFormat.Name);
@@ -3678,7 +3700,7 @@ begin
   mes[4] := 'process completed, error code:';
   mes[5] := 'job completed for';
   mes[6] := 'Error';
-  mes[7] := 'Select file to change convert parameters';
+  mes[7] := 'Select job to change convert parameters';
   mes[8] := 'Cancel';
   mes[9] := 'temporary';
   mes[10] := 'folder not exists';
@@ -4196,6 +4218,15 @@ begin
   bUpdFromCode := False;
 end;
 
+procedure TfrmGUIta.mnuCheckClick(Sender: TObject);
+var
+  i: integer;
+begin
+  mnuCheck.Checked := not mnuCheck.Checked;
+  for i := 0 to LVfiles.Items.Count - 1 do
+    LVfiles.Items[i].Checked := mnuCheck.Checked;
+end;
+
 procedure TfrmGUIta.mnuCopyAsAvsClick(Sender: TObject);
 {$IFDEF MSWINDOWS}
 var
@@ -4400,13 +4431,7 @@ begin
     i := -1;
   bUpdFromCode := False;
   if (i >= 0) then
-    LVstreams.Items[i].Selected := True
-  else
-  if (Sender = TabOutput) then
-  begin
-    cmbFormatChange(cmbFormat);
-    cmbExtChange(cmbExt);
-  end;
+    LVstreams.Items[i].Selected := True;
 end;
 
 procedure TfrmGUIta.UniqueInstance1OtherInstance(Sender: TObject;

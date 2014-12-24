@@ -139,7 +139,7 @@ object frmGUIta: TfrmGUIta
             object lblAddOptsI: TLabel
               Left = 8
               Height = 14
-              Top = 168
+              Top = 165
               Width = 173
               Caption = 'additional options for input file'
               ParentColor = False
@@ -147,7 +147,7 @@ object frmGUIta: TfrmGUIta
             object cmbAddOptsI: TComboBox
               Left = 8
               Height = 20
-              Top = 184
+              Top = 180
               Width = 514
               Anchors = [akTop, akLeft, akRight]
               ItemHeight = 0
@@ -163,7 +163,7 @@ object frmGUIta: TfrmGUIta
             object lblDurationss1: TLabel
               Left = 8
               Height = 14
-              Top = 208
+              Top = 205
               Width = 47
               Caption = '-ss from'
               ParentColor = False
@@ -171,7 +171,7 @@ object frmGUIta: TfrmGUIta
             object cmbDurationss1: TComboBox
               Left = 8
               Height = 20
-              Top = 224
+              Top = 220
               Width = 100
               DropDownCount = 40
               ItemHeight = 0
@@ -207,7 +207,7 @@ object frmGUIta: TfrmGUIta
             object lblDurationt1: TLabel
               Left = 116
               Height = 14
-              Top = 208
+              Top = 205
               Width = 59
               Caption = '-t duration'
               ParentColor = False
@@ -215,7 +215,7 @@ object frmGUIta: TfrmGUIta
             object cmbDurationt1: TComboBox
               Left = 116
               Height = 20
-              Top = 224
+              Top = 220
               Width = 100
               DropDownCount = 40
               ItemHeight = 0
@@ -236,7 +236,7 @@ object frmGUIta: TfrmGUIta
             object cmbAddOptsO: TComboBox
               Left = 8
               Height = 20
-              Top = 184
+              Top = 180
               Width = 514
               Anchors = [akTop, akLeft, akRight]
               ItemHeight = 0
@@ -246,7 +246,7 @@ object frmGUIta: TfrmGUIta
             object lblAddOptsO: TLabel
               Left = 8
               Height = 14
-              Top = 168
+              Top = 165
               Width = 181
               Caption = 'additional options for output file'
               ParentColor = False
@@ -254,7 +254,7 @@ object frmGUIta: TfrmGUIta
             object edtOfn: TLabeledEdit
               Left = 8
               Height = 20
-              Top = 24
+              Top = 20
               Width = 490
               Anchors = [akTop, akLeft, akRight]
               EditLabel.AnchorSideLeft.Control = edtOfn
@@ -263,7 +263,7 @@ object frmGUIta: TfrmGUIta
               EditLabel.AnchorSideBottom.Control = edtOfn
               EditLabel.Left = 8
               EditLabel.Height = 14
-              EditLabel.Top = 7
+              EditLabel.Top = 3
               EditLabel.Width = 490
               EditLabel.Caption = 'Output filename'
               EditLabel.ParentColor = False
@@ -274,7 +274,7 @@ object frmGUIta: TfrmGUIta
             object lblFormat: TLabel
               Left = 8
               Height = 14
-              Top = 88
+              Top = 85
               Width = 97
               Caption = 'Container format'
               ParentColor = False
@@ -282,7 +282,7 @@ object frmGUIta: TfrmGUIta
             object cmbFormat: TComboBox
               Left = 8
               Height = 20
-              Top = 105
+              Top = 100
               Width = 110
               DropDownCount = 40
               ItemHeight = 0
@@ -293,7 +293,7 @@ object frmGUIta: TfrmGUIta
             object lblExt: TLabel
               Left = 128
               Height = 14
-              Top = 88
+              Top = 85
               Width = 55
               Caption = 'Extension'
               ParentColor = False
@@ -301,7 +301,7 @@ object frmGUIta: TfrmGUIta
             object cmbExt: TComboBox
               Left = 128
               Height = 20
-              Top = 105
+              Top = 100
               Width = 100
               DropDownCount = 40
               ItemHeight = 0
@@ -311,8 +311,8 @@ object frmGUIta: TfrmGUIta
             end
             object btnCompare: TButton
               Left = 447
-              Height = 21
-              Top = 64
+              Height = 20
+              Top = 60
               Width = 75
               Anchors = [akTop, akRight]
               Caption = 'Compare'
@@ -321,8 +321,8 @@ object frmGUIta: TfrmGUIta
             end
             object btnPlayOut: TButton
               Left = 370
-              Height = 21
-              Top = 64
+              Height = 20
+              Top = 60
               Width = 75
               Anchors = [akTop, akRight]
               Caption = 'Play'
@@ -331,8 +331,8 @@ object frmGUIta: TfrmGUIta
             end
             object btnMediaInfo2: TButton
               Left = 293
-              Height = 21
-              Top = 64
+              Height = 20
+              Top = 60
               Width = 75
               Anchors = [akTop, akRight]
               Caption = 'MediaInfo'
@@ -343,7 +343,7 @@ object frmGUIta: TfrmGUIta
               Tag = 1
               Left = 8
               Height = 20
-              Top = 64
+              Top = 60
               Width = 282
               Anchors = [akTop, akLeft, akRight]
               EditLabel.AnchorSideLeft.Control = edtOfna
@@ -352,7 +352,7 @@ object frmGUIta: TfrmGUIta
               EditLabel.AnchorSideBottom.Control = edtOfna
               EditLabel.Left = 8
               EditLabel.Height = 14
-              EditLabel.Top = 47
+              EditLabel.Top = 43
               EditLabel.Width = 282
               EditLabel.Caption = 'Ansi or short filename'
               EditLabel.ParentColor = False
@@ -410,7 +410,7 @@ object frmGUIta: TfrmGUIta
             object lblDurationss: TLabel
               Left = 8
               Height = 14
-              Top = 208
+              Top = 205
               Width = 47
               Caption = '-ss from'
               ParentColor = False
@@ -418,7 +418,7 @@ object frmGUIta: TfrmGUIta
             object lblDurationt: TLabel
               Left = 116
               Height = 14
-              Top = 208
+              Top = 205
               Width = 59
               Caption = '-t duration'
               ParentColor = False
@@ -426,7 +426,7 @@ object frmGUIta: TfrmGUIta
             object cmbDurationss2: TComboBox
               Left = 8
               Height = 20
-              Top = 224
+              Top = 220
               Width = 100
               DropDownCount = 40
               ItemHeight = 0
@@ -452,7 +452,7 @@ object frmGUIta: TfrmGUIta
             object cmbDurationt2: TComboBox
               Left = 116
               Height = 20
-              Top = 224
+              Top = 220
               Width = 100
               DropDownCount = 40
               ItemHeight = 0
@@ -469,7 +469,7 @@ object frmGUIta: TfrmGUIta
               Left = 249
               Height = 26
               Hint = 'Concatenate audio and video streams, joining them together one after the other.'#13#10'The filter works on segments of synchronized video and audio streams.'#13#10'All segments must have the same number of streams of each type,'#13#10'and that will also be the number of streams at output.'#13#10'All segments must start at timestamp 0.'#13#10'All corresponding streams must have the same parameters in all segments.'#13#10'http://ffmpeg.org/ffmpeg-filters.html#concat'
-              Top = 242
+              Top = 240
               Width = 99
               HelpType = htKeyword
               HelpKeyword = 'concat'
@@ -484,12 +484,11 @@ object frmGUIta: TfrmGUIta
             Caption = 'Video'
             ClientHeight = 275
             ClientWidth = 530
-            Enabled = False
             OnShow = TabVideoShow
             object lblEncoderv: TLabel
               Left = 8
               Height = 14
-              Top = 8
+              Top = 5
               Width = 82
               Caption = 'Video encoder'
               ParentColor = False
@@ -497,7 +496,7 @@ object frmGUIta: TfrmGUIta
             object cmbEncoderV: TComboBox
               Left = 8
               Height = 20
-              Top = 25
+              Top = 20
               Width = 100
               DropDownCount = 50
               ItemHeight = 0
@@ -507,7 +506,7 @@ object frmGUIta: TfrmGUIta
             object lblkoefV: TLabel
               Left = 120
               Height = 14
-              Top = 8
+              Top = 5
               Width = 38
               Caption = '$koefv'
               ParentColor = False
@@ -515,7 +514,7 @@ object frmGUIta: TfrmGUIta
             object spnKoefV: TSpinEdit
               Left = 120
               Height = 20
-              Top = 25
+              Top = 20
               Width = 60
               MaxValue = 100000
               MinValue = 1
@@ -526,7 +525,7 @@ object frmGUIta: TfrmGUIta
             object lblPass: TLabel
               Left = 188
               Height = 14
-              Top = 8
+              Top = 5
               Width = 26
               Caption = 'Pass'
               ParentColor = False
@@ -534,7 +533,7 @@ object frmGUIta: TfrmGUIta
             object cmbPass: TComboBox
               Left = 188
               Height = 20
-              Top = 25
+              Top = 20
               Width = 60
               ItemHeight = 0
               Items.Strings = (
@@ -547,7 +546,7 @@ object frmGUIta: TfrmGUIta
             object chkx264Pass1fast: TCheckBox
               Left = 259
               Height = 26
-              Top = 24
+              Top = 17
               Width = 135
               Caption = 'libx264 fast 1 pass'
               Checked = True
@@ -558,7 +557,7 @@ object frmGUIta: TfrmGUIta
             object lblBitrateV: TLabel
               Left = 8
               Height = 14
-              Top = 48
+              Top = 45
               Width = 172
               Caption = 'Video bitrate formula or value'
               ParentColor = False
@@ -566,7 +565,7 @@ object frmGUIta: TfrmGUIta
             object cmbBitrateV: TComboBox
               Left = 8
               Height = 20
-              Top = 65
+              Top = 60
               Width = 242
               DropDownCount = 20
               ItemHeight = 0
@@ -589,7 +588,7 @@ object frmGUIta: TfrmGUIta
             object lblx264preset: TLabel
               Left = 8
               Height = 14
-              Top = 88
+              Top = 85
               Width = 81
               Caption = 'libx264 preset'
               ParentColor = False
@@ -597,7 +596,7 @@ object frmGUIta: TfrmGUIta
             object cmbx264preset: TComboBox
               Left = 8
               Height = 20
-              Top = 105
+              Top = 100
               Width = 80
               DropDownCount = 20
               ItemHeight = 0
@@ -620,7 +619,7 @@ object frmGUIta: TfrmGUIta
             object lblx264tune: TLabel
               Left = 96
               Height = 14
-              Top = 88
+              Top = 85
               Width = 70
               Caption = 'libx264 tune'
               ParentColor = False
@@ -628,7 +627,7 @@ object frmGUIta: TfrmGUIta
             object cmbx264tune: TComboBox
               Left = 96
               Height = 20
-              Top = 105
+              Top = 100
               Width = 80
               ItemHeight = 0
               Items.Strings = (
@@ -642,7 +641,7 @@ object frmGUIta: TfrmGUIta
             object lblScale: TLabel
               Left = 8
               Height = 14
-              Top = 128
+              Top = 125
               Width = 74
               Caption = '-filter:v scale'
               ParentColor = False
@@ -650,7 +649,7 @@ object frmGUIta: TfrmGUIta
             object cmbScale: TComboBox
               Left = 8
               Height = 20
-              Top = 145
+              Top = 140
               Width = 198
               DropDownCount = 20
               ItemHeight = 0
@@ -673,7 +672,7 @@ object frmGUIta: TfrmGUIta
             object lblRotate: TLabel
               Left = 216
               Height = 14
-              Top = 168
+              Top = 165
               Width = 184
               Caption = '-filter:v "transpose=, hflip, vflip"'
               ParentColor = False
@@ -681,7 +680,7 @@ object frmGUIta: TfrmGUIta
             object cmbRotate: TComboBox
               Left = 216
               Height = 22
-              Top = 185
+              Top = 180
               Width = 200
               DropDownCount = 20
               ItemHeight = 0
@@ -702,7 +701,7 @@ object frmGUIta: TfrmGUIta
             object lblPad: TLabel
               Left = 216
               Height = 14
-              Top = 128
+              Top = 125
               Width = 66
               Caption = '-filter:v pad'
               ParentColor = False
@@ -710,7 +709,7 @@ object frmGUIta: TfrmGUIta
             object cmbPad: TComboBox
               Left = 216
               Height = 20
-              Top = 145
+              Top = 140
               Width = 200
               DropDownCount = 20
               ItemHeight = 0
@@ -733,7 +732,7 @@ object frmGUIta: TfrmGUIta
             object lblDenoise: TLabel
               Left = 8
               Height = 14
-              Top = 168
+              Top = 165
               Width = 89
               Caption = '-filter:v denoise'
               ParentColor = False
@@ -741,7 +740,7 @@ object frmGUIta: TfrmGUIta
             object lblFiltersV: TLabel
               Left = 8
               Height = 14
-              Top = 208
+              Top = 205
               Width = 122
               Caption = '-filter:v "video filters"'
               ParentColor = False
@@ -749,7 +748,7 @@ object frmGUIta: TfrmGUIta
             object cmbhqdn3d: TComboBox
               Left = 8
               Height = 20
-              Top = 185
+              Top = 180
               Width = 100
               DropDownCount = 20
               ItemHeight = 0
@@ -774,7 +773,7 @@ object frmGUIta: TfrmGUIta
               Left = 8
               Height = 20
               Hint = 'Additional filters or instead of.'#10'Can be used some vars:'#10'$input or $inpu0 - main input filename,'#10'$inpu1, $inpu2 - second, third and etc track filenames'
-              Top = 225
+              Top = 220
               Width = 510
               Anchors = [akTop, akLeft, akRight]
               DropDownCount = 30
@@ -809,7 +808,7 @@ object frmGUIta: TfrmGUIta
             object lblCrop: TLabel
               Left = 180
               Height = 14
-              Top = 88
+              Top = 85
               Width = 70
               Caption = '-filter:v crop'
               ParentColor = False
@@ -817,7 +816,7 @@ object frmGUIta: TfrmGUIta
             object cmbCrop: TComboBox
               Left = 180
               Height = 20
-              Top = 105
+              Top = 100
               Width = 200
               DropDownCount = 20
               ItemHeight = 0
@@ -842,7 +841,7 @@ object frmGUIta: TfrmGUIta
               Left = 259
               Height = 20
               Hint = 'read only'
-              Top = 65
+              Top = 60
               Width = 174
               EditLabel.AnchorSideLeft.Control = edtBitrateV
               EditLabel.AnchorSideRight.Control = edtBitrateV
@@ -850,7 +849,7 @@ object frmGUIta: TfrmGUIta
               EditLabel.AnchorSideBottom.Control = edtBitrateV
               EditLabel.Left = 259
               EditLabel.Height = 14
-              EditLabel.Top = 48
+              EditLabel.Top = 43
               EditLabel.Width = 174
               EditLabel.Caption = 'calculated bitrate (ro)'
               EditLabel.ParentColor = False
@@ -863,7 +862,7 @@ object frmGUIta: TfrmGUIta
             object lblDAR: TLabel
               Left = 111
               Height = 14
-              Top = 168
+              Top = 165
               Width = 81
               Caption = '-filter:v setdar'
               ParentColor = False
@@ -871,7 +870,7 @@ object frmGUIta: TfrmGUIta
             object cmbSetDAR: TComboBox
               Left = 111
               Height = 20
-              Top = 185
+              Top = 180
               Width = 95
               DropDownCount = 20
               ItemHeight = 0
@@ -887,24 +886,34 @@ object frmGUIta: TfrmGUIta
             end
             object btnCrop: TButton
               Left = 382
-              Height = 21
-              Top = 105
+              Height = 20
+              Top = 100
               Width = 60
               Caption = 'Crop'
               OnClick = btnCropClick
               TabOrder = 9
+            end
+            object cmbAddOptsV: TComboBox
+              Left = 8
+              Height = 20
+              Hint = 'Additional video options'
+              Top = 245
+              Width = 510
+              Anchors = [akTop, akLeft, akRight]
+              ItemHeight = 0
+              OnChange = xmyChange1
+              TabOrder = 16
             end
           end
           object TabAudio: TTabSheet
             Caption = 'Audio'
             ClientHeight = 275
             ClientWidth = 530
-            Enabled = False
             OnShow = TabVideoShow
             object lblEncoderA: TLabel
               Left = 8
               Height = 14
-              Top = 8
+              Top = 5
               Width = 82
               Caption = 'Audio encoder'
               ParentColor = False
@@ -912,7 +921,7 @@ object frmGUIta: TfrmGUIta
             object cmbEncoderA: TComboBox
               Left = 8
               Height = 20
-              Top = 25
+              Top = 20
               Width = 100
               DropDownCount = 50
               ItemHeight = 0
@@ -922,7 +931,7 @@ object frmGUIta: TfrmGUIta
             object lblBitrateA: TLabel
               Left = 8
               Height = 14
-              Top = 48
+              Top = 45
               Width = 172
               Caption = 'Audio bitrate formula or value'
               ParentColor = False
@@ -930,7 +939,7 @@ object frmGUIta: TfrmGUIta
             object cmbBitrateA: TComboBox
               Left = 8
               Height = 20
-              Top = 65
+              Top = 60
               Width = 218
               DropDownCount = 20
               ItemHeight = 0
@@ -956,7 +965,7 @@ object frmGUIta: TfrmGUIta
             object lblkoefA: TLabel
               Left = 120
               Height = 14
-              Top = 8
+              Top = 5
               Width = 38
               Caption = '$koefa'
               ParentColor = False
@@ -964,7 +973,7 @@ object frmGUIta: TfrmGUIta
             object spnKoefA: TSpinEdit
               Left = 120
               Height = 20
-              Top = 25
+              Top = 20
               Width = 60
               MaxValue = 100000
               MinValue = 1
@@ -975,7 +984,7 @@ object frmGUIta: TfrmGUIta
             object lblChannels: TLabel
               Left = 8
               Height = 14
-              Top = 88
+              Top = 85
               Width = 52
               Caption = 'Channels'
               ParentColor = False
@@ -983,7 +992,7 @@ object frmGUIta: TfrmGUIta
             object cmbChannels: TComboBox
               Left = 8
               Height = 20
-              Top = 105
+              Top = 100
               Width = 58
               DropDownCount = 20
               ItemHeight = 0
@@ -1000,7 +1009,7 @@ object frmGUIta: TfrmGUIta
             object lblSRate: TLabel
               Left = 72
               Height = 14
-              Top = 88
+              Top = 85
               Width = 113
               Caption = 'Sampling frequency'
               ParentColor = False
@@ -1008,7 +1017,7 @@ object frmGUIta: TfrmGUIta
             object cmbSRate: TComboBox
               Left = 72
               Height = 20
-              Top = 105
+              Top = 100
               Width = 100
               DropDownCount = 20
               ItemHeight = 0
@@ -1030,7 +1039,7 @@ object frmGUIta: TfrmGUIta
             object lblFiltersA: TLabel
               Left = 8
               Height = 14
-              Top = 128
+              Top = 125
               Width = 122
               Caption = '-filter:a "audio filters"'
               ParentColor = False
@@ -1038,7 +1047,7 @@ object frmGUIta: TfrmGUIta
             object cmbFiltersA: TComboBox
               Left = 8
               Height = 20
-              Top = 145
+              Top = 140
               Width = 512
               Anchors = [akTop, akLeft, akRight]
               DropDownCount = 20
@@ -1062,7 +1071,7 @@ object frmGUIta: TfrmGUIta
               Left = 259
               Height = 20
               Hint = 'read only'
-              Top = 65
+              Top = 60
               Width = 149
               EditLabel.AnchorSideLeft.Control = edtBitrateA
               EditLabel.AnchorSideRight.Control = edtBitrateA
@@ -1070,7 +1079,7 @@ object frmGUIta: TfrmGUIta
               EditLabel.AnchorSideBottom.Control = edtBitrateA
               EditLabel.Left = 259
               EditLabel.Height = 14
-              EditLabel.Top = 48
+              EditLabel.Top = 43
               EditLabel.Width = 149
               EditLabel.Caption = 'calculated bitrate (ro)'
               EditLabel.ParentColor = False
@@ -1080,17 +1089,27 @@ object frmGUIta: TfrmGUIta
               TabOrder = 3
               OnChange = xmyChange1o
             end
+            object cmbAddOptsA: TComboBox
+              Left = 8
+              Height = 20
+              Hint = 'Additional video options'
+              Top = 245
+              Width = 510
+              Anchors = [akTop, akLeft, akRight]
+              ItemHeight = 0
+              OnChange = xmyChange1
+              TabOrder = 7
+            end
           end
           object TabSubtitle: TTabSheet
             Caption = 'Subtitle'
             ClientHeight = 275
             ClientWidth = 530
-            Enabled = False
             OnShow = TabVideoShow
             object lblEncoderS: TLabel
               Left = 8
               Height = 14
-              Top = 8
+              Top = 5
               Width = 92
               Caption = 'Subtitle encoder'
               ParentColor = False
@@ -1098,12 +1117,23 @@ object frmGUIta: TfrmGUIta
             object cmbEncoderS: TComboBox
               Left = 8
               Height = 20
-              Top = 25
+              Top = 20
               Width = 100
               DropDownCount = 40
               ItemHeight = 0
               OnChange = cmbEncoderVChange
               TabOrder = 0
+            end
+            object cmbAddOptsS: TComboBox
+              Left = 8
+              Height = 20
+              Hint = 'Additional video options'
+              Top = 245
+              Width = 510
+              Anchors = [akTop, akLeft, akRight]
+              ItemHeight = 0
+              OnChange = xmyChange1
+              TabOrder = 1
             end
           end
           object TabContRows: TTabSheet
@@ -3738,7 +3768,7 @@ object frmGUIta: TfrmGUIta
               Height = 20
               Hint = 'list of variables:'#13#10'$ffmpeg'#13#10'$ffplay'#13#10'$ffprobe'#13#10'$input'#13#10'$output'#13#10'$dirinp'#13#10'$dirout'#13#10'$dirtmp'
               Top = 4
-              Width = 766
+              Width = 770
               Anchors = [akTop, akLeft, akRight]
               DropDownCount = 20
               ItemHeight = 0
@@ -3758,7 +3788,7 @@ object frmGUIta: TfrmGUIta
               Text = '"$ffprobe" -show_streams -i "$input"'
             end
             object btnCmdRun: TButton
-              Left = 458
+              Left = 462
               Height = 25
               Top = 27
               Width = 75
@@ -3768,7 +3798,7 @@ object frmGUIta: TfrmGUIta
               TabOrder = 4
             end
             object btnLogSave: TButton
-              Left = 616
+              Left = 620
               Height = 25
               Top = 27
               Width = 75
@@ -3778,7 +3808,7 @@ object frmGUIta: TfrmGUIta
               TabOrder = 6
             end
             object btnLogClear: TButton
-              Left = 696
+              Left = 700
               Height = 25
               Top = 27
               Width = 75
@@ -3796,7 +3826,7 @@ object frmGUIta: TfrmGUIta
               TabOrder = 1
             end
             object btnCmdStop: TButton
-              Left = 538
+              Left = 542
               Height = 25
               Top = 27
               Width = 75
@@ -5613,6 +5643,11 @@ object frmGUIta: TfrmGUIta
     object mnuEditAvs: TMenuItem
       Caption = 'Edit avs'
       OnClick = mnuEditAvsClick
+    end
+    object mnuCheck: TMenuItem
+      Caption = 'Check or uncheck all'
+      Checked = True
+      OnClick = mnuCheckClick
     end
   end
   object PopupMenu2: TPopupMenu
