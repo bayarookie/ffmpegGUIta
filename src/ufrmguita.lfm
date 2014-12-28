@@ -665,6 +665,7 @@ object frmGUIta: TfrmGUIta
                 '1920:trunc(1920/dar/16)*16'
                 'trunc(ih*dar/16)*16:ih'
                 'min(720\, iw):trunc(min(720\, iw)/dar/16)*16'
+                '200:trunc(200/dar)'
               )
               OnChange = xmyChange1v
               TabOrder = 10
@@ -1137,11 +1138,10 @@ object frmGUIta: TfrmGUIta
             end
           end
           object TabContRows: TTabSheet
-            Caption = 'Debug info'
+            Caption = 'Stream info'
             ClientHeight = 275
             ClientWidth = 530
             OnShow = TabContRowsShow
-            TabVisible = False
             inline SynMemo4: TSynMemo
               Cursor = crIBeam
               Left = 0
@@ -1149,6 +1149,8 @@ object frmGUIta: TfrmGUIta
               Top = 0
               Width = 530
               Align = alClient
+              Color = clWindow
+              Font.Color = clWindowText
               Font.Height = -13
               Font.Name = 'Courier New'
               Font.Pitch = fpFixed
@@ -2403,7 +2405,6 @@ object frmGUIta: TfrmGUIta
         Top = 366
         Width = 147
         Caption = 'Debug info to journal'
-        OnChange = chkDebugChange
         TabOrder = 23
       end
       object cmbFont: TComboBox
@@ -2763,6 +2764,8 @@ object frmGUIta: TfrmGUIta
         Top = 0
         Width = 792
         Align = alClient
+        Color = clWindow
+        Font.Color = clWindowText
         Font.Height = -13
         Font.Name = 'Courier New'
         Font.Pitch = fpFixed
@@ -3271,6 +3274,8 @@ object frmGUIta: TfrmGUIta
             Top = 110
             Width = 784
             Align = alClient
+            Color = clWindow
+            Font.Color = clWindowText
             Font.Height = -13
             Font.Name = 'Courier New'
             Font.Pitch = fpFixed
@@ -3768,27 +3773,36 @@ object frmGUIta: TfrmGUIta
               Height = 20
               Hint = 'list of variables:'#13#10'$ffmpeg'#13#10'$ffplay'#13#10'$ffprobe'#13#10'$input'#13#10'$output'#13#10'$dirinp'#13#10'$dirout'#13#10'$dirtmp'
               Top = 4
-              Width = 770
+              Width = 774
               Anchors = [akTop, akLeft, akRight]
               DropDownCount = 20
               ItemHeight = 0
-              ItemIndex = 0
+              ItemIndex = 1
               Items.Strings = (
+                '"$ffplay" -i "$input"'
                 '"$ffprobe" -show_streams -i "$input"'
                 '"$ffprobe" -show_frames -i "$input"'
-                '"$ffmpeg" -i "$input" -vsync 1 -r 1 -f image2 c:\temp\img-%03d.jpeg'
-                '"$ffmpeg" -i "$input" -f image2 -frames:v 1 c:\temp\img.bmp'
-                '"$ffmpeg" -f image2 -i img%d.jpg c:\temp\a.mpg'
+                '"$ffmpeg" -i "$input" -vsync 1 -r 1 -f image2 "$dirtmp/img-%03d.jpg"'
+                '"$ffmpeg" -i "$input" -f image2 -frames:v 1 "$dirtmp/img.bmp"'
+                '"$ffmpeg" -f image2 -i img%d.jpg "$dirtmp/a.mpg"'
+                '"$ffmpeg" -i "$input" -vf "[in] split [T1], [T2] overlay=0:H/2 [out]; [T1] crop=iw:ih/2:0:ih/2, vflip [T2]" "$output"'
+                '"$ffmpeg" -i "$dirinp/VTS_01_1.VOB" -i "$dirinp/VTS_01_2.VOB" -filter_complex "[0:0] [0:1] [1:0] [1:1] concat=n=2:v=1:a=1 [v] [a]" -map "[v]" -map "[a]" "$output"'
+                '"$ffmpeg" -dump_attachment:t:0 "$dirout/attach-0" -i "$input"'
                 '"$ffmpeg" -encoders'
                 '"$ffmpeg" -formats'
-                '"$ffmpeg" -i "$input" -vf "[in] split [T1], [T2] overlay=0:H/2 [out]; [T1] crop=iw:ih/2:0:ih/2, vflip [T2]" "$output"'
-                '"$ffmpeg" -i "$dirinp\VTS_01_1.VOB" -i "$dirinp\VTS_01_2.VOB" -filter_complex "[0:0] [0:1] [1:0] [1:1] concat=n=2:v=1:a=1 [v] [a]" -map "[v]" -map "[a]" "$output"'
+                '"$ffmpeg" -decoders'
+                '"$ffmpeg" -devices'
+                '"$ffmpeg" -sample_fmts'
+                '"$ffmpeg" -filters'
+                '"$ffmpeg" -protocols'
+                '"$ffmpeg" -codecs'
+                '"$ffmpeg" -bsfs'
               )
               TabOrder = 0
               Text = '"$ffprobe" -show_streams -i "$input"'
             end
             object btnCmdRun: TButton
-              Left = 462
+              Left = 466
               Height = 25
               Top = 27
               Width = 75
@@ -3798,7 +3812,7 @@ object frmGUIta: TfrmGUIta
               TabOrder = 4
             end
             object btnLogSave: TButton
-              Left = 620
+              Left = 624
               Height = 25
               Top = 27
               Width = 75
@@ -3808,7 +3822,7 @@ object frmGUIta: TfrmGUIta
               TabOrder = 6
             end
             object btnLogClear: TButton
-              Left = 700
+              Left = 704
               Height = 25
               Top = 27
               Width = 75
@@ -3826,7 +3840,7 @@ object frmGUIta: TfrmGUIta
               TabOrder = 1
             end
             object btnCmdStop: TButton
-              Left = 542
+              Left = 546
               Height = 25
               Top = 27
               Width = 75
@@ -3907,6 +3921,8 @@ object frmGUIta: TfrmGUIta
             Top = 0
             Width = 784
             Align = alClient
+            Color = clWindow
+            Font.Color = clWindowText
             Font.Height = -13
             Font.Name = 'Courier New'
             Font.Pitch = fpFixed
@@ -4402,6 +4418,8 @@ object frmGUIta: TfrmGUIta
             Top = 25
             Width = 784
             Align = alClient
+            Color = clWindow
+            Font.Color = clWindowText
             Font.Height = -13
             Font.Name = 'Courier New'
             Font.Pitch = fpFixed
@@ -4929,6 +4947,8 @@ object frmGUIta: TfrmGUIta
             Top = 25
             Width = 784
             Align = alClient
+            Color = clWindow
+            Font.Color = clWindowText
             Font.Height = -13
             Font.Name = 'Courier New'
             Font.Pitch = fpFixed
@@ -5456,8 +5476,9 @@ object frmGUIta: TfrmGUIta
     Enabled = False
     CommentAttri.FrameEdges = sfeAround
     IdentifierAttri.FrameEdges = sfeAround
+    KeyAttri.Foreground = clNone
     KeyAttri.FrameEdges = sfeAround
-    SecondKeyAttri.Foreground = clRed
+    SecondKeyAttri.Foreground = clMaroon
     SecondKeyAttri.FrameEdges = sfeAround
     SecondKeyWords.Strings = (
       'ERROR'
@@ -5466,6 +5487,7 @@ object frmGUIta: TfrmGUIta
     )
     NumberAttri.FrameEdges = sfeAround
     SpaceAttri.FrameEdges = sfeAround
+    StringAttri.Foreground = clOlive
     StringAttri.FrameEdges = sfeAround
     SymbolAttri.Foreground = clTeal
     SymbolAttri.FrameEdges = sfeAround

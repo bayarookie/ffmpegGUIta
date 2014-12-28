@@ -232,7 +232,6 @@ type
     procedure btnTestPauseClick(Sender: TObject);
     procedure btnTestStopClick(Sender: TObject);
     procedure chk1instanceChange(Sender: TObject);
-    procedure chkDebugChange(Sender: TObject);
     procedure chkPlayer2Change(Sender: TObject);
     procedure chkPlayer3Change(Sender: TObject);
     procedure cmbBitrateAChange(Sender: TObject);
@@ -332,6 +331,7 @@ type
     function myCantUpd(i: integer = 0): boolean;
     function myAutoCrop(jo: TJob; co: TCont): string;
     procedure myGetClipboardFileNames(files: TStrings; test: boolean = False);
+    function myGetColor: integer;
   public
     { public declarations }
     function myExpandFN(fn: string): string;
@@ -1105,24 +1105,32 @@ begin
   so := so + IfThen(s <> '', ' -f ' + s);
   // output filename
   fno := jo.getval(edtOfn.Name);
-  if FileExistsUTF8(fno) then
+  if fno <> '' then
   begin
-    fno := myGetOutFN(ExtractFilePath(fno), jo.files[0],  ExtractFileExt(fno));
-    jo.setval(edtOfn.Name, fno);
-  end;
-  {$IFDEF MSWINDOWS}
-  fnoa := jo.getval(edtOfna.Name); //short filename
-  if FileExistsUTF8(fnoa) then
+    if FileExistsUTF8(fno) then
+    begin
+      fno := myGetOutFN(ExtractFilePath(fno), jo.files[0],  ExtractFileExt(fno));
+      jo.setval(edtOfn.Name, fno);
+    end;
+    {$IFDEF MSWINDOWS}
+    fnoa := jo.getval(edtOfna.Name); //short filename
+    if FileExistsUTF8(fnoa) then
+    begin
+      fnoa := myGetOutFNa(ExtractFilePath(fnoa), jo.files[0], ExtractFileExt(fnoa));
+      jo.setval(edtOfna.Name, fnoa);
+    end;
+    fn1 := ' -y NUL' + jo.getval(cmbExt.Name);
+    {$ELSE}
+    fnoa := fno;
+    fn1 := ' -y /dev/null';
+    {$ENDIF}
+    fn2 := ' -y "' + fnoa +'"';
+  end
+  else
   begin
-    fnoa := myGetOutFNa(ExtractFilePath(fnoa), jo.files[0], ExtractFileExt(fnoa));
-    jo.setval(edtOfna.Name, fnoa);
+    fn1 := '';
+    fn2 := '';
   end;
-  fn1 := ' -y NUL' + jo.getval(cmbExt.Name);
-  {$ELSE}
-  fnoa := fno;
-  fn1 := ' -y /dev/null';
-  {$ENDIF}
-  fn2 := ' -y "' + fnoa +'"';
   // final
   if sp1 <> '' then
     Result := si + fc + f + vi + au + su + ma + sp1 + so + fn1 + LineEnding
@@ -1154,8 +1162,7 @@ begin
     pr.ShowWindow := swoHide;
     pr.Execute;
     t := '';
-    while pr.Running do
-    begin
+    repeat
       BytesAvailable := pr.Output.NumBytesAvailable;
       BytesRead := 0;
       while BytesAvailable > 0 do
@@ -1191,7 +1198,7 @@ begin
         BytesAvailable := pr.Output.NumBytesAvailable;
       end;
       Sleep(2);
-    end;
+    until not pr.Running;
     if (t <> '') then
       mem.Lines.Add(t);
   except
@@ -2543,6 +2550,20 @@ begin
   end;
 end;
 {$ENDIF}
+function TfrmGUIta.myGetColor: integer;
+var
+  b: TBitmap;
+  t: TLazIntfImage;
+begin
+  b := TBitmap.Create;
+  b.SetSize(1, 1);
+  b.Canvas.Brush.Color := memJournal.Color;
+  b.Canvas.FillRect(0,0,1,1);
+  t := b.CreateIntfImage;
+  Result := t.Colors[0, 0].red + t.Colors[0, 0].green + t.Colors[0, 0].blue;
+  b.Free;
+end;
+
 //------------------------------------------------------------------------------
 
 procedure TfrmGUIta.btnAddFilesClick(Sender: TObject);
@@ -3327,11 +3348,6 @@ begin
   mySets(False);
 end;
 
-procedure TfrmGUIta.chkDebugChange(Sender: TObject);
-begin
-  TabContRows.TabVisible := chkDebug.Checked;
-end;
-
 procedure TfrmGUIta.chkPlayer2Change(Sender: TObject);
 begin
   if chkPlayer2.Checked then
@@ -3604,6 +3620,15 @@ begin
   SynMemo4.Clear;
   SynMemo5.Clear;
   SynMemo6.Clear;
+  if myGetColor < 400 then  //if dark theme
+  begin
+    SynUNIXShellScriptSyn1.CommentAttri.Foreground := clLime;  //Green
+    SynUNIXShellScriptSyn1.NumberAttri.Foreground := clAqua;  //Blue
+    SynUNIXShellScriptSyn1.SecondKeyAttri.Foreground := clRed; //Maroon
+    SynUNIXShellScriptSyn1.StringAttri.Foreground := clYellow; //Olive
+    //SynUNIXShellScriptSyn1.SymbolAttri.Foreground := clAqua;  //Teal
+    SynUNIXShellScriptSyn1.VarAttri.Foreground := clFuchsia;   //Purple
+  end;
   Files2Add := TList.Create;
   Counter := 0;
   fs.DecimalSeparator := '.';

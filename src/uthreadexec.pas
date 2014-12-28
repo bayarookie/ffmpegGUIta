@@ -71,8 +71,8 @@ begin
     pr.ShowWindow := swoHide;
     pr.Execute;
     t := '';
-    while (not Terminated) and (pr.Running) do
-    begin
+    repeat
+      Sleep(2);
       BytesAvailable := pr.Output.NumBytesAvailable;
       BytesRead := 0;
       while BytesAvailable > 0 do
@@ -86,7 +86,7 @@ begin
         repeat
           i := Pos(#13, t);
           j := Pos(#10, t);
-          if (i > 0) and (j <> i + 1) then //carrier return, no line feed
+          if (i > 0) and (j <> i + 1) then //cr, not crlf
           begin
             if (j > i + 1) then j := i;
             fStatus := Copy(t, 1, i - 1);
@@ -106,12 +106,12 @@ begin
         until i = 0;
         BytesAvailable := pr.Output.NumBytesAvailable;
       end;
-      Sleep(2);
-    end;
+    until Terminated or not pr.Running;
     if (t <> '') then
+    begin
       fStatus := t;
-    if (fStatus <> '') then
       Synchronize(@ShowSynMemo);
+    end;
   finally
     pr.Free;
   end;

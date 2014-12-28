@@ -171,8 +171,8 @@ begin
         pr.ShowWindow := swoHide;
         pr.Execute;
         t := '';
-        while (not Terminated) and (pr.Running) do
-        begin
+        repeat
+          Sleep(2);
           BytesAvailable := pr.Output.NumBytesAvailable;
           BytesRead := 0;
           while BytesAvailable > 0 do
@@ -206,8 +206,7 @@ begin
             until i = 0;
             BytesAvailable := pr.Output.NumBytesAvailable;
           end;
-          Sleep(2);
-        end;
+        until Terminated or not pr.Running;
         if (t <> '') then
         begin
           fStatus := t;
