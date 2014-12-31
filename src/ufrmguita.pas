@@ -73,6 +73,7 @@ type
     cmbBitrateV: TComboBox;
     cmbChannels: TComboBox;
     cmbDurationss1: TComboBox;
+    cmbDurationss2: TComboBox;
     cmbDurationt1: TComboBox;
     cmbhqdn3d: TComboBox;
     cmbLangA: TComboBox;
@@ -99,7 +100,6 @@ type
     cmbExtPlayer: TComboBox;
     cmbFont: TComboBox;
     cmbDirLast: TComboBox;
-    cmbDurationss2: TComboBox;
     cmbDurationt2: TComboBox;
     cmbTestDurationss: TComboBox;
     cmbTestDurationt: TComboBox;
@@ -121,12 +121,12 @@ type
     edtOfna: TLabeledEdit;
     lblAddOptsI: TLabel;
     lblDurationss1: TLabel;
+    lblDurationss2: TLabel;
     lblDurationt1: TLabel;
     lblLangA: TLabel;
     lblLangS: TLabel;
     lblTestStartDurationTime: TLabel;
-    lblDurationss: TLabel;
-    lblDurationt: TLabel;
+    lblDurationt2: TLabel;
     lblDirLast: TLabel;
     lblAddOptsO: TLabel;
     lblBitrateA: TLabel;
@@ -423,7 +423,12 @@ begin
           else
           begin
             if ReadOnly then
-              myToIni(Ini, s, Name, IntToStr(ItemIndex))
+            begin
+              if (ItemIndex >= 0) and (ItemIndex < Items.Count - 1) then //cmbRotate
+                myToIni(Ini, s, Name, IntToStr(ItemIndex))
+              else
+                myToIni(Ini, s, Name, '');
+            end
             else
               myToIni(Ini, s, Name, Text);
           end
@@ -2552,15 +2557,16 @@ end;
 {$ENDIF}
 function TfrmGUIta.myGetColor: integer;
 var
-  b: TBitmap;
+  b: Graphics.TBitmap;
   t: TLazIntfImage;
 begin
-  b := TBitmap.Create;
+  b := Graphics.TBitmap.Create;
   b.SetSize(1, 1);
   b.Canvas.Brush.Color := memJournal.Color;
-  b.Canvas.FillRect(0,0,1,1);
+  b.Canvas.FillRect(0, 0, 0, 0);
   t := b.CreateIntfImage;
   Result := t.Colors[0, 0].red + t.Colors[0, 0].green + t.Colors[0, 0].blue;
+  t.Free;
   b.Free;
 end;
 
@@ -3613,8 +3619,6 @@ begin
   memJournal.Lines.Add(sCap + ' - ' + taBuildDate + ' - Free Pascal ' +
     fpcVersion + ' - Lazarus ' + lazVersion + '-' + lazRevision +
     ' - ' + TargetCPU + ' ' + TargetOS);
-  frmGUIta.Constraints.MinWidth := 800;
-  frmGUIta.Constraints.MinHeight := 480;
   SynMemo2.Clear;
   SynMemo3.Clear;
   SynMemo4.Clear;

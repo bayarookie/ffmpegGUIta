@@ -1,23 +1,25 @@
 object frmCrop: TfrmCrop
   Left = 253
-  Height = 440
+  Height = 480
   Top = 117
-  Width = 724
+  Width = 800
   Caption = 'frmCrop'
-  ClientHeight = 440
-  ClientWidth = 724
+  ClientHeight = 480
+  ClientWidth = 800
+  Constraints.MinHeight = 480
+  Constraints.MinWidth = 800
   OnCreate = FormCreate
-  LCLVersion = '1.0.6.0'
+  LCLVersion = '1.2.6.0'
   object ScrollBox1: TScrollBox
     Left = 0
-    Height = 367
+    Height = 415
     Top = 50
-    Width = 724
-    HorzScrollBar.Page = 720
-    VertScrollBar.Page = 363
+    Width = 800
+    HorzScrollBar.Page = 704
+    VertScrollBar.Page = 318
     Align = alClient
-    ClientHeight = 363
-    ClientWidth = 720
+    ClientHeight = 411
+    ClientWidth = 796
     TabOrder = 1
     object Image1: TImage
       Left = -2
@@ -73,12 +75,12 @@ object frmCrop: TfrmCrop
     object Panel2: TPanel
       Left = 0
       Height = 142
-      Top = 221
-      Width = 720
+      Top = 269
+      Width = 796
       Align = alBottom
       Caption = 'Panel2'
       ClientHeight = 142
-      ClientWidth = 720
+      ClientWidth = 796
       TabOrder = 4
       Visible = False
       inline SynMemo1: TSynMemo
@@ -86,7 +88,7 @@ object frmCrop: TfrmCrop
         Left = 1
         Height = 109
         Top = 32
-        Width = 718
+        Width = 794
         Anchors = [akTop, akLeft, akRight, akBottom]
         Font.Height = -13
         Font.Name = 'Courier New'
@@ -524,12 +526,14 @@ object frmCrop: TfrmCrop
         Lines.Strings = (
           'SynMemo1'
         )
+        SelectedColor.FrameEdges = sfeAround
         SelectedColor.BackPriority = 50
         SelectedColor.ForePriority = 50
         SelectedColor.FramePriority = 50
         SelectedColor.BoldPriority = 50
         SelectedColor.ItalicPriority = 50
         SelectedColor.UnderlinePriority = 50
+        SelectedColor.StrikeOutPriority = 50
         inline SynLeftGutterPartList1: TSynGutterPartList
           object SynGutterMarks1: TSynGutterMarks
             Width = 24
@@ -540,6 +544,7 @@ object frmCrop: TfrmCrop
             MouseActions = <>
             MarkupInfo.Background = clBtnFace
             MarkupInfo.Foreground = clNone
+            MarkupInfo.FrameEdges = sfeAround
             DigitCount = 2
             ShowOnlyLineNumbersMultiplesOf = 1
             ZeroStart = False
@@ -554,11 +559,15 @@ object frmCrop: TfrmCrop
           object SynGutterSeparator1: TSynGutterSeparator
             Width = 2
             MouseActions = <>
+            MarkupInfo.Background = clWhite
+            MarkupInfo.Foreground = clGray
+            MarkupInfo.FrameEdges = sfeAround
           end
           object SynGutterCodeFolding1: TSynGutterCodeFolding
             MouseActions = <>
             MarkupInfo.Background = clNone
             MarkupInfo.Foreground = clGray
+            MarkupInfo.FrameEdges = sfeAround
             MouseActionsExpanded = <>
             MouseActionsCollapsed = <>
           end
@@ -566,17 +575,17 @@ object frmCrop: TfrmCrop
       end
       object LabeledEdit2: TLabeledEdit
         Left = 95
-        Height = 23
+        Height = 17
         Top = 2
         Width = 608
         EditLabel.AnchorSideTop.Control = LabeledEdit2
         EditLabel.AnchorSideTop.Side = asrCenter
         EditLabel.AnchorSideRight.Control = LabeledEdit2
         EditLabel.AnchorSideBottom.Side = asrBottom
-        EditLabel.Left = 45
-        EditLabel.Height = 16
+        EditLabel.Left = 57
+        EditLabel.Height = 11
         EditLabel.Top = 5
-        EditLabel.Width = 47
+        EditLabel.Width = 35
         EditLabel.Caption = 'add opts'
         EditLabel.ParentColor = False
         LabelPosition = lpLeft
@@ -588,8 +597,8 @@ object frmCrop: TfrmCrop
       Cursor = crVSplit
       Left = 0
       Height = 10
-      Top = 211
-      Width = 720
+      Top = 259
+      Width = 796
       Align = alBottom
       ResizeAnchor = akBottom
       Visible = False
@@ -599,10 +608,10 @@ object frmCrop: TfrmCrop
     Left = 0
     Height = 50
     Top = 0
-    Width = 724
+    Width = 800
     Align = alTop
     ClientHeight = 50
-    ClientWidth = 724
+    ClientWidth = 800
     TabOrder = 0
     object BitBtn1: TBitBtn
       Left = 8
@@ -616,7 +625,7 @@ object frmCrop: TfrmCrop
       TabOrder = 0
     end
     object BitBtn2: TBitBtn
-      Left = 640
+      Left = 716
       Height = 30
       Top = 8
       Width = 75
@@ -641,7 +650,7 @@ object frmCrop: TfrmCrop
     end
     object LabeledEdit1: TLabeledEdit
       Left = 144
-      Height = 23
+      Height = 17
       Top = 8
       Width = 80
       EditLabel.AnchorSideLeft.Control = LabeledEdit1
@@ -652,9 +661,9 @@ object frmCrop: TfrmCrop
       EditLabel.AnchorSideBottom.Control = LabeledEdit1
       EditLabel.AnchorSideBottom.Side = asrBottom
       EditLabel.Left = 227
-      EditLabel.Height = 16
+      EditLabel.Height = 11
       EditLabel.Top = 11
-      EditLabel.Width = 68
+      EditLabel.Width = 53
       EditLabel.Caption = 'LabeledEdit1'
       EditLabel.ParentColor = False
       LabelPosition = lpRight
@@ -664,17 +673,17 @@ object frmCrop: TfrmCrop
     end
     object Label1: TLabel
       Left = 144
-      Height = 16
+      Height = 11
       Top = 32
-      Width = 35
+      Width = 27
       Caption = 'Label1'
       ParentColor = False
     end
     object CheckBox1: TCheckBox
       Left = 552
-      Height = 19
+      Height = 26
       Top = 29
-      Width = 63
+      Width = 60
       Caption = 'Console'
       OnChange = CheckBox1Change
       TabOrder = 4
@@ -682,9 +691,9 @@ object frmCrop: TfrmCrop
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Height = 23
-    Top = 417
-    Width = 724
+    Height = 15
+    Top = 465
+    Width = 800
     Panels = <>
   end
-end
+end

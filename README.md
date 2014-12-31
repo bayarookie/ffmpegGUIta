@@ -2,6 +2,8 @@ ffmpegGUIta
 ===========
 
 GUI for ffmpeg
-It is a trying to simplify the usage of ffmpeg, but did not ))
+Dificult to use, if you compare it versus WinFF. Only for commandliners ))
 
-ffmpeg, ffprobe, ffplay 2.5.0 - https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media - ppa:mc3man/trusty-media
+ffmpeg, ffprobe, ffplay 2.5.2 - https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media - ppa:mc3man/trusty-media
+
+Free Pascal 2.6.4 - Lazarus 1.2.6

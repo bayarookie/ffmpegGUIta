@@ -2,22 +2,24 @@ object frmCompare: TfrmCompare
   Left = 251
   Height = 500
   Top = 117
-  Width = 720
+  Width = 800
   Caption = 'frmCompare'
   ClientHeight = 500
-  ClientWidth = 720
+  ClientWidth = 800
+  Constraints.MinHeight = 480
+  Constraints.MinWidth = 800
   KeyPreview = True
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
-  LCLVersion = '1.0.12.0'
+  LCLVersion = '1.2.6.0'
   object Panel1: TPanel
     Left = 0
     Height = 64
     Top = 0
-    Width = 720
+    Width = 800
     Align = alTop
     ClientHeight = 64
-    ClientWidth = 720
+    ClientWidth = 800
     TabOrder = 0
     object Button1: TButton
       Left = 8
@@ -38,7 +40,7 @@ object frmCompare: TfrmCompare
       TabOrder = 1
     end
     object Button3: TButton
-      Left = 640
+      Left = 720
       Height = 23
       Top = 34
       Width = 75
@@ -49,7 +51,7 @@ object frmCompare: TfrmCompare
     end
     object LabeledEdit1: TLabeledEdit
       Left = 136
-      Height = 21
+      Height = 17
       Top = 8
       Width = 80
       EditLabel.AnchorSideLeft.Control = LabeledEdit1
@@ -60,9 +62,9 @@ object frmCompare: TfrmCompare
       EditLabel.AnchorSideBottom.Control = LabeledEdit1
       EditLabel.AnchorSideBottom.Side = asrBottom
       EditLabel.Left = 219
-      EditLabel.Height = 14
+      EditLabel.Height = 11
       EditLabel.Top = 11
-      EditLabel.Width = 62
+      EditLabel.Width = 53
       EditLabel.Caption = 'LabeledEdit1'
       EditLabel.ParentColor = False
       LabelPosition = lpRight
@@ -72,7 +74,7 @@ object frmCompare: TfrmCompare
     end
     object LabeledEdit2: TLabeledEdit
       Left = 136
-      Height = 21
+      Height = 17
       Top = 34
       Width = 80
       EditLabel.AnchorSideLeft.Control = LabeledEdit2
@@ -83,9 +85,9 @@ object frmCompare: TfrmCompare
       EditLabel.AnchorSideBottom.Control = LabeledEdit2
       EditLabel.AnchorSideBottom.Side = asrBottom
       EditLabel.Left = 219
-      EditLabel.Height = 14
+      EditLabel.Height = 11
       EditLabel.Top = 37
-      EditLabel.Width = 62
+      EditLabel.Width = 53
       EditLabel.Caption = 'LabeledEdit2'
       EditLabel.ParentColor = False
       LabelPosition = lpRight
@@ -118,18 +120,18 @@ object frmCompare: TfrmCompare
       OnChangingEx = UpDown1ChangingEx
     end
     object CheckBox1: TCheckBox
-      Left = 648
-      Height = 17
+      Left = 726
+      Height = 26
       Top = 8
-      Width = 58
+      Width = 60
       Anchors = [akTop, akRight]
       Caption = 'Console'
       OnChange = CheckBox1Change
       TabOrder = 7
     end
     object SpinEdit1: TSpinEdit
-      Left = 584
-      Height = 21
+      Left = 664
+      Height = 17
       Top = 34
       Width = 50
       Anchors = [akTop, akRight]
@@ -142,14 +144,14 @@ object frmCompare: TfrmCompare
   end
   object ScrollBox1: TScrollBox
     Left = 0
-    Height = 416
+    Height = 421
     Top = 64
-    Width = 720
-    HorzScrollBar.Page = 716
-    VertScrollBar.Page = 412
+    Width = 800
+    HorzScrollBar.Page = 142
+    VertScrollBar.Page = 181
     Align = alClient
-    ClientHeight = 412
-    ClientWidth = 716
+    ClientHeight = 417
+    ClientWidth = 796
     TabOrder = 1
     object Image1: TImage
       Left = 0
@@ -176,8 +178,8 @@ object frmCompare: TfrmCompare
       Cursor = crVSplit
       Left = 0
       Height = 5
-      Top = 231
-      Width = 716
+      Top = 236
+      Width = 796
       Align = alBottom
       ResizeAnchor = akBottom
       Visible = False
@@ -185,12 +187,12 @@ object frmCompare: TfrmCompare
     object Panel2: TPanel
       Left = 0
       Height = 176
-      Top = 236
-      Width = 716
+      Top = 241
+      Width = 796
       Align = alBottom
       Caption = 'Panel2'
       ClientHeight = 176
-      ClientWidth = 716
+      ClientWidth = 796
       TabOrder = 1
       Visible = False
       inline SynMemo1: TSynMemo
@@ -198,7 +200,7 @@ object frmCompare: TfrmCompare
         Left = 1
         Height = 114
         Top = 61
-        Width = 714
+        Width = 794
         Anchors = [akTop, akLeft, akRight, akBottom]
         Font.Height = -13
         Font.Name = 'Courier New'
@@ -636,12 +638,14 @@ object frmCompare: TfrmCompare
         Lines.Strings = (
           'SynMemo1'
         )
+        SelectedColor.FrameEdges = sfeAround
         SelectedColor.BackPriority = 50
         SelectedColor.ForePriority = 50
         SelectedColor.FramePriority = 50
         SelectedColor.BoldPriority = 50
         SelectedColor.ItalicPriority = 50
         SelectedColor.UnderlinePriority = 50
+        SelectedColor.StrikeOutPriority = 50
         inline SynLeftGutterPartList1: TSynGutterPartList
           object SynGutterMarks1: TSynGutterMarks
             Width = 24
@@ -652,6 +656,7 @@ object frmCompare: TfrmCompare
             MouseActions = <>
             MarkupInfo.Background = clBtnFace
             MarkupInfo.Foreground = clNone
+            MarkupInfo.FrameEdges = sfeAround
             DigitCount = 2
             ShowOnlyLineNumbersMultiplesOf = 1
             ZeroStart = False
@@ -668,11 +673,13 @@ object frmCompare: TfrmCompare
             MouseActions = <>
             MarkupInfo.Background = clWhite
             MarkupInfo.Foreground = clGray
+            MarkupInfo.FrameEdges = sfeAround
           end
           object SynGutterCodeFolding1: TSynGutterCodeFolding
             MouseActions = <>
             MarkupInfo.Background = clNone
             MarkupInfo.Foreground = clGray
+            MarkupInfo.FrameEdges = sfeAround
             MouseActionsExpanded = <>
             MouseActionsCollapsed = <>
           end
@@ -680,18 +687,18 @@ object frmCompare: TfrmCompare
       end
       object LabeledEdit3: TLabeledEdit
         Left = 86
-        Height = 21
+        Height = 17
         Top = 5
-        Width = 616
+        Width = 696
         Anchors = [akTop, akLeft, akRight]
         EditLabel.AnchorSideTop.Control = LabeledEdit3
         EditLabel.AnchorSideTop.Side = asrCenter
         EditLabel.AnchorSideRight.Control = LabeledEdit3
         EditLabel.AnchorSideBottom.Side = asrBottom
-        EditLabel.Left = 14
-        EditLabel.Height = 14
+        EditLabel.Left = 26
+        EditLabel.Height = 11
         EditLabel.Top = 8
-        EditLabel.Width = 69
+        EditLabel.Width = 57
         EditLabel.Caption = '1 file add opts'
         EditLabel.ParentColor = False
         LabelPosition = lpLeft
@@ -700,18 +707,18 @@ object frmCompare: TfrmCompare
       end
       object LabeledEdit4: TLabeledEdit
         Left = 86
-        Height = 21
+        Height = 17
         Top = 34
-        Width = 616
+        Width = 696
         Anchors = [akTop, akLeft, akRight]
         EditLabel.AnchorSideTop.Control = LabeledEdit4
         EditLabel.AnchorSideTop.Side = asrCenter
         EditLabel.AnchorSideRight.Control = LabeledEdit4
         EditLabel.AnchorSideBottom.Side = asrBottom
-        EditLabel.Left = 14
-        EditLabel.Height = 14
+        EditLabel.Left = 26
+        EditLabel.Height = 11
         EditLabel.Top = 37
-        EditLabel.Width = 69
+        EditLabel.Width = 57
         EditLabel.Caption = '2 file add opts'
         EditLabel.ParentColor = False
         LabelPosition = lpLeft
@@ -722,9 +729,9 @@ object frmCompare: TfrmCompare
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Height = 20
-    Top = 480
-    Width = 720
+    Height = 15
+    Top = 485
+    Width = 800
     Panels = <>
   end
-end
+end

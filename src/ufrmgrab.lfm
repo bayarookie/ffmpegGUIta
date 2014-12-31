@@ -6,6 +6,8 @@ object frmGrab: TfrmGrab
   Caption = 'frmGrab'
   ClientHeight = 240
   ClientWidth = 320
+  Constraints.MinHeight = 240
+  Constraints.MinWidth = 320
   KeyPreview = True
   Position = poMainFormCenter
   LCLVersion = '1.2.6.0'
