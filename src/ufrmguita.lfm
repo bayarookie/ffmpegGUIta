@@ -70,7 +70,8 @@ object frmGUIta: TfrmGUIta
                 Width = 45
               end            
               item
-                Width = 195
+                AutoSize = True
+                Width = 180
               end>
             DragMode = dmAutomatic
             PopupMenu = PopupMenu2
@@ -160,7 +161,7 @@ object frmGUIta: TfrmGUIta
                 '-f alsa'
               )
               OnChange = xmyChange0i
-              TabOrder = 1
+              TabOrder = 0
             end
             object lblDurationss1: TLabel
               Left = 8
@@ -197,17 +198,7 @@ object frmGUIta: TfrmGUIta
               OnChange = xmyChange0i
               ParentShowHint = False
               ShowHint = True
-              TabOrder = 2
-            end
-            object memInputfn: TMemo
-              Left = 0
-              Height = 66
-              Top = 0
-              Width = 530
-              Align = alTop
-              ReadOnly = True
-              ScrollBars = ssAutoVertical
-              TabOrder = 0
+              TabOrder = 1
             end
             object lblDurationt1: TLabel
               Left = 422
@@ -236,7 +227,27 @@ object frmGUIta: TfrmGUIta
               OnChange = xmyChange0o
               ParentShowHint = False
               ShowHint = True
+              TabOrder = 2
+            end
+            object LVdelo: TListView
+              Left = 0
+              Height = 112
+              Top = 0
+              Width = 530
+              Align = alTop
+              Columns = <              
+                item
+                  Width = 45
+                end              
+                item
+                  AutoSize = True
+                  Width = 464
+                end>
+              ReadOnly = True
+              RowSelect = True
               TabOrder = 3
+              ViewStyle = vsReport
+              OnSelectItem = LVdeloSelectItem
             end
           end
           object TabOutput: TTabSheet

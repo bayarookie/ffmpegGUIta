@@ -152,10 +152,10 @@ type
     lblSRate: TLabel;
     lblx264preset: TLabel;
     lblx264tune: TLabel;
+    LVdelo: TListView;
     LVfiles: TListView;
     LVstreams: TListView;
     memCmdlines: TMemo;
-    memInputfn: TMemo;
     mnuCheck: TMenuItem;
     mnuPasteTracks: TMenuItem;
     mnuMediaInfo: TMenuItem;
@@ -251,6 +251,8 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure FormDropFiles(Sender: TObject; const FileNames: array of string);
     procedure FormShow(Sender: TObject);
+    procedure LVdeloSelectItem(Sender: TObject; Item: TListItem;
+      Selected: Boolean);
     procedure LVfilesClick(Sender: TObject);
     procedure LVfilesContextPopup(Sender: TObject; MousePos: TPoint;
       var Handled: boolean);
@@ -3884,7 +3886,8 @@ begin
     w := 2
   else
   {$ENDIF}
-  if (LVfiles.Selected <> nil) and (wc.Name = LVstreams.Name) then
+  if (LVfiles.Selected <> nil)
+  and ((wc.Name = LVstreams.Name) or (wc.Name = LVdelo.Name)) then
     w := 3
   else
   if (LVfiles.Selected <> nil) and (wc.Name = edtOfn.Name) then
@@ -4011,12 +4014,30 @@ begin
   end;
 end;
 
+procedure TfrmGUIta.LVdeloSelectItem(Sender: TObject; Item: TListItem;
+  Selected: Boolean);
+var
+  i: integer;
+  jo: TJob;
+begin
+  if (LVfiles.Selected <> nil) and (LVdelo.Selected <> nil) then
+  begin
+    jo := TJob(LVfiles.Selected.Data);
+    i := LVdelo.Selected.Index;
+    if (i >= 0) and (i < jo.files.Count) then
+    begin
+      myGetValsFromCont(TabInput, TCont(jo.files.Objects[i]));
+    end;
+  end;
+end;
+
 procedure TfrmGUIta.LVfilesClick(Sender: TObject);
 begin
   if LVfiles.Selected = nil then
   begin
     edtOfn.EditLabel.Caption := mes[7];
     myClear2([TabInput, TabOutput, TabVideo, TabAudio, TabSubtitle, TabContRows, TabCmdline]);
+    LVdelo.Clear;
     LVstreams.Clear;
   end;
   myDisComp;
@@ -4129,12 +4150,19 @@ var
   li: TListItem;
 begin
   bUpdFromCode := True;
+  LVdelo.Clear;
   LVstreams.Clear;
   myClear2([TabInput, TabOutput, TabVideo, TabAudio, TabSubtitle, TabContRows, TabCmdline]);
   if LVfiles.Selected <> nil then
     jo := TJob(LVfiles.Selected.Data)
   else
     jo := TJob(Item.Data);
+  for k := 0 to jo.files.Count - 1 do
+  begin
+    li := LVdelo.Items.Add;
+    li.Caption := IntToStr(k);;
+    li.SubItems.Add(jo.files[k]);
+  end;
   myGetValsFromCont(TabOutput, jo);
   for k := 0 to High(jo.a) do
   begin
@@ -4416,6 +4444,8 @@ var
 begin
   if (LVfiles.Selected <> nil) then
   begin
+    for i := 0 to LVdelo.Items.Count - 1 do
+      LVdelo.Items[i].Selected := False;
     jo := TJob(LVfiles.Selected.Data);
     if (LVstreams.Selected <> nil) then
       s := TCont(LVstreams.Selected.Data).getval('filenum')
@@ -4424,8 +4454,9 @@ begin
     i := StrToIntDef(s, -1);
     if (i >= 0) and (i < jo.files.Count) then
     begin
-      myGetValsFromCont(TabInput, TCont(jo.files.Objects[i]));
-      memInputfn.Text := jo.files[i];
+      //myGetValsFromCont(TabInput, TCont(jo.files.Objects[i]));
+      //memInputfn.Text := jo.files[i];
+      LVdelo.Items[i].Selected := True;
     end;
   end;
 end;
@@ -4489,11 +4520,15 @@ begin
   s1 := (Sender as TControl).Name;
   s2 := myGet2(Sender);
   jo := TJob(LVfiles.Selected.Data);
-  if (LVstreams.Selected <> nil) then
-    s := TCont(LVstreams.Selected.Data).getval('filenum')
+  //if (LVstreams.Selected <> nil) then
+  //  s := TCont(LVstreams.Selected.Data).getval('filenum')
+  //else
+  //  s := '0';
+  //i := StrToIntDef(s, -1);
+  if (LVdelo.Selected <> nil) then
+    i := LVdelo.Selected.Index
   else
-    s := '0';
-  i := StrToIntDef(s, -1);
+    i := -1;
   if (i >= 0) and (i < jo.files.Count) then
     TCont(TJob(LVfiles.Selected.Data).files.Objects[i]).setval(s1, s2);
 end;
