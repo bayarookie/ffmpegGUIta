@@ -195,7 +195,7 @@ var
   jo: TJob;
   v: TCont;
 begin
-  if frmGUIta.LVfiles.Selected = nil then
+  if frmGUIta.LVjobs.Selected = nil then
     Exit;
   (Sender as TUpDown).Visible := False;
   AllowChange := False;
@@ -203,7 +203,7 @@ begin
     ob := LabeledEdit1
   else
     ob := LabeledEdit2;
-  jo := TJob(frmGUIta.LVfiles.Selected.Data);
+  jo := TJob(frmGUIta.LVjobs.Selected.Data);
   rd := myTimeStrToReal(jo.getval('duration'));
   r1 := myTimeStrToReal(ob.Text);
   if fd = 0 then
@@ -230,4 +230,4 @@ begin
   (Sender as TUpDown).Visible := True;
 end;
 
-end.
+end.

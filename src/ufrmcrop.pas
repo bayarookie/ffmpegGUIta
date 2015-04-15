@@ -166,10 +166,10 @@ var
 begin
   (Sender as TUpDown).Enabled := False;
   AllowChange := False;
-  if frmGUIta.LVfiles.Selected = nil then
+  if frmGUIta.LVjobs.Selected = nil then
     Exit;
   ob := LabeledEdit1;
-  jo := TJob(frmGUIta.LVfiles.Selected.Data);
+  jo := TJob(frmGUIta.LVjobs.Selected.Data);
   rd := myTimeStrToReal(jo.getval('duration'));
   r1 := myTimeStrToReal(ob.Text);
   if fd = 0 then

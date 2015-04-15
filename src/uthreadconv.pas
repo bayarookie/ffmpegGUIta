@@ -45,16 +45,16 @@ var
 begin
   dt := Now;
   fcmd.Clear;
-  for i := 0 to frmGUIta.LVfiles.Items.Count - 1 do
+  for i := 0 to frmGUIta.LVjobs.Items.Count - 1 do
   begin
-    if frmGUIta.LVfiles.Items[i].Checked then
+    if frmGUIta.LVjobs.Items[i].Checked then
     begin
       frmGUIta.SynMemo3.Clear;
-      jo := TJob(frmGUIta.LVfiles.Items[i].Data);
+      jo := TJob(frmGUIta.LVjobs.Items[i].Data);
       frmGUIta.memJournal.Lines.Add(DateTimeToStr(dt) + ' - ' + jo.files[0]);
       fcmd.Text := frmGUIta.myGetCmdFromJo(jo);
       jo.setval('Completed', '2');
-      frmGUIta.LVfiles.Refresh;
+      frmGUIta.LVjobs.Refresh;
       Break;
     end;
   end;
@@ -87,15 +87,15 @@ begin
     jo.setval(frmGUIta.edtOfna.Name, fnoa);
   end;
   {$ENDIF}
-  for i := 0 to frmGUIta.LVfiles.Items.Count - 1 do
+  for i := 0 to frmGUIta.LVjobs.Items.Count - 1 do
   begin
-    s := TJob(frmGUIta.LVfiles.Items[i].Data).getval('index');
+    s := TJob(frmGUIta.LVjobs.Items[i].Data).getval('index');
     t := jo.getval('index');
     if s = t then
     begin
-      frmGUIta.LVfiles.Items[i].Checked := False;
-      if frmGUIta.LVfiles.Items[i].Selected then
-        frmGUIta.LVfilesSelectItem(nil, frmGUIta.LVfiles.Items[i], True);
+      frmGUIta.LVjobs.Items[i].Checked := False;
+      if frmGUIta.LVjobs.Items[i].Selected then
+        frmGUIta.LVjobsSelectItem(nil, frmGUIta.LVjobs.Items[i], True);
       Break;
     end;
   end;
@@ -117,7 +117,7 @@ begin
   frmGUIta.StatusBar1.SimpleText := s;
   frmGUIta.memJournal.Lines.Add(sdiv);
   frmGUIta.SynMemo3.Lines.Add(sdiv);
-  frmGUIta.LVfiles.Refresh;
+  frmGUIta.LVjobs.Refresh;
 end;
 
 procedure TThreadConv.ShowJournal;

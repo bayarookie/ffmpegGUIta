@@ -231,20 +231,20 @@ begin
   v := '';
   a := '';
   s := '';
-  for i := 0 to frmGUIta.LVfiles.Items.Count - 1 do
+  for i := 0 to frmGUIta.LVjobs.Items.Count - 1 do
   begin
-    if TJob(frmGUIta.LVfiles.Items[i].Data).getval('index') = jo.getval('index') then
+    if TJob(frmGUIta.LVjobs.Items[i].Data).getval('index') = jo.getval('index') then
     begin
-      frmGUIta.LVfiles.Items[i].Data := Pointer(jo);
+      frmGUIta.LVjobs.Items[i].Data := Pointer(jo);
       frmGUIta.myGetCaptions(jo, v, a, s);
-      frmGUIta.LVfiles.Items[i].SubItems[4] := v;
-      frmGUIta.LVfiles.Items[i].SubItems[5] := a;
-      if frmGUIta.LVfiles.Items[i].Selected then
-        frmGUIta.LVfilesSelectItem(nil, frmGUIta.LVfiles.Items[i], True);
+      frmGUIta.LVjobs.Items[i].SubItems[4] := v;
+      frmGUIta.LVjobs.Items[i].SubItems[5] := a;
+      if frmGUIta.LVjobs.Items[i].Selected then
+        frmGUIta.LVjobsSelectItem(nil, frmGUIta.LVjobs.Items[i], True);
       Exit;
     end;
   end;
-  li := frmGUIta.LVfiles.Items.Add;
+  li := frmGUIta.LVjobs.Items.Add;
   li.Checked := b;
   li.Caption := jo.getval('index');
   li.SubItems.Add(filenamew);
@@ -256,15 +256,15 @@ begin
   inc(DuraAl2);
   frmGUIta.Caption := sCap + ' - ' + mes[21] + ' = ' + myRealToTimeStr(DuraAll)
     + ', ' + mes[27] + ' = ' + IntToStr(DuraAl2);
-  //frmGUIta.LVfilesItemChecked(nil, nil);
+  //frmGUIta.LVjobsItemChecked(nil, nil);
   frmGUIta.myGetCaptions(jo, v, a, s);
   li.SubItems.Add(v);
   li.SubItems.Add(a);
   li.Data := Pointer(jo);
-  if (frmGUIta.LVfiles.Items.Count = 1) then
+  if (frmGUIta.LVjobs.Items.Count = 1) then
   begin
-    frmGUIta.LVfiles.Items[0].Selected := True;
-    frmGUIta.LVfilesSelectItem(nil, frmGUIta.LVfiles.Items[0], True);
+    frmGUIta.LVjobs.Items[0].Selected := True;
+    frmGUIta.LVjobsSelectItem(nil, frmGUIta.LVjobs.Items[0], True);
   end;
 end;
 

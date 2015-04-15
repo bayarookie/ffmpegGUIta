@@ -51,7 +51,7 @@ begin
   frmGUIta.memJournal.Lines.Add(DateTimeToStr(dt) + ' - ' + jo.files[0]);
   fcmd.Text := frmGUIta.myGetCmdFromJo(jo, True);
   jo.setval('Completed', '2');
-  frmGUIta.LVfiles.Refresh;
+  frmGUIta.LVjobs.Refresh;
 end;
 
 procedure TThreadTest.DataOut;
@@ -110,10 +110,10 @@ begin
   frmGUIta.memJournal.Lines.Add(sdiv);
   frmGUIta.SynMemo5.Lines.Add(sdiv);
   if li.Selected then
-    frmGUIta.LVfilesSelectItem(nil, li, True);
+    frmGUIta.LVjobsSelectItem(nil, li, True);
   if fExitStatus = 0 then
     frmGUIta.btnPlayOutClick(nil);
-  frmGUIta.LVfiles.Refresh;
+  frmGUIta.LVjobs.Refresh;
 end;
 
 procedure TThreadTest.ShowJournal;

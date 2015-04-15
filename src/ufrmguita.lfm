@@ -81,9 +81,9 @@ object frmGUIta: TfrmGUIta
             TabOrder = 0
             ViewStyle = vsReport
             OnClick = LVstreamsClick
-            OnCustomDrawItem = LVfilesCustomDrawItem
-            OnDragDrop = LVfilesDragDrop
-            OnDragOver = LVfilesDragOver
+            OnCustomDrawItem = LVjobsCustomDrawItem
+            OnDragDrop = LVjobsDragDrop
+            OnDragOver = LVjobsDragOver
             OnExit = LVstreamsExit
             OnItemChecked = LVstreamsItemChecked
             OnSelectItem = LVstreamsSelectItem
@@ -229,7 +229,7 @@ object frmGUIta: TfrmGUIta
               ShowHint = True
               TabOrder = 2
             end
-            object LVdelo: TListView
+            object LVfiles: TListView
               Left = 0
               Height = 112
               Top = 0
@@ -247,7 +247,7 @@ object frmGUIta: TfrmGUIta
               RowSelect = True
               TabOrder = 3
               ViewStyle = vsReport
-              OnSelectItem = LVdeloSelectItem
+              OnSelectItem = LVfilesSelectItem
             end
           end
           object TabOutput: TTabSheet
@@ -1678,7 +1678,7 @@ object frmGUIta: TfrmGUIta
           end
         end
       end
-      object LVfiles: TListView
+      object LVjobs: TListView
         Left = 0
         Height = 150
         Top = 26
@@ -1738,15 +1738,15 @@ object frmGUIta: TfrmGUIta
         SmallImages = ImageList1
         TabOrder = 1
         ViewStyle = vsReport
-        OnClick = LVfilesClick
-        OnContextPopup = LVfilesContextPopup
-        OnCustomDrawItem = LVfilesCustomDrawItem
+        OnClick = LVjobsClick
+        OnContextPopup = LVjobsContextPopup
+        OnCustomDrawItem = LVjobsCustomDrawItem
         OnDblClick = mnuOpenClick
-        OnDragDrop = LVfilesDragDrop
-        OnDragOver = LVfilesDragOver
-        OnItemChecked = LVfilesItemChecked
-        OnKeyDown = LVfilesKeyDown
-        OnSelectItem = LVfilesSelectItem
+        OnDragDrop = LVjobsDragDrop
+        OnDragOver = LVjobsDragOver
+        OnItemChecked = LVjobsItemChecked
+        OnKeyDown = LVjobsKeyDown
+        OnSelectItem = LVjobsSelectItem
       end
       object Panel1: TPanel
         Left = 0

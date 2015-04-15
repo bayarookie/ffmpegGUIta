@@ -152,8 +152,8 @@ type
     lblSRate: TLabel;
     lblx264preset: TLabel;
     lblx264tune: TLabel;
-    LVdelo: TListView;
     LVfiles: TListView;
+    LVjobs: TListView;
     LVstreams: TListView;
     memCmdlines: TMemo;
     mnuCheck: TMenuItem;
@@ -251,19 +251,19 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure FormDropFiles(Sender: TObject; const FileNames: array of string);
     procedure FormShow(Sender: TObject);
-    procedure LVdeloSelectItem(Sender: TObject; Item: TListItem;
-      Selected: Boolean);
-    procedure LVfilesClick(Sender: TObject);
-    procedure LVfilesContextPopup(Sender: TObject; MousePos: TPoint;
-      var Handled: boolean);
-    procedure LVfilesCustomDrawItem(Sender: TCustomListView; Item: TListItem;
-      State: TCustomDrawState; var DefaultDraw: boolean);
-    procedure LVfilesDragDrop(Sender, Source: TObject; X, Y: integer);
-    procedure LVfilesDragOver(Sender, Source: TObject; X, Y: integer;
-      State: TDragState; var Accept: boolean);
-    procedure LVfilesItemChecked(Sender: TObject; Item: TListItem);
-    procedure LVfilesKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure LVfilesSelectItem(Sender: TObject; Item: TListItem;
+      Selected: Boolean);
+    procedure LVjobsClick(Sender: TObject);
+    procedure LVjobsContextPopup(Sender: TObject; MousePos: TPoint;
+      var Handled: boolean);
+    procedure LVjobsCustomDrawItem(Sender: TCustomListView; Item: TListItem;
+      State: TCustomDrawState; var DefaultDraw: boolean);
+    procedure LVjobsDragDrop(Sender, Source: TObject; X, Y: integer);
+    procedure LVjobsDragOver(Sender, Source: TObject; X, Y: integer;
+      State: TDragState; var Accept: boolean);
+    procedure LVjobsItemChecked(Sender: TObject; Item: TListItem);
+    procedure LVjobsKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+    procedure LVjobsSelectItem(Sender: TObject; Item: TListItem;
       Selected: boolean);
     procedure LVstreamsClick(Sender: TObject);
     procedure LVstreamsExit(Sender: TObject);
@@ -1376,17 +1376,17 @@ begin
   Result := StringReplace(Result, '$ffplay', myExpandFN(edtffplay.Text), [rfReplaceAll]);
   Result := StringReplace(Result, '$ffprobe', myExpandFN(edtffprobe.Text),
     [rfReplaceAll]);
-  if LVfiles.Selected = nil then
+  if LVjobs.Selected = nil then
     Exit;
-  p := myGetAnsiFN(LVfiles.Selected.SubItems[0]);
+  p := myGetAnsiFN(LVjobs.Selected.SubItems[0]);
   Result := StringReplace(Result, '$input', p, [rfReplaceAll]);
   p := ExtractFileDir(p);
   Result := StringReplace(Result, '$dirinp', p, [rfReplaceAll]);
   Result := StringReplace(Result, '$output',
   {$IFDEF MSWINDOWS}
-    TJob(LVfiles.Selected.Data).getval(edtOfna.Name), [rfReplaceAll]);
+    TJob(LVjobs.Selected.Data).getval(edtOfna.Name), [rfReplaceAll]);
   {$ELSE}
-    TJob(LVfiles.Selected.Data).getval(edtOfn.Name), [rfReplaceAll]);
+    TJob(LVjobs.Selected.Data).getval(edtOfn.Name), [rfReplaceAll]);
   {$ENDIF}
 end;
 
@@ -1698,7 +1698,7 @@ begin
   s3 := 'Messages';
   myLng5([PageControl1, PageControl2, PageControl3]);
   myLng3([Panel1, Panel2, Panel3]);
-  myLng1([LVfiles]);
+  myLng1([LVjobs]);
   myLng4([PopupMenu1, PopupMenu2]);
   for i := Low(mes) to High(mes) do
     if bRead then
@@ -1729,15 +1729,15 @@ begin
   mySets3(Ini, s, [cmbRunCmd, cmbExtPlayer], bRead);
   if bRead then
   begin
-    for i := 0 to LVfiles.Columns.Count - 1 do
-      LVfiles.Column[i].Width :=
-        Ini.ReadInteger(LVfiles.Name, IntToStr(i), LVfiles.Column[i].Width);
+    for i := 0 to LVjobs.Columns.Count - 1 do
+      LVjobs.Column[i].Width :=
+        Ini.ReadInteger(LVjobs.Name, IntToStr(i), LVjobs.Column[i].Width);
     myFormPosLoad(frmGUIta, Ini);
   end
   else
   begin
-    for i := 0 to LVfiles.Columns.Count - 1 do
-      myToIni(Ini, LVfiles.Name, IntToStr(i), IntToStr(LVfiles.Column[i].Width));
+    for i := 0 to LVjobs.Columns.Count - 1 do
+      myToIni(Ini, LVjobs.Name, IntToStr(i), IntToStr(LVjobs.Column[i].Width));
     myFormPosSave(frmGUIta, Ini);
     if edtDirOut.Text = '' then
       Ini.WriteString(s, edtDirOut.Name, '');
@@ -1754,10 +1754,10 @@ begin
   btnStart.Enabled := not b;
   btnSuspend.Enabled := b;
   btnStop.Enabled := b;
-  b := (LVfiles.Selected <> nil);
+  b := (LVjobs.Selected <> nil);
   for i := 0 to TabConvJob.ControlCount - 1 do
     TControl(TabConvJob.Controls[i]).Enabled := b;
-  b1 := b and FileExistsUTF8(LVfiles.Selected.SubItems[0]);
+  b1 := b and FileExistsUTF8(LVjobs.Selected.SubItems[0]);
   btnPlayIn.Enabled := b1;
   mnuOpen.Enabled := b1;
   mnuView.Enabled := b1;
@@ -1765,14 +1765,14 @@ begin
   mnuMediaInfo.Enabled := b1 and b3;
   btnMediaInfo1.Enabled := b1 and b3;
   btnTest.Enabled := b1 and (ThreadTest = nil);
-  b2 := b and FileExistsUTF8(TJob(LVfiles.Selected.Data).getval(edtOfn.Name));
+  b2 := b and FileExistsUTF8(TJob(LVjobs.Selected.Data).getval(edtOfn.Name));
   btnMediaInfo2.Enabled := b2 and b3;
   btnPlayOut.Enabled := b2;
   btnCompare.Enabled := b1 and b2;
-  b3 := b1 and (LowerCase(ExtractFileExt(LVfiles.Selected.SubItems[0])) = '.avs');
+  b3 := b1 and (LowerCase(ExtractFileExt(LVjobs.Selected.SubItems[0])) = '.avs');
   mnuEditAvs.Enabled := b3;
   mnuCopyAsAvs.Enabled := b1 and not b3;
-  chkConcat.Enabled := b and (TJob(LVfiles.Selected.Data).files.Count > 1);
+  chkConcat.Enabled := b and (TJob(LVjobs.Selected.Data).files.Count > 1);
 end;
 
 function TfrmGUIta.myGetCaptionCont(p: TCont): string;
@@ -2328,7 +2328,7 @@ end;
 
 function TfrmGUIta.myCantUpd(i: integer = 0): boolean;
 begin
-  Result := bUpdFromCode or (LVfiles.Selected = nil) or
+  Result := bUpdFromCode or (LVjobs.Selected = nil) or
     ((i = 1) and (LVstreams.Selected = nil));
 end;
 
@@ -2598,8 +2598,8 @@ begin
     if Sender = btnAddFileSplit then
       myAddFileSplit(od.Files)
     else
-    if (Sender = btnAddTracks) and (LVfiles.Selected <> nil) then
-      myAddFilesPlus(LVfiles.Selected, od.Files)
+    if (Sender = btnAddTracks) and (LVjobs.Selected <> nil) then
+      myAddFilesPlus(LVjobs.Selected, od.Files)
     else
       myAddFiles(od.Files)
   end;
@@ -2657,7 +2657,7 @@ begin
     jo.a[1].setval('Checked', '1');
 
 
-    li := LVfiles.Items.Add;
+    li := LVjobs.Items.Add;
     li.Checked := True;
     li.Caption := IntToStr(Counter);
     li.SubItems.Add('screen grab');
@@ -2670,10 +2670,10 @@ begin
     li.SubItems.Add('');
     li.SubItems.Add('');
     li.Data := Pointer(jo);
-    if (LVfiles.Items.Count = 1) then
+    if (LVjobs.Items.Count = 1) then
     begin
-      LVfiles.Items[0].Selected := True;
-      LVfilesSelectItem(nil, LVfiles.Items[0], True);
+      LVjobs.Items[0].Selected := True;
+      LVjobsSelectItem(nil, LVjobs.Items[0], True);
     end;
   end;
   frmGrab.Free;
@@ -2701,11 +2701,11 @@ var
   ty, iv, ia, fv, fa, nv, na, fn, map: string;
   k: integer;
 begin
-  if LVfiles.Selected = nil then
+  if LVjobs.Selected = nil then
     Exit;
   if not FileExistsUTF8(edtOfn.Text) then
     Exit;
-  jo := TJob(LVfiles.Selected.Data);
+  jo := TJob(LVjobs.Selected.Data);
   iv := '';
   ia := '';
   fv := '';
@@ -2854,7 +2854,7 @@ var
 begin
   if myCantUpd(1) then
     Exit;
-  jo := TJob(LVfiles.Selected.Data);
+  jo := TJob(LVjobs.Selected.Data);
   co := TCont(LVstreams.Selected.Data);
   if cmbCrop.Text = '' then
   begin
@@ -3029,7 +3029,7 @@ begin
   s := myGetAnsiFN(myExpandFN(edtMediaInfo.Text));
   if not FileExistsUTF8(s) then
     Exit;
-  fn := IfThen(Sender = btnMediaInfo2, edtOfn.Text, LVfiles.Selected.SubItems[0]);
+  fn := IfThen(Sender = btnMediaInfo2, edtOfn.Text, LVjobs.Selected.SubItems[0]);
   se := LowerCase(ExtractFileExt(s));
   if se = '.exe' then
     myExecProc(s, [fn])
@@ -3058,7 +3058,7 @@ begin
   end;
   {$ELSE}
   s := myExpandFN(edtMediaInfo.Text);
-  fn := IfThen(Sender = btnMediaInfo2, edtOfn.Text, LVfiles.Selected.SubItems[0]);
+  fn := IfThen(Sender = btnMediaInfo2, edtOfn.Text, LVjobs.Selected.SubItems[0]);
   myExecProc(s, [fn]);
   {$ENDIF}
 end;
@@ -3091,9 +3091,9 @@ var
   s, ss, t, si, vf, af, vn, an, sn, filenum: string;
   k: integer;
 begin
-  if LVfiles.Selected = nil then
+  if LVjobs.Selected = nil then
     Exit;
-  jo := TJob(LVfiles.Selected.Data);
+  jo := TJob(LVjobs.Selected.Data);
   vf := '';
   af := '';
   vn := '';
@@ -3280,7 +3280,7 @@ end;
 
 procedure TfrmGUIta.btnTestClick(Sender: TObject);
 begin
-  if LVfiles.Selected = nil then
+  if LVjobs.Selected = nil then
     Exit;
   if (ThreadTest <> nil) then
   begin
@@ -3292,7 +3292,7 @@ begin
     {$ENDIF}
     Exit;
   end;
-  ThreadTest := TThreadTest.Create(myStrReplace('$dirtmp'), LVfiles.Selected);
+  ThreadTest := TThreadTest.Create(myStrReplace('$dirtmp'), LVjobs.Selected);
   if Assigned(ThreadTest.FatalException) then
     raise ThreadTest.FatalException;
   ThreadTest.OnTerminate := @onTestTerminate;
@@ -3515,7 +3515,7 @@ begin
     Exit;
   s := myGetAnsiFN(s);
   Ini := TIniFile.Create(UTF8ToSys(s));
-  jo := TJob(LVfiles.Selected.Data);
+  jo := TJob(LVjobs.Selected.Data);
   jo.setval(cmbFormat.Name, Ini.ReadString('1', cmbFormat.Name, ''));
   se := Ini.ReadString('1', cmbExt.Name, '');
   jo.setval(cmbExt.Name, se);
@@ -3558,8 +3558,8 @@ begin
       jo.a[k].setval(edtBitrateA.Name, myCalcBRa(jo.a[k]));
   end;
   Ini.Free;
-  LVfiles.Selected.SubItems[2] := myCalcOutSize(jo);
-  LVfilesSelectItem(Sender, LVfiles.Selected, True);
+  LVjobs.Selected.SubItems[2] := myCalcOutSize(jo);
+  LVjobsSelectItem(Sender, LVjobs.Selected, True);
 end;
 
 procedure TfrmGUIta.edtOfnChange(Sender: TObject);
@@ -3582,7 +3582,7 @@ begin
   if FileExistsUTF8(edtOfn.Text) then
     edtOfna.Text := myGetAnsiFN(edtOfn.Text)
   else
-    edtOfna.Text := myGetOutFNa(sd, LVfiles.Selected.SubItems[0], se);
+    edtOfna.Text := myGetOutFNa(sd, LVjobs.Selected.SubItems[0], se);
   {$ENDIF}
   cmbExt.Text := se;
   cmbExtChange(cmbExt);
@@ -3886,11 +3886,11 @@ begin
     w := 2
   else
   {$ENDIF}
-  if (LVfiles.Selected <> nil)
-  and ((wc.Name = LVstreams.Name) or (wc.Name = LVdelo.Name)) then
+  if (LVjobs.Selected <> nil)
+  and ((wc.Name = LVstreams.Name) or (wc.Name = LVfiles.Name)) then
     w := 3
   else
-  if (LVfiles.Selected <> nil) and (wc.Name = edtOfn.Name) then
+  if (LVjobs.Selected <> nil) and (wc.Name = edtOfn.Name) then
     w := 4
   else
   if wc.Name = btnAddFileSplit.Name then
@@ -3918,7 +3918,7 @@ begin
         1: myAddFilesAsAVS1(ST);
         2: myAddFilesAsAVS2(ST);
         {$ENDIF}
-        3: myAddFilesPlus(LVfiles.Selected, ST);
+        3: myAddFilesPlus(LVjobs.Selected, ST);
         4: edtOfn.Text := ST[0];
         5: myAddFileSplit(ST);
         else
@@ -4014,48 +4014,75 @@ begin
   end;
 end;
 
-procedure TfrmGUIta.LVdeloSelectItem(Sender: TObject; Item: TListItem;
+procedure TfrmGUIta.LVfilesSelectItem(Sender: TObject; Item: TListItem;
   Selected: Boolean);
 var
-  i: integer;
+  i, j, k, l: integer;
   jo: TJob;
+  s: string;
 begin
-  if (LVfiles.Selected <> nil) and (LVdelo.Selected <> nil) then
+  if (LVjobs.Selected <> nil) and (LVfiles.Selected <> nil) then
   begin
-    jo := TJob(LVfiles.Selected.Data);
-    i := LVdelo.Selected.Index;
-    if (i >= 0) and (i < jo.files.Count) then
+    jo := TJob(LVjobs.Selected.Data);
+    l := LVfiles.Selected.Index;
+    if (l >= 0) and (l < jo.files.Count) then
     begin
-      myGetValsFromCont(TabInput, TCont(jo.files.Objects[i]));
+      myGetValsFromCont(TabInput, TCont(jo.files.Objects[l]));
+      if bUpdFromCode then
+        Exit;
+      bUpdFromCode := True;
+      j := -1;
+      k := -1;
+      for i := 0 to LVstreams.Items.Count - 1 do
+      begin
+        s := TCont(LVstreams.Items[i].Data).getval('filenum');
+        if (s = IntToStr(l)) then
+        begin
+          if (j < 0) and LVstreams.Items[i].Checked then
+            j := i;
+          if (k < 0) then
+            k := i;
+        end;
+        LVstreams.Items[i].Selected := False;
+      end;
+      if (j >= 0) then
+        i := j
+      else if (k >= 0) then
+        i := k
+      else
+        i := -1;
+      bUpdFromCode := False;
+      if (i >= 0) then
+        LVstreams.Items[i].Selected := True;
     end;
   end;
 end;
 
-procedure TfrmGUIta.LVfilesClick(Sender: TObject);
+procedure TfrmGUIta.LVjobsClick(Sender: TObject);
 begin
-  if LVfiles.Selected = nil then
+  if LVjobs.Selected = nil then
   begin
     edtOfn.EditLabel.Caption := mes[7];
     myClear2([TabInput, TabOutput, TabVideo, TabAudio, TabSubtitle, TabContRows, TabCmdline]);
-    LVdelo.Clear;
+    LVfiles.Clear;
     LVstreams.Clear;
   end;
   myDisComp;
 end;
 
-procedure TfrmGUIta.LVfilesContextPopup(Sender: TObject; MousePos: TPoint;
+procedure TfrmGUIta.LVjobsContextPopup(Sender: TObject; MousePos: TPoint;
   var Handled: boolean);
 begin
-  if LVfiles.Selected = nil then
+  if LVjobs.Selected = nil then
     myDisComp;
 end;
 
-procedure TfrmGUIta.LVfilesCustomDrawItem(Sender: TCustomListView;
+procedure TfrmGUIta.LVjobsCustomDrawItem(Sender: TCustomListView;
   Item: TListItem; State: TCustomDrawState; var DefaultDraw: boolean);
 var
   i: integer;
 begin
-  if (Sender = LVfiles) then
+  if (Sender = LVjobs) then
   begin
     if TJob(Item.Data) = nil then
       Exit;
@@ -4076,7 +4103,7 @@ begin
   end;
 end;
 
-procedure TfrmGUIta.LVfilesDragDrop(Sender, Source: TObject; X, Y: integer);
+procedure TfrmGUIta.LVjobsDragDrop(Sender, Source: TObject; X, Y: integer);
 var
   currentItem, nextItem, dragItem, dropItem: TListItem;
   i: integer;
@@ -4108,23 +4135,23 @@ begin
     LVstreamsExit(nil);
 end;
 
-procedure TfrmGUIta.LVfilesDragOver(Sender, Source: TObject; X, Y: integer;
+procedure TfrmGUIta.LVjobsDragOver(Sender, Source: TObject; X, Y: integer;
   State: TDragState; var Accept: boolean);
 begin
   Accept := (Sender = Source);
 end;
 
-procedure TfrmGUIta.LVfilesItemChecked(Sender: TObject; Item: TListItem);
+procedure TfrmGUIta.LVjobsItemChecked(Sender: TObject; Item: TListItem);
 var
   i: integer;
   jo: TJob;
 begin
   DuraAll := 0;
   DuraAl2 := 0;
-  for i := 0 to LVfiles.Items.Count - 1 do
-    if LVfiles.Items[i].Checked then
+  for i := 0 to LVjobs.Items.Count - 1 do
+    if LVjobs.Items[i].Checked then
     begin
-      jo := TJob(LVfiles.Items[i].Data);
+      jo := TJob(LVjobs.Items[i].Data);
       DuraAll := DuraAll + myTimeStrToReal(jo.getval('duration'));
       inc(DuraAl2);
     end;
@@ -4132,7 +4159,7 @@ begin
     + ', ' + mes[27] + ' = ' + IntToStr(DuraAl2);
 end;
 
-procedure TfrmGUIta.LVfilesKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+procedure TfrmGUIta.LVjobsKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
 begin
   if (Shift = [ssCtrl]) then
     if (Key = 86) then
@@ -4142,7 +4169,7 @@ begin
       mnuPasteClick(mnuPaste);
 end;
 
-procedure TfrmGUIta.LVfilesSelectItem(Sender: TObject; Item: TListItem;
+procedure TfrmGUIta.LVjobsSelectItem(Sender: TObject; Item: TListItem;
   Selected: boolean);
 var
   k: integer;
@@ -4150,16 +4177,16 @@ var
   li: TListItem;
 begin
   bUpdFromCode := True;
-  LVdelo.Clear;
+  LVfiles.Clear;
   LVstreams.Clear;
   myClear2([TabInput, TabOutput, TabVideo, TabAudio, TabSubtitle, TabContRows, TabCmdline]);
-  if LVfiles.Selected <> nil then
-    jo := TJob(LVfiles.Selected.Data)
+  if LVjobs.Selected <> nil then
+    jo := TJob(LVjobs.Selected.Data)
   else
     jo := TJob(Item.Data);
   for k := 0 to jo.files.Count - 1 do
   begin
-    li := LVdelo.Items.Add;
+    li := LVfiles.Items.Add;
     li.Caption := IntToStr(k);;
     li.SubItems.Add(jo.files[k]);
   end;
@@ -4199,7 +4226,7 @@ begin
   if myCantUpd(0) then
     Exit;
   for i := 0 to LVstreams.Items.Count - 1 do
-    TJob(LVfiles.Selected.Data).a[i] := TCont(LVstreams.Items[i].Data);
+    TJob(LVjobs.Selected.Data).a[i] := TCont(LVstreams.Items[i].Data);
 end;
 
 procedure TfrmGUIta.LVstreamsItemChecked(Sender: TObject; Item: TListItem);
@@ -4210,8 +4237,8 @@ begin
     Exit;
   s := IfThen(Item.Checked, '1', '0');
   TCont(Item.Data).setval('Checked', s);
-  TJob(LVfiles.Selected.Data).a[Item.Index].setval('Checked', s);
-  LVfiles.Selected.SubItems[2] := myCalcOutSize(TJob(LVfiles.Selected.Data));
+  TJob(LVjobs.Selected.Data).a[Item.Index].setval('Checked', s);
+  LVjobs.Selected.SubItems[2] := myCalcOutSize(TJob(LVjobs.Selected.Data));
   if PageControl2.ActivePage = TabCmdline then
     TabCmdlineShow(Sender);
 end;
@@ -4280,8 +4307,8 @@ var
   i: integer;
 begin
   mnuCheck.Checked := not mnuCheck.Checked;
-  for i := 0 to LVfiles.Items.Count - 1 do
-    LVfiles.Items[i].Checked := mnuCheck.Checked;
+  for i := 0 to LVjobs.Items.Count - 1 do
+    LVjobs.Items[i].Checked := mnuCheck.Checked;
 end;
 
 procedure TfrmGUIta.mnuCopyAsAvsClick(Sender: TObject);
@@ -4292,13 +4319,13 @@ var
   b: boolean;
   {$ENDIF}
 begin
-  if LVfiles.Selected = nil then
+  if LVjobs.Selected = nil then
     Exit;
   {$IFDEF MSWINDOWS}
   b := False;
-  s := myExpandFileNameCaseW(LVfiles.Selected.SubItems[0], b);
+  s := myExpandFileNameCaseW(LVjobs.Selected.SubItems[0], b);
   if not b then
-    s := LVfiles.Selected.SubItems[0];
+    s := LVjobs.Selected.SubItems[0];
   if LowerCase(ExtractFileExt(s)) = '.avs' then
     Exit;
   sl := TStringList.Create;
@@ -4312,9 +4339,9 @@ procedure TfrmGUIta.mnuEditAvsClick(Sender: TObject);
 var
   s: string;
 begin
-  if LVfiles.Selected = nil then
+  if LVjobs.Selected = nil then
     Exit;
-  s := myGetAnsiFN(LVfiles.Selected.SubItems[0]);
+  s := myGetAnsiFN(LVjobs.Selected.SubItems[0]);
   if LowerCase(ExtractFileExt(s)) = '.avs' then
     myOpenDoc(s);
 end;
@@ -4323,7 +4350,7 @@ procedure TfrmGUIta.mnuOpenClick(Sender: TObject);
 begin
   if myCantUpd(0) then
     Exit;
-  myOpenDoc(LVfiles.Selected.SubItems[0]);
+  myOpenDoc(LVjobs.Selected.SubItems[0]);
 end;
 
 procedure TfrmGUIta.mnuPasteClick(Sender: TObject);
@@ -4344,8 +4371,8 @@ begin
       myAddFilesAsAVS2(sl)
     else
     {$ENDIF}
-    if (Sender = mnuPasteTracks) and (LVfiles.Selected <> nil) then
-      myAddFilesPlus(LVfiles.Selected, sl);
+    if (Sender = mnuPasteTracks) and (LVjobs.Selected <> nil) then
+      myAddFilesPlus(LVjobs.Selected, sl);
   sl.Free;
 end;
 
@@ -4399,15 +4426,15 @@ begin
   mnuPaste.Enabled := b3;
   mnuPasteAsAvs1.Enabled := b3;
   mnuPasteAsAvs2.Enabled := b3;
-  b := (LVfiles.Selected <> nil);
+  b := (LVjobs.Selected <> nil);
   b3 := FileExistsUTF8(myExpandFN(edtffplay.Text));
   mnuView.Enabled := b and b3;
 end;
 
 procedure TfrmGUIta.TabCmdlineShow(Sender: TObject);
 begin
-  if (LVfiles.Selected <> nil) then
-    memCmdlines.Text := myGetCmdFromJo(TJob(LVfiles.Selected.Data));
+  if (LVjobs.Selected <> nil) then
+    memCmdlines.Text := myGetCmdFromJo(TJob(LVjobs.Selected.Data));
 end;
 
 procedure TfrmGUIta.TabContRowsShow(Sender: TObject);
@@ -4417,9 +4444,9 @@ var
   c: TCont;
 begin
   SynMemo4.Clear;
-  if LVfiles.Selected <> nil then
+  if LVjobs.Selected <> nil then
   begin
-    jo := TJob(LVfiles.Selected.Data);
+    jo := TJob(LVjobs.Selected.Data);
     if LVstreams.Selected = nil then
     begin
       for i := 0 to jo.files.Count - 1 do
@@ -4442,22 +4469,18 @@ var
   s: string;
   jo: TJob;
 begin
-  if (LVfiles.Selected <> nil) then
+  if (LVjobs.Selected <> nil) then
   begin
-    for i := 0 to LVdelo.Items.Count - 1 do
-      LVdelo.Items[i].Selected := False;
-    jo := TJob(LVfiles.Selected.Data);
+    for i := 0 to LVfiles.Items.Count - 1 do
+      LVfiles.Items[i].Selected := False;
+    jo := TJob(LVjobs.Selected.Data);
     if (LVstreams.Selected <> nil) then
       s := TCont(LVstreams.Selected.Data).getval('filenum')
     else
       s := '0';
     i := StrToIntDef(s, -1);
     if (i >= 0) and (i < jo.files.Count) then
-    begin
-      //myGetValsFromCont(TabInput, TCont(jo.files.Objects[i]));
-      //memInputfn.Text := jo.files[i];
-      LVdelo.Items[i].Selected := True;
-    end;
+      LVfiles.Items[i].Selected := True;
   end;
 end;
 
@@ -4511,7 +4534,7 @@ end;
 
 procedure TfrmGUIta.xmyChange0i(Sender: TObject);
 var
-  s, s1, s2: string;
+  s1, s2: string;
   i: integer;
   jo: TJob;
 begin
@@ -4519,18 +4542,13 @@ begin
     Exit;
   s1 := (Sender as TControl).Name;
   s2 := myGet2(Sender);
-  jo := TJob(LVfiles.Selected.Data);
-  //if (LVstreams.Selected <> nil) then
-  //  s := TCont(LVstreams.Selected.Data).getval('filenum')
-  //else
-  //  s := '0';
-  //i := StrToIntDef(s, -1);
-  if (LVdelo.Selected <> nil) then
-    i := LVdelo.Selected.Index
+  jo := TJob(LVjobs.Selected.Data);
+  if (LVfiles.Selected <> nil) then
+    i := LVfiles.Selected.Index
   else
     i := -1;
   if (i >= 0) and (i < jo.files.Count) then
-    TCont(TJob(LVfiles.Selected.Data).files.Objects[i]).setval(s1, s2);
+    TCont(TJob(LVjobs.Selected.Data).files.Objects[i]).setval(s1, s2);
 end;
 
 procedure TfrmGUIta.xmyChange0(Sender: TObject);
@@ -4541,7 +4559,7 @@ begin
     Exit;
   s1 := (Sender as TControl).Name;
   s2 := myGet2(Sender);
-  TJob(LVfiles.Selected.Data).setval(s1, s2);
+  TJob(LVjobs.Selected.Data).setval(s1, s2);
   myDisComp;
 end;
 
@@ -4550,7 +4568,7 @@ begin
   if myCantUpd(0) then
     Exit;
   xmyChange0(Sender);
-  LVfiles.Selected.SubItems[2] := myCalcOutSize(TJob(LVfiles.Selected.Data));
+  LVjobs.Selected.SubItems[2] := myCalcOutSize(TJob(LVjobs.Selected.Data));
 end;
 
 procedure TfrmGUIta.xmyChange1(Sender: TObject);
@@ -4562,7 +4580,7 @@ begin
   s1 := (Sender as TControl).Name;
   s2 := myGet2(Sender);
   TCont(LVstreams.Selected.Data).setval(s1, s2);
-  TJob(LVfiles.Selected.Data).a[LVstreams.Selected.Index].setval(s1, s2);
+  TJob(LVjobs.Selected.Data).a[LVstreams.Selected.Index].setval(s1, s2);
 end;
 
 procedure TfrmGUIta.xmyChange1v(Sender: TObject);
@@ -4570,7 +4588,7 @@ begin
   if myCantUpd(1) then
     Exit;
   xmyChange1(Sender);
-  edtBitrateV.Text := myCalcBRv(TJob(LVfiles.Selected.Data).a[LVstreams.Selected.Index]);
+  edtBitrateV.Text := myCalcBRv(TJob(LVjobs.Selected.Data).a[LVstreams.Selected.Index]);
 end;
 
 procedure TfrmGUIta.xmyChange1a(Sender: TObject);
@@ -4578,7 +4596,7 @@ begin
   if myCantUpd(1) then
     Exit;
   xmyChange1(Sender);
-  edtBitrateA.Text := myCalcBRa(TJob(LVfiles.Selected.Data).a[LVstreams.Selected.Index]);
+  edtBitrateA.Text := myCalcBRa(TJob(LVjobs.Selected.Data).a[LVstreams.Selected.Index]);
 end;
 
 procedure TfrmGUIta.xmyChange1o(Sender: TObject);
@@ -4586,7 +4604,7 @@ begin
   if myCantUpd(1) then
     Exit;
   xmyChange1(Sender);
-  LVfiles.Selected.SubItems[2] := myCalcOutSize(TJob(LVfiles.Selected.Data));
+  LVjobs.Selected.SubItems[2] := myCalcOutSize(TJob(LVjobs.Selected.Data));
 end;
 
 procedure TfrmGUIta.xmyCheckDir(Sender: TObject);
