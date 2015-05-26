@@ -3,6 +3,7 @@ object frmGUIta: TfrmGUIta
   Height = 540
   Top = 119
   Width = 800
+  ActiveControl = LVfiles
   AllowDropFiles = True
   Caption = 'frmGUIta'
   ClientHeight = 540
@@ -81,9 +82,6 @@ object frmGUIta: TfrmGUIta
             TabOrder = 0
             ViewStyle = vsReport
             OnClick = LVstreamsClick
-            OnCustomDrawItem = LVjobsCustomDrawItem
-            OnDragDrop = LVjobsDragDrop
-            OnDragOver = LVjobsDragOver
             OnExit = LVstreamsExit
             OnItemChecked = LVstreamsItemChecked
             OnSelectItem = LVstreamsSelectItem
@@ -559,7 +557,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbPass: TComboBox
               Left = 188
-              Height = 23
+              Height = 20
               Top = 20
               Width = 60
               ItemHeight = 0
@@ -2056,9 +2054,7 @@ object frmGUIta: TfrmGUIta
         Top = 199
         Width = 202
         Caption = 'play output with default player'
-        Checked = True
         OnChange = chkPlayer2Change
-        State = cbChecked
         TabOrder = 16
       end
       object chkPlayer3: TCheckBox

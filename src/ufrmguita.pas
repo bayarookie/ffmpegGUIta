@@ -768,7 +768,7 @@ var
       p := StringReplace(p, ':', '\:', [rfReplaceAll]);
       r := StringReplace(r, '$input', p, [rfReplaceAll]);
     end;
-    for i := 0 to jo.files.Count - 1 do
+    for i := jo.files.Count - 1 downto 0 do
     if Pos('$inpu' + IntToStr(i), r) > 0 then
     begin
       p := myGetAnsiFN(jo.files[i]);
