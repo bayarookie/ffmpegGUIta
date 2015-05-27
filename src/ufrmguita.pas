@@ -766,6 +766,7 @@ var
       p := myGetAnsiFN(jo.files[0]);
       p := StringReplace(p, '\', '/', [rfReplaceAll]);
       p := StringReplace(p, ':', '\:', [rfReplaceAll]);
+      p := StringReplace(p, '''', '\\\''', [rfReplaceAll]);
       r := StringReplace(r, '$input', p, [rfReplaceAll]);
     end;
     for i := jo.files.Count - 1 downto 0 do
@@ -774,6 +775,7 @@ var
       p := myGetAnsiFN(jo.files[i]);
       p := StringReplace(p, '\', '/', [rfReplaceAll]);
       p := StringReplace(p, ':', '\:', [rfReplaceAll]);
+      p := StringReplace(p, '''', '\\\''', [rfReplaceAll]);
       r := StringReplace(r, '$inpu' + IntToStr(i), p, [rfReplaceAll]);
     end;
     s := IfThen(s <> '', s + ', ') + r;

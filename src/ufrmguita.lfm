@@ -3,7 +3,6 @@ object frmGUIta: TfrmGUIta
   Height = 540
   Top = 119
   Width = 800
-  ActiveControl = LVfiles
   AllowDropFiles = True
   Caption = 'frmGUIta'
   ClientHeight = 540
@@ -742,15 +741,15 @@ object frmGUIta: TfrmGUIta
               Items.Strings = (
                 ''
                 '640:480:0:40:violet'
-                '"3/2*iw:3/2*ih:(ow-iw)/2:(oh-ih)/2"'
-                '"max(iw\,ih):ow:(ow-iw)/2:(oh-ih)/2"'
-                '"ih*16/9:ih:(ow-iw)/2:0"'
-                '"ih*16/9/sar:ih:(ow-iw)/2:0"'
-                '"iw:iw*9/16:0:0"'
-                '"iw:iw*9/16*sar:0:0"'
-                '"iw:iw*9/16:0:(oh-ih)/2"'
-                '"iw:iw*9/16*sar:0:(oh-ih)/2"'
-                '"2*iw:2*ih:ow-iw:oh-ih"'
+                '3/2*iw:3/2*ih:(ow-iw)/2:(oh-ih)/2'
+                'max(iw\,ih):ow:(ow-iw)/2:(oh-ih)/2'
+                'ih*16/9:ih:(ow-iw)/2:0'
+                'ih*16/9/sar:ih:(ow-iw)/2:0'
+                'iw:iw*9/16:0:0'
+                'iw:iw*9/16*sar:0:0'
+                'iw:iw*9/16:0:(oh-ih)/2'
+                'iw:iw*9/16*sar:0:(oh-ih)/2'
+                '2*iw:2*ih:ow-iw:oh-ih'
               )
               OnChange = xmyChange1v
               TabOrder = 11
@@ -806,17 +805,18 @@ object frmGUIta: TfrmGUIta
               ItemHeight = 0
               Items.Strings = (
                 ''
+                'fps=15'
                 'split [main][tmp]; [tmp] crop=iw:ih/2:0:0, vflip [flip]; [main][flip] overlay=0:H/2'
-                'movie=''/test/logo.png'' [logo];[in] [logo] overlay=16:16 [out]'
-                '[in] hqdn3d=2:1.5:3 [main];movie=''/test/logo.png'' [logo];[main] [logo] overlay=16:16 [out]'
-                '[in] hqdn3d=2:1.5:3 [main];movie=''$inpu1'' [logo];[main] [logo] overlay=16:16 [out]'
-                'subtitles=''/test/sub.srt'''
-                'subtitles=''$input'''
-                'subtitles=''$inpu1'''
-                'subtitles=''$inpu2'':charenc=cp1251'
-                'subtitles=''$input'':si=1'
-                'ass=''/test/sub.ass'''
-                'drawtext=fontsize=30:fontfile=FreeSerif.ttf:fontcolor=green:text=''hello world'':x=(w-text_w)/2:y=(h-text_h-line_h)/2'
+                'movie=/test/logo.png [logo];[in] [logo] overlay=16:16 [out]'
+                'movie=$inpu1 [logo];[in] [logo] overlay=16:16 [out]'
+                '[in] hqdn3d=2:1.5:3 [main];movie=/test/logo.png [logo];[main] [logo] overlay=16:16 [out]'
+                '[in] hqdn3d=2:1.5:3 [main];movie=$inpu1 [logo];[main] [logo] overlay=16:16 [out]'
+                'subtitles=/test/sub.srt'
+                'subtitles=$input'
+                'subtitles=$inpu1'
+                'subtitles=$inpu2:charenc=cp1251'
+                'subtitles=$input:si=1'
+                'ass=/test/sub.ass'
                 'delogo=x=0:y=0:w=100:h=77:band=10'
                 'yadif'
                 'kerndeint=thresh=10:map=0:order=0:sharp=0:twoway=0'
@@ -826,7 +826,6 @@ object frmGUIta: TfrmGUIta
                 'pp=md'
                 'pp=fd'
                 'pp=l5'
-                'fps=15'
               )
               OnChange = xmyChange1
               TabOrder = 15
