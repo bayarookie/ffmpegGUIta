@@ -162,7 +162,6 @@ var
   ob: TLabeledEdit;
   rd, r, r1: real;
   jo: TJob;
-  v: TCont;
 begin
   (Sender as TUpDown).Enabled := False;
   AllowChange := False;
@@ -174,12 +173,7 @@ begin
   r1 := myTimeStrToReal(ob.Text);
   if fd = 0 then
   begin
-    v := TCont(frmGUIta.LVstreams.Selected.Data);
-    fd := frmGUIta.myValFPS(v.getval('avg_frame_rate'));
-    if fd = 0 then
-      fd := frmGUIta.myValFPS(v.getval('r_frame_rate'));
-    if fd = 0 then
-      fd := 30;
+    fd := frmGUIta.myGetFPS(jo, frmGUIta.LVstreams.Selected.Caption);
     fd := 1 / fd;
   end;
   if NewValue < TUpDown(Sender).Position then

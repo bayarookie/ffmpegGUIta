@@ -18,6 +18,7 @@ type
     jo: TJob;
     filename: string;
     filenamew: string;
+    filenum: integer;
     fcmd: string;
     fStatus: string;
     procedure DataGet;
@@ -39,23 +40,30 @@ uses ufrmGUIta;
 { TThreadAddF }
 
 procedure TThreadAddF.DataGet;
+var
+  l: integer;
 begin
   dt := Now;
+  filenum := -1;
   fcmd := '';
   while Files2Add.Count > 0 do
   begin
     jo := TJob(Files2Add.Items[0]);
-    if jo.files.Count > (jo.filecnt + 1) then
+    for l := 0 to High(jo.f) do
+    if jo.f[l].getval('ffprobe') = '0' then
     begin
-      Inc(jo.filecnt);
-      filenamew := jo.files[jo.filecnt];
+      jo.f[l].setval('ffprobe', '1');
+      filenamew := jo.f[l].getval('filename');
       filename := myGetAnsiFN(filenamew);
       fcmd := frmGUIta.myStrReplace('"$ffprobe"') + ' -show_streams "' +
         filename + '"';
+      filenum := l;
       Break;
-    end
+    end;
+    if filenum < 0 then
+      Files2Add.Delete(0)
     else
-      Files2Add.Delete(0);
+      Break;
   end;
   if fcmd <> '' then
   begin
@@ -76,10 +84,9 @@ var
   li: TListItem;
   b: boolean;
 begin
-  //this code didnt work on windows 8, poUsePipes - infinite wait
-  //frmGUIta.SynMemo6.Lines.LoadFromStream(pr.Output);
+  //frmGUIta.SynMemo6.Lines.LoadFromStream(pr.Output); //this code didnt work on windows 8, poUsePipes - infinite wait
   b := False;
-  if jo.filecnt > 0 then
+  if filenum > 0 then
   begin
     iv := 0;
     ia := 0;
@@ -98,7 +105,7 @@ begin
   Ini := TIniFile.Create(UTF8ToSys(s));
   Ini.ReadSection('input', sl);
   for i := 0 to sl.Count - 1 do
-    TCont(jo.files.Objects[jo.filecnt]).setval(sl[i], Ini.ReadString('input', sl[i], ''));
+    jo.f[filenum].setval(sl[i], Ini.ReadString('input', sl[i], ''));
   Ini.ReadSection('1', sl);
   for i := 0 to sl.Count - 1 do
     jo.setval(sl[i], Ini.ReadString('1', sl[i], ''));
@@ -107,30 +114,30 @@ begin
     sl.Text := myBetween(s, '[STREAM]', '[/STREAM]');
     if (sl.Text = '') then
       Break;
-    k := High(jo.a) + 1;
-    SetLength(jo.a, k + 1);
-    jo.a[k] := TCont.Create;
-    jo.a[k].setval('filenum', IntToStr(jo.filecnt));
+    k := High(jo.f[filenum].s) + 1;
+    SetLength(jo.f[filenum].s, k + 1);
+    jo.f[filenum].s[k] := TCont.Create;
+    jo.f[filenum].s[k].setval('filenum', IntToStr(filenum));
     for i := 0 to sl.Count - 1 do
     begin
       j := Pos('=', sl[i]);
       if j > 0 then
-        jo.a[k].setval(Copy(sl[i], 1, j - 1), Copy(sl[i], j + 1, Length(sl[i])));
+        jo.f[filenum].s[k].setval(Copy(sl[i], 1, j - 1), Copy(sl[i], j + 1, Length(sl[i])));
     end;
-    if (jo.a[k].getval('codec_name') = 'unknown') then
+    if (jo.f[filenum].s[k].getval('codec_name') = 'unknown') then
       Continue;
-    jo.a[k].setval('-----', '-----=-----=-----');
-    styp := jo.a[k].getval('codec_type');
+    jo.f[filenum].s[k].setval('-----', '-----=-----=-----');
+    styp := jo.f[filenum].s[k].getval('codec_type');
     sl.Clear;
     Ini.ReadSection(styp, sl);
     for i := 0 to sl.Count - 1 do
-      jo.a[k].setval(sl[i], Ini.ReadString(styp, sl[i], ''));
+      jo.f[filenum].s[k].setval(sl[i], Ini.ReadString(styp, sl[i], ''));
     if (styp = 'video') then
     begin
       if (iv < 0) then
       begin
         iv := k;
-        jo.a[k].setval('Checked', '1');
+        jo.f[filenum].s[k].setval('Checked', '1');
         b := True;
       end;
       {$IFDEF MSWINDOWS}
@@ -143,72 +150,72 @@ begin
           i := StrToIntDef(v, 0);
           if i = 0 then
             v := frmGUIta.myGetMediaInfo(filename, 'BitRate_Nominal');
-          jo.a[k].setval('bit_rate', v);
+          jo.f[filenum].s[k].setval('bit_rate', v);
         end;
-        r := frmGUIta.myValFPS([jo.a[k].getval('avg_frame_rate'), jo.a[k].getval('r_frame_rate')]);
+        r := frmGUIta.myValFPS([jo.f[filenum].s[k].getval('avg_frame_rate'), jo.f[filenum].s[k].getval('r_frame_rate')]);
         if r = 1000 then
         begin
           v := frmGUIta.myGetMediaInfo(filename, 'FrameRate');
-          jo.a[k].setval('avg_frame_rate', v);
+          jo.f[filenum].s[k].setval('avg_frame_rate', v);
         end;
       end;
       {$ENDIF}
-      jo.a[k].setval(frmGUIta.edtBitrateV.Name, frmGUIta.myCalcBRv(jo.a[k]));
+      jo.f[filenum].s[k].setval(frmGUIta.edtBitrateV.Name, frmGUIta.myCalcBRv(jo.f[filenum].s[k]));
     end
     else
     if (styp = 'audio') then
     begin
-      lng := jo.a[k].getval('TAG:language');
-      if (lng = '') and (jo.filecnt > 0) then
+      lng := jo.f[filenum].s[k].getval('TAG:language');
+      if (lng = '') and (filenum > 0) then
       begin
-        v := ExtractFileNameOnly(jo.files[0]);
-        a := ExtractFileNameOnly(jo.files[jo.filecnt]);
+        v := ExtractFileNameOnly(jo.f[0].getval('filename'));
+        a := ExtractFileNameOnly(jo.f[filenum].getval('filename'));
         if Pos(v, a) = 1 then
         begin
           lng := Copy(a, Length(v) + 2, 100);
           if lng <> '' then
-            jo.a[k].setval('TAG:language', lng);
+            jo.f[filenum].s[k].setval('TAG:language', lng);
         end;
       end;
       if (ia < 0) and (lng <> '') and
         (Pos(LowerCase(lng) + ' ', LowerCase(frmGUIta.cmbLangA.Text) + ' ') > 0) then
       begin
         ia := k;
-        jo.a[k].setval('Checked', '1');
+        jo.f[filenum].s[k].setval('Checked', '1');
         b := True;
       end;
       if ia2 < 0 then
         ia2 := k;
-      jo.a[k].setval(frmGUIta.edtBitrateA.Name, frmGUIta.myCalcBRa(jo.a[k]));
+      jo.f[filenum].s[k].setval(frmGUIta.edtBitrateA.Name, frmGUIta.myCalcBRa(jo.f[filenum].s[k]));
     end
     else
     if (styp = 'subtitle') then
     begin
-      lng := jo.a[k].getval('TAG:language');
-      if (lng = '') and (jo.filecnt > 0) then
+      lng := jo.f[filenum].s[k].getval('TAG:language');
+      if (lng = '') and (filenum > 0) then
       begin
-        v := ExtractFileNameOnly(jo.files[0]);
-        a := ExtractFileNameOnly(jo.files[jo.filecnt]);
+        v := ExtractFileNameOnly(jo.f[0].getval('filename'));
+        a := ExtractFileNameOnly(jo.f[filenum].getval('filename'));
         if Pos(v, a) = 1 then
         begin
           lng := Copy(a, Length(v) + 2, 100);
           if lng <> '' then
-            jo.a[k].setval('TAG:language', lng);
+            jo.f[filenum].s[k].setval('TAG:language', lng);
         end;
       end;
       if (it < 0) and (lng <> '') and
         (Pos(LowerCase(lng) + ' ', LowerCase(frmGUIta.cmbLangS.Text) + ' ') > 0) then
       begin
         it := k;
-        jo.a[k].setval('Checked', '1');
+        jo.f[filenum].s[k].setval('Checked', '1');
         b := True;
       end;
     end;
   until (s = '');
   Ini.Free;
   if (ia < 0) and (ia2 >= 0) then
-    jo.a[ia2].setval('Checked', '1');
-  if (jo.filecnt = 0) then
+    jo.f[filenum].s[ia2].setval('Checked', '1');
+  if (filenum = 0) then
   begin
     s := frmGUIta.SynMemo6.Text;
     s := myBetween(s, 'Duration: ', ',');

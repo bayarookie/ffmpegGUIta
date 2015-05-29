@@ -193,7 +193,6 @@ var
   ob: TLabeledEdit;
   rd, r, r1: real;
   jo: TJob;
-  v: TCont;
 begin
   if frmGUIta.LVjobs.Selected = nil then
     Exit;
@@ -207,17 +206,10 @@ begin
   rd := myTimeStrToReal(jo.getval('duration'));
   r1 := myTimeStrToReal(ob.Text);
   if fd = 0 then
-  for v in jo.a do
-    if v.getval('Checked') = '1' then
-    begin
-      fd := frmGUIta.myValFPS(v.getval('avg_frame_rate'));
-      if fd = 0 then
-        fd := frmGUIta.myValFPS(v.getval('r_frame_rate'));
-      if fd = 0 then
-        fd := 30;
-      fd := 1 / fd;
-      Break;
-    end;
+  begin
+    fd := frmGUIta.myGetFPS(jo, '');
+    fd := 1 / fd;
+  end;
   if NewValue < TUpDown(Sender).Position then
     r := r1 - fd
   else

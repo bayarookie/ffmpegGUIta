@@ -12,7 +12,6 @@ type
   { TCont }
 
   TCont = class(TObject)
-  private
   public
     sk: TStringList;
     sv: TStringList;
@@ -21,15 +20,18 @@ type
     procedure setval(key, Value: string);
   end;
 
+  { TFil }
+
+  TFil = class(TCont)
+  public
+    s: array of TCont; //streams
+  end;
+
   { TJob }
 
   TJob = class(TCont)
-  private
   public
-    a: array of TCont;
-    files: TStringList;
-    filecnt: integer;
-    constructor Create; overload;
+    f: array of TFil; //files
   end;
 
 implementation
@@ -66,14 +68,6 @@ begin
     sk.Add(key);
     sv.Add(Value);
   end;
-end;
-
-{ TJob }
-
-constructor TJob.Create;
-begin
-  inherited;
-  files := TStringList.Create;
 end;
 
 end.

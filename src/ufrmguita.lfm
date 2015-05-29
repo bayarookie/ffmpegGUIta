@@ -81,7 +81,6 @@ object frmGUIta: TfrmGUIta
             TabOrder = 0
             ViewStyle = vsReport
             OnClick = LVstreamsClick
-            OnExit = LVstreamsExit
             OnItemChecked = LVstreamsItemChecked
             OnSelectItem = LVstreamsSelectItem
           end

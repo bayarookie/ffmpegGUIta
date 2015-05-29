@@ -48,7 +48,7 @@ begin
   fcmd.Clear;
   frmGUIta.SynMemo5.Clear;
   jo := TJob(li.Data);
-  frmGUIta.memJournal.Lines.Add(DateTimeToStr(dt) + ' - ' + jo.files[0]);
+  frmGUIta.memJournal.Lines.Add(DateTimeToStr(dt) + ' - ' + jo.f[0].getval('filename'));
   fcmd.Text := frmGUIta.myGetCmdFromJo(jo, True);
   jo.setval('Completed', '2');
   frmGUIta.LVjobs.Refresh;
