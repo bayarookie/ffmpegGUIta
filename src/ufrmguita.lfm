@@ -239,6 +239,7 @@ object frmGUIta: TfrmGUIta
                   AutoSize = True
                   Width = 464
                 end>
+              PopupMenu = PopupMenu3
               ReadOnly = True
               RowSelect = True
               TabOrder = 3
@@ -5692,13 +5693,31 @@ object frmGUIta: TfrmGUIta
       Checked = True
       OnClick = mnuCheckClick
     end
+    object mnuDeleteJob: TMenuItem
+      Caption = 'Delete job'
+      OnClick = mnuDeleteJobClick
+    end
   end
   object PopupMenu2: TPopupMenu
+    OnPopup = PopupMenu2Popup
     left = 520
     top = 104
     object mnuPasteTracks: TMenuItem
       Caption = 'Add tracks from clipboard'
       OnClick = mnuPasteClick
+    end
+  end
+  object PopupMenu3: TPopupMenu
+    OnPopup = PopupMenu3Popup
+    left = 600
+    top = 104
+    object mnuPasteFiles: TMenuItem
+      Caption = 'Add files from clipboard'
+      OnClick = mnuPasteClick
+    end
+    object mnuDeleteFile: TMenuItem
+      Caption = 'Delete file from job'
+      OnClick = mnuDeleteFileClick
     end
   end
 end

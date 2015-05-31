@@ -143,7 +143,7 @@ begin
       {$IFDEF MSWINDOWS}
       if FileExistsUTF8(frmGUIta.myExpandFN(frmGUIta.edtMediaInfo.Text)) then
       begin
-        i := StrToIntDef(jo.a[k].getval('bit_rate'), 0);
+        i := StrToIntDef(jo.f[filenum].s[k].getval('bit_rate'), 0);
         if i = 0 then
         begin
           v := frmGUIta.myGetMediaInfo(filename, 'BitRate');
@@ -373,4 +373,4 @@ begin
   inherited Create(CreateSuspended);
 end;
 
-end.
+end.

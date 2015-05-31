@@ -156,6 +156,9 @@ type
     LVjobs: TListView;
     LVstreams: TListView;
     memCmdlines: TMemo;
+    mnuDeleteJob: TMenuItem;
+    mnuDeleteFile: TMenuItem;
+    mnuPasteFiles: TMenuItem;
     mnuCheck: TMenuItem;
     mnuPasteTracks: TMenuItem;
     mnuMediaInfo: TMenuItem;
@@ -177,6 +180,7 @@ type
     Panel6: TPanel;
     PopupMenu1: TPopupMenu;
     PopupMenu2: TPopupMenu;
+    PopupMenu3: TPopupMenu;
     spnKoefA: TSpinEdit;
     spnKoefV: TSpinEdit;
     StatusBar1: TStatusBar;
@@ -271,6 +275,8 @@ type
       Selected: boolean);
     procedure mnuCheckClick(Sender: TObject);
     procedure mnuCopyAsAvsClick(Sender: TObject);
+    procedure mnuDeleteFileClick(Sender: TObject);
+    procedure mnuDeleteJobClick(Sender: TObject);
     procedure mnuEditAvsClick(Sender: TObject);
     procedure mnuOpenClick(Sender: TObject);
     procedure mnuPasteClick(Sender: TObject);
@@ -280,6 +286,8 @@ type
     procedure onTestTerminate(Sender: TObject);
     procedure ontAutoStart(Sender: TObject);
     procedure PopupMenu1Popup(Sender: TObject);
+    procedure PopupMenu2Popup(Sender: TObject);
+    procedure PopupMenu3Popup(Sender: TObject);
     procedure TabCmdlineShow(Sender: TObject);
     procedure TabContRowsShow(Sender: TObject);
     procedure TabInputShow(Sender: TObject);
@@ -1142,7 +1150,7 @@ begin
     fnoa := jo.getval(edtOfna.Name); //short filename
     if FileExistsUTF8(fnoa) then
     begin
-      fnoa := myGetOutFNa(ExtractFilePath(fnoa), jo.files[0], ExtractFileExt(fnoa));
+      fnoa := myGetOutFNa(ExtractFilePath(fnoa), jo.f[0].getval('filename'), ExtractFileExt(fnoa));
       jo.setval(edtOfna.Name, fnoa);
     end;
     fn1 := ' -y NUL' + jo.getval(cmbExt.Name);
@@ -1824,6 +1832,9 @@ begin
     if s <> '' then
       Result := Result + ' ' + s;
     s := getval('TAG:handler_name');
+    if s <> '' then
+      Result := Result + ' ' + s;
+    s := getval('TAG:title');
     if s <> '' then
       Result := Result + ' ' + s;
   end;
@@ -4380,6 +4391,27 @@ begin
   {$ENDIF}
 end;
 
+procedure TfrmGUIta.mnuDeleteFileClick(Sender: TObject);
+var
+  jo: TJob;
+  i: integer;
+begin
+  if LVjobs.Selected = nil then Exit;
+  if LVfiles.Selected = nil then Exit;
+  if LVfiles.Items.Count = 1 then Exit;
+  jo := TJob(LVjobs.Selected.Data);
+  for i := LVfiles.Selected.Index to High(jo.f) - 1 do
+    jo.f[i] := jo.f[i + 1];
+  SetLength(jo.f, High(jo.f));
+  LVjobsSelectItem(Sender, LVjobs.Selected, True);
+end;
+
+procedure TfrmGUIta.mnuDeleteJobClick(Sender: TObject);
+begin
+  if LVjobs.Selected = nil then Exit;
+  LVjobs.Selected.Delete;
+end;
+
 procedure TfrmGUIta.mnuEditAvsClick(Sender: TObject);
 var
   s: string;
@@ -4416,7 +4448,7 @@ begin
       myAddFilesAsAVS2(sl)
     else
     {$ENDIF}
-    if (Sender = mnuPasteTracks) and (LVjobs.Selected <> nil) then
+    if (LVjobs.Selected <> nil) and ((Sender = mnuPasteTracks) or (Sender = mnuPasteFiles)) then
       myAddFilesPlus(LVjobs.Selected, sl);
   sl.Free;
 end;
@@ -4474,6 +4506,32 @@ begin
   b := (LVjobs.Selected <> nil);
   b3 := FileExistsUTF8(myExpandFN(edtffplay.Text));
   mnuView.Enabled := b and b3;
+end;
+
+procedure TfrmGUIta.PopupMenu2Popup(Sender: TObject);
+var
+  sl: TStringList;
+  b3: boolean;
+begin
+  sl := TStringList.Create;
+  myGetClipboardFileNames(sl, True);
+  b3 := sl.Count > 0;
+  sl.Free;
+  mnuPasteTracks.Enabled := b3;
+end;
+
+procedure TfrmGUIta.PopupMenu3Popup(Sender: TObject);
+var
+  sl: TStringList;
+  b, b3: boolean;
+begin
+  sl := TStringList.Create;
+  myGetClipboardFileNames(sl, True);
+  b3 := sl.Count > 0;
+  sl.Free;
+  mnuPasteFiles.Enabled := b3;
+  b := (LVfiles.Selected <> nil) and (LVfiles.Items.Count > 1);
+  mnuDeleteFile.Enabled := b;
 end;
 
 procedure TfrmGUIta.TabCmdlineShow(Sender: TObject);
