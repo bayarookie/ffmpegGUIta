@@ -9,11 +9,12 @@ uses
   ExtCtrls, StdCtrls, IniFiles, LclIntf, Process, UTF8Process, LConvEncoding,
   SynMemo, synhighlighterunixshellscript, StrUtils, LCLVersion, types, Math,
   Spin, Buttons, IntfGraphics, LCLType, Menus, fpImage, dateutils, clipbrd,
+  Masks,
   {$IFDEF MSWINDOWS}
   Windows, Registry, mediainfodll,
   {$ENDIF}
   ucalcul, ufrmcompare, ujobinfo, utaversion, UniqueInstance2,
-  uthreadconv, uthreadtest, uthreadaddf, uthreadexec;
+  uthreadconv, uthreadtest, uthreadaddf, uthreadexec, ufrmmaskprof;
 
 type
 
@@ -54,6 +55,10 @@ type
     btnCrop: TButton;
     btnAddFileSplit: TButton;
     btnAddScreenGrab: TButton;
+    btnMaskAdd: TButton;
+    btnMaskEdit: TButton;
+    btnMaskDel: TButton;
+    chkUseMasks: TCheckBox;
     chkSaveFormPos: TCheckBox;
     chk1instance: TCheckBox;
     chkAddTracks: TCheckBox;
@@ -105,13 +110,14 @@ type
     cmbTestDurationt: TComboBox;
     cmbLangsList: TComboBox;
     cmbAddOptsV: TComboBox;
+    cmbAddTracks: TComboBox;
+    edtFileExts: TComboBox;
     edtBitrateA: TLabeledEdit;
     edtDirOut: TLabeledEdit;
     edtDirTmp: TLabeledEdit;
     edtffmpeg: TLabeledEdit;
     edtffplay: TLabeledEdit;
     edtffprobe: TLabeledEdit;
-    edtFileExts: TLabeledEdit;
     edtMediaInfo: TLabeledEdit;
     edtOfn: TLabeledEdit;
     edtxterm: TLabeledEdit;
@@ -152,6 +158,7 @@ type
     lblSRate: TLabel;
     lblx264preset: TLabel;
     lblx264tune: TLabel;
+    LVmasks: TListView;
     LVfiles: TListView;
     LVjobs: TListView;
     LVstreams: TListView;
@@ -224,6 +231,9 @@ type
     procedure btnLanguageClick(Sender: TObject);
     procedure btnLogClearClick(Sender: TObject);
     procedure btnLogSaveClick(Sender: TObject);
+    procedure btnMaskAddClick(Sender: TObject);
+    procedure btnMaskDelClick(Sender: TObject);
+    procedure btnMaskEditClick(Sender: TObject);
     procedure btnMediaInfo1Click(Sender: TObject);
     procedure btnFindOfnClick(Sender: TObject);
     procedure btnPlayInClick(Sender: TObject);
@@ -238,6 +248,7 @@ type
     procedure chk1instanceChange(Sender: TObject);
     procedure chkPlayer2Change(Sender: TObject);
     procedure chkPlayer3Change(Sender: TObject);
+    procedure chkUseMasksChange(Sender: TObject);
     procedure cmbBitrateAChange(Sender: TObject);
     procedure cmbBitrateVChange(Sender: TObject);
     procedure cmbEncoderVChange(Sender: TObject);
@@ -341,6 +352,7 @@ type
     function myAutoCrop(jo: TJob; co: TCont): string;
     procedure myGetClipboardFileNames(files: TStrings; test: boolean = False);
     function myGetColor: integer;
+    function myGetExts: string;
   public
     { public declarations }
     function myExpandFN(fn: string): string;
@@ -365,6 +377,7 @@ type
     function myCalcBRv(v: TCont): string;
     function myCalcBRa(a: TCont): string;
     procedure myGetFileStreamNums(s: string; var l, k: integer);
+    function myGetProfile(fn: string): string;
   end;
 
 var
@@ -392,9 +405,9 @@ uses ubyUtils, ufrmsplash, ufrmcrop, ufrmgrab;
 
 {$R *.lfm}
 
-procedure myToIni(Ini: TIniFile; s1, s2, s3: string);
+procedure myToIni(Ini: TIniFile; s1, s2, s3: string; tag: Integer = 0);
 begin
-  if s3 = '' then
+  if (tag = 0) and (s3 = '') then
     Ini.DeleteKey(s1, s2)
   else if Ini.ReadString(s1, s2, '') <> s3 then
   begin
@@ -420,7 +433,7 @@ begin
           else
           begin
             if not ReadOnly then
-              myToIni(Ini, s, Name, Text);
+              myToIni(Ini, s, Name, Text, Tag);
           end
       else if c[k] is TComboBox then
         with TComboBox(c[k]) do
@@ -1482,17 +1495,25 @@ end;
 
 function TfrmGUIta.myGetSimilarFiles(fn: string; List: TStrings): boolean;
 var
-  i: Longint;
+  i: integer;
+  j: Longint;
+  SL: TStringList;
   SR: TSearchRec;
 begin
-  i := FindFirstUTF8(ChangeFileExt(fn, '') + '*', 0, SR);
-  while i = 0 do
+  SL := TStringList.Create;
+  myGetListFromStr(cmbAddTracks.Text, ';', SL);
+  for i := 0 to SL.Count - 1 do
   begin
-    if ExtractFileName(fn) <> SR.Name then
-      List.Add(ExtractFilePath(fn) + SR.Name);
-    i := FindNextUTF8(SR);
+    j := FindFirstUTF8(ChangeFileExt(fn, '') + SL[i], 0, SR);
+    while j = 0 do
+    begin
+      if ExtractFileName(fn) <> SR.Name then
+        List.Add(ExtractFilePath(fn) + SR.Name);
+      j := FindNextUTF8(SR);
+    end;
+    FindCloseUTF8(SR);
   end;
-  FindCloseUTF8(SR);
+  SL.Free;
   Result := (List.Count > 0);
 end;
 
@@ -1746,13 +1767,15 @@ var
   Ini: TIniFile;
   s: string;
   i: integer;
+  li: TListItem;
 begin
   if not FileExistsUTF8(sInifile) and bRead then
     Exit;
   Ini := TIniFile.Create(UTF8ToSys(sInifile));
   s := 'Main';
   mySets2(Ini, s, [TabDefSets, TabConsole1], bRead);
-  mySets1(Ini, s, [cmbProfile], bRead);
+  if not chkUseMasks.Checked then
+    mySets1(Ini, s, [cmbProfile], bRead);
   mySets3(Ini, s, [cmbRunCmd, cmbExtPlayer], bRead);
   if bRead then
   begin
@@ -1760,14 +1783,41 @@ begin
       LVjobs.Column[i].Width :=
         Ini.ReadInteger(LVjobs.Name, IntToStr(i), LVjobs.Column[i].Width);
     myFormPosLoad(frmGUIta, Ini);
+    i := 0;
+    while Ini.ReadString('Masks', IntToStr(i) + 'Checked', '') <> '' do
+    begin
+      li := LVmasks.Items.Add;
+      li.Checked := Ini.ReadString('Masks', IntToStr(i) + 'Checked', '') = '1';
+      li.Caption := Ini.ReadString('Masks', IntToStr(i) + 'Prefix', '');
+      li.SubItems.Add(Ini.ReadString('Masks', IntToStr(i) + 'Extens', ''));
+      li.SubItems.Add(Ini.ReadString('Masks', IntToStr(i) + 'Profile', ''));
+      inc(i);
+    end;
   end
   else
   begin
     for i := 0 to LVjobs.Columns.Count - 1 do
       myToIni(Ini, LVjobs.Name, IntToStr(i), IntToStr(LVjobs.Column[i].Width));
     myFormPosSave(frmGUIta, Ini);
-    if edtDirOut.Text = '' then
-      Ini.WriteString(s, edtDirOut.Name, '');
+    //if edtDirOut.Text = '' then
+    //  Ini.WriteString(s, edtDirOut.Name, '');
+    for i := 0 to 15 do
+    begin
+      if i < LVmasks.Items.Count then
+      begin
+        myToIni(Ini, 'Masks', IntToStr(i) + 'Checked', IfThen(LVmasks.Items[i].Checked, '1', '0'));
+        myToIni(Ini, 'Masks', IntToStr(i) + 'Prefix', LVmasks.Items[i].Caption);
+        myToIni(Ini, 'Masks', IntToStr(i) + 'Extens', LVmasks.Items[i].SubItems[0]);
+        myToIni(Ini, 'Masks', IntToStr(i) + 'Profile', LVmasks.Items[i].SubItems[1]);
+      end
+      else
+      begin
+        myToIni(Ini, 'Masks', IntToStr(i) + 'Checked', '');
+        myToIni(Ini, 'Masks', IntToStr(i) + 'Prefix', '');
+        myToIni(Ini, 'Masks', IntToStr(i) + 'Extens', '');
+        myToIni(Ini, 'Masks', IntToStr(i) + 'Profile', '');
+      end;
+    end;
   end;
   Ini.Free;
 end;
@@ -2369,8 +2419,9 @@ end;
 
 function TfrmGUIta.myCantUpd(i: integer = 0): boolean;
 begin
-  Result := bUpdFromCode or (LVjobs.Selected = nil) or
-    ((i = 1) and (LVstreams.Selected = nil));
+  Result := bUpdFromCode or (LVjobs.Selected = nil)
+    or ((i = 1) and (LVfiles.Selected = nil))
+    or ((i = 2) and (LVstreams.Selected = nil));
 end;
 
 procedure TfrmGUIta.myGetss4Compare(jo: TJob; rs: double = 0; rt: double = 0);
@@ -2611,7 +2662,7 @@ begin
       if DirectoryExistsUTF8(s) then
       begin
         sl2 := TStringList.Create;
-        if myGetFileList(s, edtFileExts.Text, sl2, True) then
+        if myGetFileList(s, myGetExts, sl2, True) then
         begin
           sl2.Sort;
           files.AddStrings(sl2);
@@ -2646,6 +2697,70 @@ begin
   b.Free;
 end;
 
+function TfrmGUIta.myGetExts: string;
+var
+  i, j: integer;
+  s: string;
+  SL: TStringList;
+begin
+  Result := '';
+  for i := 0 to LVmasks.Items.Count - 1 do
+  begin
+    if LVmasks.Items[i].Checked then
+    begin
+      s := LVmasks.Items[i].SubItems[0];
+      SL := TStringList.Create;
+      myGetListFromStr(s, ';', SL);
+      for j := 0 to SL.Count - 1 do
+      begin
+        s := '*' + SL[j] + ';';
+        if Pos(s, Result) = 0 then
+          Result := Result + s;
+      end;
+      SL.Free;
+    end;
+  end;
+end;
+
+function TfrmGUIta.myGetProfile(fn: string): string;
+var
+  i, j: integer;
+  s: string;
+  SL: TStringList;
+begin
+  if chkUseMasks.Checked then
+  begin
+    Result := cmbProfile.Text;
+  end
+  else
+  begin
+    Result := '';
+    for i := 0 to LVmasks.Items.Count - 1 do
+    begin
+      if LVmasks.Items[i].Checked then
+      begin
+        s := LVmasks.Items[i].SubItems[0];
+        SL := TStringList.Create;
+        myGetListFromStr(s, ';', SL);
+        for j := 0 to SL.Count - 1 do
+        begin
+          s := LVmasks.Items[i].Caption + SL[j];
+          if MatchesMask(fn, s) then
+          begin
+            Result := LVmasks.Items[i].SubItems[1];
+            Break;
+          end;
+        end;
+        SL.Free;
+      end;
+      if Result <> '' then
+        Break;
+    end;
+    if Result = '' then
+      Result := cmbProfile.Text;
+  end;
+end;
+
 //------------------------------------------------------------------------------
 
 procedure TfrmGUIta.btnAddFilesClick(Sender: TObject);
@@ -2655,7 +2770,7 @@ begin
   od := TOpenDialog.Create(frmGUIta);
   if DirectoryExistsUTF8(myExpandFN(cmbDirLast.Text)) then
     od.InitialDir := myExpandFN(cmbDirLast.Text);
-  od.Filter := mes[0] + '|' + edtFileExts.Text + '|' + mes[1];
+  od.Filter := mes[0] + '|' + myGetExts + '|' + mes[1];
   od.Title := mes[20] + ' - ' + mes[0];
   od.Options := [ofEnableSizing, ofViewDetail, ofAllowMultiSelect, ofFileMustExist];
   if od.Execute then
@@ -2917,17 +3032,19 @@ end;
 
 procedure TfrmGUIta.btnCropClick(Sender: TObject);
 var
-  k, w, h, x, y: integer;
+  l, k, w, h, x, y: integer;
   jo: TJob;
   co: TCont;
   frmCrop: TfrmCrop;
   Ini: TIniFile;
   iv, nv, fn: string;
 begin
-  if myCantUpd(1) then
+  if myCantUpd(2) then
     Exit;
   jo := TJob(LVjobs.Selected.Data);
-  co := TCont(LVstreams.Selected.Data);
+  //co := TCont(LVstreams.Selected.Data);
+  myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
+  co := jo.f[l].s[k];
   if cmbCrop.Text = '' then
   begin
     cmbCrop.Text := myAutoCrop(jo, co);
@@ -3073,6 +3190,56 @@ begin
     RenameFileUTF8(s, sd.FileName);
   end;
   sd.Free;
+end;
+
+procedure TfrmGUIta.btnMaskAddClick(Sender: TObject);
+var
+  li: TListItem;
+begin
+  if LVmasks.Items.Count > 99 then
+  begin
+    ShowMessage('Too many masks');
+    Exit;
+  end;
+  Application.CreateForm(TfrmMaskProf, frmMaskProf);
+  frmMaskProf.ComboBox1.Text := '';
+  frmMaskProf.ComboBox2.Text := '';
+  frmMaskProf.ComboBox3.Text := '';
+  frmMaskProf.ComboBox3.Items.AddStrings(cmbProfile.Items);
+  if frmMaskProf.ShowModal = mrOk then
+  begin
+    li := LVmasks.Items.Add;
+    li.Checked := True;
+    li.Caption := frmMaskProf.ComboBox1.Text;
+    li.SubItems.Add(frmMaskProf.ComboBox2.Text);
+    li.SubItems.Add(frmMaskProf.ComboBox3.Text);
+  end;
+  frmMaskProf.Free;
+end;
+
+procedure TfrmGUIta.btnMaskDelClick(Sender: TObject);
+begin
+  if LVmasks.Selected = nil then
+    Exit;
+  LVmasks.Selected.Delete;
+end;
+
+procedure TfrmGUIta.btnMaskEditClick(Sender: TObject);
+begin
+  if LVmasks.Selected = nil then
+    Exit;
+  Application.CreateForm(TfrmMaskProf, frmMaskProf);
+  frmMaskProf.ComboBox1.Text := LVmasks.Selected.Caption;
+  frmMaskProf.ComboBox2.Text := LVmasks.Selected.SubItems[0];
+  frmMaskProf.ComboBox3.Text := LVmasks.Selected.SubItems[1];
+  frmMaskProf.ComboBox3.Items.AddStrings(cmbProfile.Items);
+  if frmMaskProf.ShowModal = mrOk then
+  begin
+    LVmasks.Selected.Caption := frmMaskProf.ComboBox1.Text;
+    LVmasks.Selected.SubItems[0] := frmMaskProf.ComboBox2.Text;
+    LVmasks.Selected.SubItems[1] := frmMaskProf.ComboBox3.Text;
+  end;
+  frmMaskProf.Free;
 end;
 
 procedure TfrmGUIta.btnMediaInfo1Click(Sender: TObject);
@@ -3438,30 +3605,42 @@ begin
   cmbExtPlayer.Enabled := chkPlayer3.Checked;
 end;
 
+procedure TfrmGUIta.chkUseMasksChange(Sender: TObject);
+begin
+  LVmasks.Enabled := chkUseMasks.Checked;
+  btnMaskAdd.Enabled := chkUseMasks.Checked;
+  btnMaskDel.Enabled := chkUseMasks.Checked;
+  btnMaskEdit.Enabled := chkUseMasks.Checked;
+end;
+
 procedure TfrmGUIta.cmbBitrateAChange(Sender: TObject);
 var
   b: boolean;
+  k, l: integer;
 begin
   b := Pos('$koefa', cmbBitrateA.Text) > 0;
   spnKoefA.Enabled := b;
   lblkoefA.Enabled := b;
-  if myCantUpd(1) then
+  if myCantUpd(2) then
     Exit;
   xmyChange1(Sender);
-  edtBitrateA.Text := myCalcBRa(TCont(LVstreams.Selected.Data));
+  myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
+  edtBitrateA.Text := myCalcBRa(TJob(LVjobs.Selected.Data).f[l].s[k]);
 end;
 
 procedure TfrmGUIta.cmbBitrateVChange(Sender: TObject);
 var
   b: boolean;
+  k, l: integer;
 begin
   b := Pos('$koefv', cmbBitrateV.Text) > 0;
   spnKoefV.Enabled := b;
   lblkoefV.Enabled := b;
-  if myCantUpd(1) then
+  if myCantUpd(2) then
     Exit;
   xmyChange1(Sender);
-  edtBitrateV.Text := myCalcBRv(TCont(LVstreams.Selected.Data));
+  myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
+  edtBitrateV.Text := myCalcBRv(TJob(LVjobs.Selected.Data).f[l].s[k]);
 end;
 
 procedure TfrmGUIta.cmbEncoderVChange(Sender: TObject);
@@ -3584,6 +3763,7 @@ begin
   s := myGetAnsiFN(s);
   Ini := TIniFile.Create(UTF8ToSys(s));
   jo := TJob(LVjobs.Selected.Data);
+  jo.setval(cmbProfile.Name, cmbProfile.Text);
   jo.setval(cmbFormat.Name, Ini.ReadString('1', cmbFormat.Name, ''));
   se := Ini.ReadString('1', cmbExt.Name, '');
   jo.setval(cmbExt.Name, se);
@@ -3667,6 +3847,7 @@ var
   reg: TRegistry;
   p: PChar;
   {$ENDIF}
+  li: TListItem;
   procedure my1(a: array of string);
   var
     i: integer;
@@ -3843,7 +4024,38 @@ begin
     if cmbProfile.Items.Count > 0 then
       cmbProfile.ItemIndex := 0;
   end;
-  if not b then
+  if LVmasks.Items.Count = 0 then
+  begin
+    li := LVmasks.Items.Add;
+    li.Checked := True;
+    li.Caption := '*';
+    li.SubItems.Add('.jp*g;.png');
+    li.SubItems.Add('resize to image2 png w200.ini');
+    li := LVmasks.Items.Add;
+    li.Checked := False;
+    li.Caption := '*';
+    li.SubItems.Add('.mp3;.ac3;.wav');
+    li.SubItems.Add('audio to ogg.ini');
+    li := LVmasks.Items.Add;
+    li.Checked := True;
+    li.Caption := 'anim*';
+    li.SubItems.Add('.avi;.mkv;.vob;.mp*g;.mp4;.mov;.flv;.3gp;.3g2;.asf;.wmv;.m2ts;.ts;.ogv;.webm;.rm;.qt');
+    {$IFDEF MSWINDOWS}
+    li.SubItems.Add('libx264 slow animation-libvo_aacenc-matroska.ini');
+    {$ELSE}
+    li.SubItems.Add('libx264 slow animation-libfdk_aac-matroska.ini');
+    {$ENDIF}
+    li := LVmasks.Items.Add;
+    li.Checked := True;
+    li.Caption := '*';
+    li.SubItems.Add('.avi;.mkv;.vob;.mp*g;.mp4;.mov;.flv;.3gp;.3g2;.asf;.wmv;.m2ts;.ts;.ogv;.webm;.rm;.qt');
+    {$IFDEF MSWINDOWS}
+    li.SubItems.Add('libx264 slow film-libvo_aacenc-matroska.ini');
+    {$ELSE}
+    li.SubItems.Add('libx264 slow film-libfdk_aac-matroska.ini');
+    {$ENDIF}
+  end;
+  if not b then //inifile doesnt exists
   begin
     myFindFiles(sDirApp, [edtffmpeg, edtffprobe, edtffplay, edtMediaInfo, cmbExtPlayer]);
     {$IFDEF MSWINDOWS}
@@ -3971,7 +4183,7 @@ begin
       if DirectoryExistsUTF8(FileNames[i]) then
       begin
         SL := TStringList.Create;
-        if myGetFileList(FileNames[i], edtFileExts.Text, SL, True) then
+        if myGetFileList(FileNames[i], myGetExts, SL, True) then
         begin
           SL.Sort;
           ST.AddStrings(SL);
@@ -4038,7 +4250,7 @@ begin
           if DirectoryExistsUTF8(s) then
           begin
             SL := TStringList.Create;
-            if myGetFileList(s, edtFileExts.Text, SL, True) then
+            if myGetFileList(s, myGetExts, SL, True) then
             begin
               SL.Sort;
               SL1.AddStrings(SL);
@@ -4072,7 +4284,7 @@ begin
       SLp.Free;
       {$ENDIF}
     end
-    else if myGetFileList(GetCurrentDir, edtFileExts.Text, SL1, True) then
+    else if myGetFileList(GetCurrentDir, myGetExts, SL1, True) then
       SL1.Sort;
     myAddFiles(SL1);
     SL1.Free;
@@ -4262,9 +4474,11 @@ begin
       li.Checked := jo.f[l].s[k].getval('Checked') = '1';
       li.Caption := IntToStr(l) + ':' + IntToStr(k);
       li.SubItems.Add(myGetCaptionCont(jo.f[l].s[k]));
-      li.Data := Pointer(jo.f[l].s[k]);  //??
+      //li.Data := Pointer(jo.f[l].s[k]);  //??
     end;
   end;
+  if chkUseMasks.Checked then
+    cmbProfile.Text := jo.getval(cmbProfile.Name);
   bUpdFromCode := False;
   myDisComp;
   if LVstreams.Items.Count = 1 then
@@ -4289,13 +4503,15 @@ procedure TfrmGUIta.LVstreamsItemChecked(Sender: TObject; Item: TListItem);
 var
   s: string;
   k, l: integer;
+  jo: TJob;
 begin
   if myCantUpd(0) then
     Exit;
   s := IfThen(Item.Checked, '1', '0');
   myGetFileStreamNums(Item.Caption, l, k);
-  TJob(LVjobs.Selected.Data).f[l].s[k].setval('Checked', s);
-  LVjobs.Selected.SubItems[2] := myCalcOutSize(TJob(LVjobs.Selected.Data));
+  jo := TJob(LVjobs.Selected.Data);
+  jo.f[l].s[k].setval('Checked', s);
+  LVjobs.Selected.SubItems[2] := myCalcOutSize(jo);
   if PageControl2.ActivePage = TabCmdline then
     TabCmdlineShow(Sender);
 end;
@@ -4308,7 +4524,7 @@ var
   k, l: integer;
   ts: TTabSheet;
 begin
-  if bUpdFromCode then
+  if myCantUpd(2) then
     Exit;
   bUpdFromCode := True;
   myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
@@ -4542,7 +4758,7 @@ end;
 
 procedure TfrmGUIta.TabContRowsShow(Sender: TObject);
 var
-  i: integer;
+  i, k, l: integer;
   jo: TJob;
   c: TCont;
 begin
@@ -4559,7 +4775,9 @@ begin
     end
     else
     begin
-      c := TCont(LVstreams.Selected.Data);
+      myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
+      c := TJob(LVjobs.Selected.Data).f[l].s[k];
+      //c := TCont(LVstreams.Selected.Data);
       for i := 0 to c.sk.Count - 1 do
         SynMemo4.Lines.Add(c.sk[i] + '=' + c.sv[i]);
     end;
@@ -4581,30 +4799,32 @@ end;
 
 procedure TfrmGUIta.TabVideoShow(Sender: TObject);
 var
-  i, j, k: integer;
+  i, j, k, l, m: integer;
   s: string;
 begin
   if myCantUpd(0) then
     Exit;
   bUpdFromCode := True;
   j := -1;
-  k := -1;
+  m := -1;
   for i := 0 to LVstreams.Items.Count - 1 do
   begin
-    s := TCont(LVstreams.Items[i].Data).getval('codec_type');
+    myGetFileStreamNums(LVstreams.Items[i].Caption, l, k);
+    s := TJob(LVjobs.Selected.Data).f[l].s[k].getval('codec_type');
+    //s := TCont(LVstreams.Items[i].Data).getval('codec_type');
     if (s = LowerCase(Copy(TTabSheet(Sender).Name, 4, 8))) then
     begin
       if (j < 0) and LVstreams.Items[i].Checked then
         j := i;
-      if (k < 0) then
-        k := i;
+      if (m < 0) then
+        m := i;
     end;
     LVstreams.Items[i].Selected := False;
   end;
   if (j >= 0) then
     i := j
-  else if (k >= 0) then
-    i := k
+  else if (m >= 0) then
+    i := m
   else
     i := -1;
   bUpdFromCode := False;
@@ -4671,7 +4891,7 @@ var
   s1, s2: string;
   k, l: integer;
 begin
-  if myCantUpd(1) then
+  if myCantUpd(2) then
     Exit;
   s1 := (Sender as TControl).Name;
   s2 := myGet2(Sender);
@@ -4683,7 +4903,7 @@ procedure TfrmGUIta.xmyChange1v(Sender: TObject);
 var
   k, l: integer;
 begin
-  if myCantUpd(1) then
+  if myCantUpd(2) then
     Exit;
   xmyChange1(Sender);
   myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
@@ -4694,7 +4914,7 @@ procedure TfrmGUIta.xmyChange1a(Sender: TObject);
 var
   k, l: integer;
 begin
-  if myCantUpd(1) then
+  if myCantUpd(2) then
     Exit;
   xmyChange1(Sender);
   myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
@@ -4703,7 +4923,7 @@ end;
 
 procedure TfrmGUIta.xmyChange1o(Sender: TObject);
 begin
-  if myCantUpd(1) then
+  if myCantUpd(2) then
     Exit;
   xmyChange1(Sender);
   LVjobs.Selected.SubItems[2] := myCalcOutSize(TJob(LVjobs.Selected.Data));

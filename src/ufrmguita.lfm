@@ -7,7 +7,7 @@ object frmGUIta: TfrmGUIta
   Caption = 'frmGUIta'
   ClientHeight = 540
   ClientWidth = 800
-  Constraints.MinHeight = 480
+  Constraints.MinHeight = 540
   Constraints.MinWidth = 800
   Font.CharSet = 4
   Font.Height = -11
@@ -1978,6 +1978,7 @@ object frmGUIta: TfrmGUIta
         OnDblClick = xmySelDir
       end
       object edtDirOut: TLabeledEdit
+        Tag = 1
         Left = 110
         Height = 20
         Hint = 'empty for save to input dir'
@@ -2026,63 +2027,42 @@ object frmGUIta: TfrmGUIta
         OnChange = xmyCheckFile
         OnDblClick = xmySelFile
       end
-      object edtFileExts: TLabeledEdit
-        Left = 110
-        Height = 20
-        Top = 130
-        Width = 672
-        Anchors = [akTop, akLeft, akRight]
-        EditLabel.AnchorSideTop.Control = edtFileExts
-        EditLabel.AnchorSideTop.Side = asrCenter
-        EditLabel.AnchorSideRight.Control = edtFileExts
-        EditLabel.AnchorSideBottom.Control = edtFileExts
-        EditLabel.AnchorSideBottom.Side = asrBottom
-        EditLabel.Left = 48
-        EditLabel.Height = 14
-        EditLabel.Top = 133
-        EditLabel.Width = 59
-        EditLabel.Caption = 'Video files'
-        EditLabel.ParentColor = False
-        LabelPosition = lpLeft
-        TabOrder = 12
-        Text = '*.avi;*.mkv;*.vob;*.mpg;*.mpeg;*.mp4;*.mov;*.flv;*.3gp;*.3g2;*.asf;*.wmv;*.m2ts;*.ts;*.ogv;*.webm;*.rm;*.qt;*.mp3;*.ac3'
-      end
       object chkPlayer2: TCheckBox
-        Left = 110
+        Left = 8
         Height = 26
-        Top = 199
+        Top = 130
         Width = 202
         Caption = 'play output with default player'
         OnChange = chkPlayer2Change
-        TabOrder = 16
+        TabOrder = 12
       end
       object chkPlayer3: TCheckBox
-        Left = 358
+        Left = 8
         Height = 26
-        Top = 199
+        Top = 154
         Width = 210
         Caption = 'play output with external player'
         OnChange = chkPlayer3Change
-        TabOrder = 17
+        TabOrder = 13
       end
       object cmbLanguage: TComboBox
         Left = 466
         Height = 20
-        Top = 393
+        Top = 460
         Width = 148
         ItemHeight = 0
         OnChange = cmbLanguageChange
-        TabOrder = 28
+        TabOrder = 34
         Text = 'Default.lng'
       end
       object btnLanguage: TButton
         Left = 623
         Height = 20
-        Top = 393
+        Top = 460
         Width = 75
         Caption = 'Language'
         OnClick = btnLanguageClick
-        TabOrder = 29
+        TabOrder = 35
       end
       object btnFindffmpeg: TBitBtn
         Left = 762
@@ -2363,7 +2343,7 @@ object frmGUIta: TfrmGUIta
       object btnFindExtPlayer: TBitBtn
         Left = 762
         Height = 20
-        Top = 178
+        Top = 157
         Width = 20
         Anchors = [akTop, akRight]
         Glyph.Data = {
@@ -2407,10 +2387,10 @@ object frmGUIta: TfrmGUIta
         TabOrder = 15
       end
       object cmbExtPlayer: TComboBox
-        Left = 110
+        Left = 280
         Height = 20
-        Top = 178
-        Width = 650
+        Top = 157
+        Width = 480
         Enabled = False
         ItemHeight = 0
         Items.Strings = (
@@ -2424,38 +2404,37 @@ object frmGUIta: TfrmGUIta
       object chkDebug: TCheckBox
         Left = 8
         Height = 26
-        Top = 366
+        Top = 454
         Width = 147
         Caption = 'Debug info to journal'
-        TabOrder = 23
+        TabOrder = 32
       end
       object cmbFont: TComboBox
         Left = 313
         Height = 20
-        Top = 393
+        Top = 460
         Width = 148
         ItemHeight = 0
         OnGetItems = cmbFontGetItems
         OnSelect = cmbFontSelect
-        TabOrder = 27
+        TabOrder = 33
         Text = 'Tahoma'
       end
       object cmbDirLast: TComboBox
         Left = 8
         Height = 20
-        Top = 244
-        Width = 774
-        Anchors = [akTop, akLeft, akRight]
+        Top = 379
+        Width = 300
         ItemHeight = 0
         OnChange = xmyCheckDir
         OnDblClick = xmySelDir
-        TabOrder = 18
+        TabOrder = 24
         Text = 'C:\'
       end
       object lblDirLast: TLabel
         Left = 8
         Height = 14
-        Top = 229
+        Top = 363
         Width = 60
         Caption = 'Last folder'
         ParentColor = False
@@ -2463,7 +2442,7 @@ object frmGUIta: TfrmGUIta
       object lblTestStartDurationTime: TLabel
         Left = 313
         Height = 14
-        Top = 284
+        Top = 363
         Width = 146
         Alignment = taRightJustify
         Caption = 'Test start - duration times'
@@ -2472,7 +2451,7 @@ object frmGUIta: TfrmGUIta
       object cmbTestDurationss: TComboBox
         Left = 313
         Height = 20
-        Top = 300
+        Top = 379
         Width = 75
         ItemHeight = 0
         ItemIndex = 2
@@ -2484,13 +2463,13 @@ object frmGUIta: TfrmGUIta
           '30:00'
           '1:00:00'
         )
-        TabOrder = 20
+        TabOrder = 25
         Text = '5:00'
       end
       object cmbTestDurationt: TComboBox
         Left = 393
         Height = 20
-        Top = 300
+        Top = 379
         Width = 75
         ItemHeight = 0
         ItemIndex = 2
@@ -2501,13 +2480,13 @@ object frmGUIta: TfrmGUIta
           '45'
           '60'
         )
-        TabOrder = 21
+        TabOrder = 26
         Text = '30'
       end
       object lblLangA: TLabel
         Left = 313
         Height = 14
-        Top = 348
+        Top = 415
         Width = 146
         Caption = 'Prefered audio languages'
         ParentColor = False
@@ -2515,7 +2494,7 @@ object frmGUIta: TfrmGUIta
       object cmbLangA: TComboBox
         Left = 313
         Height = 20
-        Top = 366
+        Top = 433
         Width = 148
         ItemHeight = 0
         ItemIndex = 5
@@ -2527,12 +2506,12 @@ object frmGUIta: TfrmGUIta
           'rus eng'
           ''
         )
-        TabOrder = 24
+        TabOrder = 29
       end
       object lblLangS: TLabel
         Left = 466
         Height = 14
-        Top = 348
+        Top = 415
         Width = 156
         Caption = 'Prefered subtitle languages'
         ParentColor = False
@@ -2540,7 +2519,7 @@ object frmGUIta: TfrmGUIta
       object cmbLangS: TComboBox
         Left = 466
         Height = 20
-        Top = 366
+        Top = 433
         Width = 148
         ItemHeight = 0
         Items.Strings = (
@@ -2550,13 +2529,13 @@ object frmGUIta: TfrmGUIta
           'en eng english'
           'rus eng'
         )
-        TabOrder = 25
+        TabOrder = 30
       end
       object cmbLangsList: TComboBox
         Tag = 1
         Left = 623
         Height = 20
-        Top = 366
+        Top = 433
         Width = 100
         ItemHeight = 0
         Items.Strings = (
@@ -2746,33 +2725,125 @@ object frmGUIta: TfrmGUIta
           'zha||za|Zhuang; Chuang|zhuang; chuang'
           'zul||zu|Zulu|zoulou'
         )
-        TabOrder = 26
+        TabOrder = 31
         Text = 'Langs List'
       end
       object chkAddTracks: TCheckBox
-        Left = 110
+        Left = 8
         Height = 26
-        Top = 151
+        Top = 328
         Width = 139
         Caption = 'Add external tracks'
-        TabOrder = 13
+        TabOrder = 22
       end
       object chk1instance: TCheckBox
         Left = 8
         Height = 26
-        Top = 321
+        Top = 427
         Width = 86
         Caption = '1 instance'
         OnChange = chk1instanceChange
-        TabOrder = 22
+        TabOrder = 28
       end
       object chkSaveFormPos: TCheckBox
         Left = 8
         Height = 26
-        Top = 294
-        Width = 141
-        Caption = 'Save form positions'
+        Top = 400
+        Width = 147
+        Caption = 'Save forms positions'
+        TabOrder = 27
+      end
+      object LVmasks: TListView
+        Left = 110
+        Height = 116
+        Top = 184
+        Width = 672
+        Anchors = [akTop, akLeft, akRight]
+        Checkboxes = True
+        Columns = <        
+          item
+            Caption = 'Prefix'
+            Width = 100
+          end        
+          item
+            Caption = 'Extensions'
+            Width = 250
+          end        
+          item
+            AutoSize = True
+            Caption = 'Profile'
+            Width = 301
+          end>
+        Enabled = False
+        TabOrder = 20
+        ViewStyle = vsReport
+        OnDragDrop = LVjobsDragDrop
+        OnDragOver = LVjobsDragOver
+      end
+      object btnMaskAdd: TButton
+        Left = 8
+        Height = 25
+        Top = 210
+        Width = 100
+        Caption = 'Add'
+        Enabled = False
+        OnClick = btnMaskAddClick
+        TabOrder = 17
+      end
+      object btnMaskEdit: TButton
+        Left = 8
+        Height = 25
+        Top = 240
+        Width = 100
+        Caption = 'Edit'
+        Enabled = False
+        OnClick = btnMaskEditClick
+        TabOrder = 18
+      end
+      object btnMaskDel: TButton
+        Left = 9
+        Height = 25
+        Top = 270
+        Width = 100
+        Caption = 'Delete'
+        Enabled = False
+        OnClick = btnMaskDelClick
         TabOrder = 19
+      end
+      object chkUseMasks: TCheckBox
+        Left = 8
+        Height = 26
+        Top = 184
+        Width = 89
+        Caption = 'Use masks'
+        OnChange = chkUseMasksChange
+        TabOrder = 16
+      end
+      object edtFileExts: TComboBox
+        Left = 8
+        Height = 20
+        Top = 305
+        Width = 774
+        Anchors = [akTop, akLeft, akRight]
+        ItemHeight = 0
+        Items.Strings = (
+          '*.avi;*.mkv;*.vob;*.mpg;*.mpeg;*.mp4;*.mov;*.flv;*.3gp;*.3g2;*.asf;*.wmv;*.m2ts;*.ts;*.ogv;*.webm;*.rm;*.qt;*.mp3;*.ac3'
+        )
+        TabOrder = 21
+        Text = '*.avi;*.mkv;*.vob;*.mpg;*.mpeg;*.mp4;*.mov;*.flv;*.3gp;*.3g2;*.asf;*.wmv;*.m2ts;*.ts;*.ogv;*.webm;*.rm;*.qt;*.mp3;*.ac3'
+      end
+      object cmbAddTracks: TComboBox
+        Left = 248
+        Height = 20
+        Top = 331
+        Width = 534
+        Anchors = [akTop, akLeft, akRight]
+        ItemHeight = 0
+        Items.Strings = (
+          '*.mp3;*.ac3;*.srt;*.ass;*.png'
+        )
+        TabOrder = 23
+        Text = '*.mp3;*.ac3;*.srt;*.ass;*.png'
       end
     end
     object TabJournal: TTabSheet

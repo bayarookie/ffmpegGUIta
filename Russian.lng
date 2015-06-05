@@ -7,7 +7,6 @@ edtffprobe=путь к ffprobe
 edtDirTmp=Временная папка
 edtDirOut=Сохранять в папку
 edtMediaInfo=MediaInfo
-edtFileExts=Видео файлы
 chkPlayer2=Воспроизв. результат плэйером по умолчанию
 chkPlayer3=Воспроизводить результат внешним плэйером
 btnLanguage=Язык
@@ -19,6 +18,10 @@ lblLangS=Предпочит. язык субтитров
 chkAddTracks=Добавлять внешние дорожки
 chk1instance=Не запускать более одной копии
 chkSaveFormPos=Сохранять позиции форм
+btnMaskAdd=Добавить
+btnMaskEdit=Редактировать
+btnMaskDel=Удалить
+chkUseMasks=Маски
 TabJournal=Журнал
 TabConsole=Консоль
 TabInput=Источник
@@ -101,7 +104,8 @@ mnuPasteAsAvs1=Добавить из буфера обмена как *.avs
 mnuPasteAsAvs2=Добавить из буфера обмена как 1 avs
 mnuCopyAsAvs=Добавить этот файл как avs
 mnuEditAvs=Редактировать avs
-mnuCheck=Check or uncheck all
+mnuCheck=Пометить или разотметить всё
+mnuDeleteJob=Удалить задание
 mnuPasteTracks=Добавить дорожки из буфера
 
 [LVjobs]
@@ -120,7 +124,6 @@ edtffprobe=путь к файлу ffprobe.exe
 edtDirTmp=временная папка
 edtDirOut=пусто для сохранения в папку источника
 edtMediaInfo=путь к файлу MediaInfo.exe или MediaInfo.dll
-edtFileExts=маска файлов, которые будут добавлены при добавлении папки, и также используется в диалоге добавления файлов
 chkPlayer2=
 chkPlayer3=
 cmbLanguage=
@@ -137,6 +140,12 @@ cmbLangsList=
 chkAddTracks=
 chk1instance=
 chkSaveFormPos=
+btnMaskAdd=
+btnMaskEdit=
+btnMaskDel=
+chkUseMasks=
+edtFileExts=маска файлов, которые будут добавлены при добавлении папки, и также используется в диалоге добавления файлов
+cmbAddTracks=
 cmbAddOptsI=
 cmbDurationss1=Когда используется как входная опция (перед -i),\nперемещается во входном файле до позиции "откуда".
 cmbDurationt1=Когда используется как входная опция (перед -i),\nограничивает продолжительность чтения входного файла.
@@ -211,7 +220,13 @@ mnuPasteAsAvs2=
 mnuCopyAsAvs=
 mnuEditAvs=
 mnuCheck=
+mnuDeleteJob=
 mnuPasteTracks=
+
+[LVmasks]
+0=Имя файла
+1=Расширения
+2=Профиль
 
 [LVfiles]
 0=Номер

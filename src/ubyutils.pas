@@ -401,7 +401,8 @@ begin
     Delete(s2, 1, i + j - 1);
     i := Pos(sep, s2);
   end;
-  List.Add(s2);
+  if s2 <> '' then
+    List.Add(s2);
 end;
 
 function myGetOutFN(Dir, Inp, Ext: string): string;

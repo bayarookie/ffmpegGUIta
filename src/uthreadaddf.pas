@@ -100,8 +100,10 @@ begin
   end;
   ia2 := -1;
   sl := TStringList.Create;
-  s := AppendPathDelim(sInidir) + frmGUIta.cmbProfile.Text;
-  s := myGetAnsiFN(s);
+  //s := frmGUIta.cmbProfile.Text;
+  s := frmGUIta.myGetProfile(ExtractFileName(jo.f[0].getval('filename')));
+  jo.setval(frmGUIta.cmbProfile.Name, s);
+  s := myGetAnsiFN(AppendPathDelim(sInidir) + s);
   Ini := TIniFile.Create(UTF8ToSys(s));
   Ini.ReadSection('input', sl);
   for i := 0 to sl.Count - 1 do
@@ -373,4 +375,4 @@ begin
   inherited Create(CreateSuspended);
 end;
 
-end.
+end.
