@@ -803,6 +803,8 @@ var
       begin
         p := StringReplace(p, '\', '/', [rfReplaceAll]);
         p := StringReplace(p, ':', '\:', [rfReplaceAll]);
+        p := StringReplace(p, '[', '\[', [rfReplaceAll]);
+        p := StringReplace(p, ']', '\]', [rfReplaceAll]);
         p := StringReplace(p, '''', '\\\''', [rfReplaceAll]);
         r := StringReplace(r, q, p, [rfReplaceAll]);
       end;
@@ -2730,10 +2732,6 @@ var
 begin
   if chkUseMasks.Checked then
   begin
-    Result := cmbProfile.Text;
-  end
-  else
-  begin
     Result := '';
     for i := 0 to LVmasks.Items.Count - 1 do
     begin
@@ -2758,6 +2756,10 @@ begin
     end;
     if Result = '' then
       Result := cmbProfile.Text;
+  end
+  else
+  begin
+    Result := cmbProfile.Text;
   end;
 end;
 
