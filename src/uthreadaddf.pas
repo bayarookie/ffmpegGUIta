@@ -55,8 +55,13 @@ begin
       jo.f[l].setval('ffprobe', '1');
       filenamew := jo.f[l].getval('filename');
       filename := myGetAnsiFN(filenamew);
-      fcmd := frmGUIta.myStrReplace('"$ffprobe"') + ' -show_streams "' +
-        filename + '"';
+      if LowerCase(ExtractFileExt(filename)) = '.vob' then
+        fcmd := frmGUIta.myStrReplace('"$ffprobe"')
+        + ' -show_streams -analyzeduration 100M -probesize 100M "' +
+        filename + '"'
+      else
+        fcmd := frmGUIta.myStrReplace('"$ffprobe"')
+        + ' -show_streams "' + filename + '"';
       filenum := l;
       Break;
     end;

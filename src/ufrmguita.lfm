@@ -65,13 +65,14 @@ object frmGUIta: TfrmGUIta
             Checkboxes = True
             Columns = <            
               item
+                AutoSize = True
                 MaxWidth = 50
                 MinWidth = 35
-                Width = 45
+                Width = 35
               end            
               item
                 AutoSize = True
-                Width = 180
+                Width = 190
               end>
             DragMode = dmAutomatic
             PopupMenu = PopupMenu2
@@ -126,9 +127,9 @@ object frmGUIta: TfrmGUIta
           Height = 311
           Top = 1
           Width = 538
-          ActivePage = TabInput
+          ActivePage = TabOutput
           Align = alClient
-          TabIndex = 0
+          TabIndex = 1
           TabOrder = 1
           object TabInput: TTabSheet
             Caption = 'Input file'
@@ -155,6 +156,7 @@ object frmGUIta: TfrmGUIta
                 '-f h264'
                 '-f x11grab -video_size 1280x720 -framerate 25'
                 '-f alsa'
+                '-palette "000000, 000000, 000000, ffff00, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000"'
               )
               OnChange = xmyChange0i
               TabOrder = 0
@@ -220,7 +222,7 @@ object frmGUIta: TfrmGUIta
                 '30'
                 '60'
               )
-              OnChange = xmyChange0o
+              OnChange = xmyChange0i
               ParentShowHint = False
               ShowHint = True
               TabOrder = 2
@@ -233,11 +235,12 @@ object frmGUIta: TfrmGUIta
               Align = alTop
               Columns = <              
                 item
-                  Width = 45
+                  AutoSize = True
+                  Width = 12
                 end              
                 item
                   AutoSize = True
-                  Width = 464
+                  Width = 497
                 end>
               PopupMenu = PopupMenu3
               ReadOnly = True
@@ -259,7 +262,7 @@ object frmGUIta: TfrmGUIta
               Anchors = [akTop, akLeft, akRight]
               ItemHeight = 0
               OnChange = xmyChange0
-              TabOrder = 8
+              TabOrder = 10
             end
             object lblAddOptsO: TLabel
               Left = 8
@@ -450,20 +453,6 @@ object frmGUIta: TfrmGUIta
               OnChange = xmyChange0o
               ParentShowHint = False
               ShowHint = True
-              TabOrder = 9
-            end
-            object chkConcat: TCheckBox
-              Left = 249
-              Height = 26
-              Hint = 'Concatenate audio and video streams, joining them together one after the other.'#13#10'The filter works on segments of synchronized video and audio streams.'#13#10'All segments must have the same number of streams of each type,'#13#10'and that will also be the number of streams at output.'#13#10'All segments must start at timestamp 0.'#13#10'All corresponding streams must have the same parameters in all segments.'#13#10'http://ffmpeg.org/ffmpeg-filters.html#concat'
-              Top = 240
-              Width = 99
-              HelpType = htKeyword
-              HelpKeyword = 'concat'
-              Caption = 'Concatenate'
-              OnChange = xmyChange0
-              ParentShowHint = False
-              ShowHint = True
               TabOrder = 11
             end
             object lblDurationss2: TLabel
@@ -498,10 +487,50 @@ object frmGUIta: TfrmGUIta
                 '55:00'
                 '1:00:00'
               )
-              OnChange = xmyChange0i
+              OnChange = xmyChange0o
               ParentShowHint = False
               ShowHint = True
-              TabOrder = 10
+              TabOrder = 12
+            end
+            object chkFilterComplex: TCheckBox
+              Left = 8
+              Height = 26
+              Top = 115
+              Width = 134
+              Caption = 'use -filter complex'
+              OnChange = chkFilterComplexChange
+              TabOrder = 8
+            end
+            object cmbFilterComplex: TComboBox
+              Left = 8
+              Height = 20
+              Top = 140
+              Width = 514
+              Anchors = [akTop, akLeft, akRight]
+              Enabled = False
+              ItemHeight = 0
+              Items.Strings = (
+                ''
+                '[0:v][0:s]overlay'
+                'split[a][b]; [a]pad=iw*2:ih[src]; [b]deshake[filt]; [src][filt]overlay=w'
+                'nullsrc=size=200x100 [background]; [0:v] setpts=PTS-STARTPTS, scale=100x100 [left]; [1:v] setpts=PTS-STARTPTS, scale=100x100 [right]; [background][left] overlay=shortest=1 [background+left]; [background+left][right] overlay=shortest=1:x=100'
+              )
+              OnChange = xmyChange0
+              TabOrder = 9
+            end
+            object chkConcat: TCheckBox
+              Left = 249
+              Height = 26
+              Hint = 'Concatenate audio and video streams, joining them together one after the other.'#13#10'The filter works on segments of synchronized video and audio streams.'#13#10'All segments must have the same number of streams of each type,'#13#10'and that will also be the number of streams at output.'#13#10'All segments must start at timestamp 0.'#13#10'All corresponding streams must have the same parameters in all segments.'#13#10'http://ffmpeg.org/ffmpeg-filters.html#concat'
+              Top = 240
+              Width = 99
+              HelpType = htKeyword
+              HelpKeyword = 'concat'
+              Caption = 'Concatenate'
+              OnChange = xmyChange0
+              ParentShowHint = False
+              ShowHint = True
+              TabOrder = 13
             end
           end
           object TabVideo: TTabSheet
@@ -671,6 +700,7 @@ object frmGUIta: TfrmGUIta
               ParentColor = False
             end
             object cmbScale: TComboBox
+              Tag = 2
               Left = 8
               Height = 20
               Top = 140
@@ -703,6 +733,7 @@ object frmGUIta: TfrmGUIta
               ParentColor = False
             end
             object cmbRotate: TComboBox
+              Tag = 2
               Left = 242
               Height = 22
               Top = 180
@@ -732,6 +763,7 @@ object frmGUIta: TfrmGUIta
               ParentColor = False
             end
             object cmbPad: TComboBox
+              Tag = 2
               Left = 242
               Height = 20
               Top = 140
@@ -771,6 +803,7 @@ object frmGUIta: TfrmGUIta
               ParentColor = False
             end
             object cmbhqdn3d: TComboBox
+              Tag = 2
               Left = 8
               Height = 20
               Top = 180
@@ -795,6 +828,7 @@ object frmGUIta: TfrmGUIta
               TabOrder = 12
             end
             object cmbFiltersV: TComboBox
+              Tag = 2
               Left = 8
               Height = 20
               Hint = 'Additional filters or instead of.'#10'Can be used some vars:'#10'$input or $inpu0 - main input filename,'#10'$inpu1, $inpu2 - second, third and etc track filenames'
@@ -814,6 +848,7 @@ object frmGUIta: TfrmGUIta
                 'subtitles=/test/sub.srt'
                 'subtitles=$input'
                 'subtitles=$inpu1'
+                'subtitles=$inpu1:force_style=''FontName=Ubuntu,PrimaryColour=&H0000FFFF'''
                 'subtitles=$inpu2:charenc=cp1251'
                 'subtitles=$input:si=1'
                 'ass=/test/sub.ass'
@@ -826,6 +861,7 @@ object frmGUIta: TfrmGUIta
                 'pp=md'
                 'pp=fd'
                 'pp=l5'
+                'split[a][b]; [a]pad=iw*2:ih[src]; [b]deshake[filt]; [src][filt]overlay=w'
               )
               OnChange = xmyChange1
               TabOrder = 15
@@ -839,6 +875,7 @@ object frmGUIta: TfrmGUIta
               ParentColor = False
             end
             object cmbCrop: TComboBox
+              Tag = 2
               Left = 180
               Height = 20
               Top = 100
@@ -893,6 +930,7 @@ object frmGUIta: TfrmGUIta
               ParentColor = False
             end
             object cmbSetDAR: TComboBox
+              Tag = 2
               Left = 120
               Height = 20
               Top = 180
@@ -1070,6 +1108,7 @@ object frmGUIta: TfrmGUIta
               ParentColor = False
             end
             object cmbFiltersA: TComboBox
+              Tag = 2
               Left = 8
               Height = 20
               Top = 140

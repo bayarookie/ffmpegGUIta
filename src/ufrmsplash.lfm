@@ -12,7 +12,7 @@ object frmSplash: TfrmSplash
   FormStyle = fsSplash
   KeyPreview = True
   Position = poMainFormCenter
-  LCLVersion = '1.0.6.0'
+  LCLVersion = '1.2.6.0'
   object ProgressBar1: TProgressBar
     Left = 8
     Height = 20
@@ -26,7 +26,6 @@ object frmSplash: TfrmSplash
     Top = 36
     Width = 503
     AutoSize = False
-    Caption = 'Label1'
     ParentColor = False
     WordWrap = True
   end
@@ -36,9 +35,9 @@ object frmSplash: TfrmSplash
     Top = 55
     Width = 75
     Cancel = True
-    Caption = 'btnCancel'
+    Caption = 'Cancel'
     ModalResult = 2
     OnClick = btnCancelClick
     TabOrder = 1
   end
-end
+end
