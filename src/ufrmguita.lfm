@@ -273,6 +273,7 @@ object frmGUIta: TfrmGUIta
               ParentColor = False
             end
             object edtOfn: TLabeledEdit
+              Tag = 3
               Left = 8
               Height = 20
               Top = 20
@@ -361,7 +362,7 @@ object frmGUIta: TfrmGUIta
               TabOrder = 3
             end
             object edtOfna: TLabeledEdit
-              Tag = 1
+              Tag = 3
               Left = 8
               Height = 20
               Top = 60
@@ -496,7 +497,7 @@ object frmGUIta: TfrmGUIta
               Left = 8
               Height = 26
               Top = 115
-              Width = 134
+              Width = 103
               Caption = 'use -filter complex'
               OnChange = chkFilterComplexChange
               TabOrder = 8
@@ -512,6 +513,7 @@ object frmGUIta: TfrmGUIta
               Items.Strings = (
                 ''
                 '[0:v][0:s]overlay'
+                '[0:v]crop=720:368:0:60[v];[0:s]crop=720:368:0:60[s];[v][s]overlay'
                 'split[a][b]; [a]pad=iw*2:ih[src]; [b]deshake[filt]; [src][filt]overlay=w'
                 'nullsrc=size=200x100 [background]; [0:v] setpts=PTS-STARTPTS, scale=100x100 [left]; [1:v] setpts=PTS-STARTPTS, scale=100x100 [right]; [background][left] overlay=shortest=1 [background+left]; [background+left][right] overlay=shortest=1:x=100'
               )
@@ -523,7 +525,7 @@ object frmGUIta: TfrmGUIta
               Height = 26
               Hint = 'Concatenate audio and video streams, joining them together one after the other.'#13#10'The filter works on segments of synchronized video and audio streams.'#13#10'All segments must have the same number of streams of each type,'#13#10'and that will also be the number of streams at output.'#13#10'All segments must start at timestamp 0.'#13#10'All corresponding streams must have the same parameters in all segments.'#13#10'http://ffmpeg.org/ffmpeg-filters.html#concat'
               Top = 240
-              Width = 99
+              Width = 81
               HelpType = htKeyword
               HelpKeyword = 'concat'
               Caption = 'Concatenate'

@@ -7,14 +7,14 @@
 
 
 Для работы нужны в windows:
-ffmpeg.exe, ffprobe.exe, ffplay.exe 2.5.0 - http://ffmpeg.zeranoe.com/builds/win32/shared/
+ffmpeg.exe, ffprobe.exe, ffplay.exe 2.7 - http://ffmpeg.zeranoe.com/builds/win32/shared/
 mediainfo.exe или mediainfo.dll - http://sourceforge.net/projects/mediainfo/files/binary/mediainfo-gui/
 Дополнительно, но не обязательно, можно использовать:
 Avisynth - http://sourceforge.net/projects/avisynth2/
 плагин для Avisynth - https://code.google.com/p/ffmpegsource/downloads/list
 
 Для работы нужны в linux:
-ffmpeg, ffprobe, ffplay 2.5.0 - https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media - ppa:mc3man/trusty-media
+ffmpeg, ffprobe, ffplay 2.7 - https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media - ppa:mc3man/trusty-media
 
 Ключи:
 -o:"D:\Путь\к папке\назначения"
@@ -23,7 +23,7 @@ ffmpeg, ffprobe, ffplay 2.5.0 - https://launchpad.net/~mc3man/+archive/ubuntu/tr
 
 ФАК Ю - Фсе Атветы Каторые знаЮ
 
-Вопрос: Наложить субтитры на видео.
+Вопрос: Наложить текстовые субтитры (*.srt, *.ass) на видео.
 Ответ: Выбрать видео дорожку на которую хотите наложить текст.
   В поле "Ещё видеофильтры" написать для srt:
     если субтитры в этом же файле, то: subtitles=$input

@@ -4,6 +4,7 @@ component's property Tag
 0 = default, normal component
 1 = readonly, doesnt need to save to profile
 2 = filters, depends from chkFilterComplex.Checked
+3 = output filename, dont save to profile
 }
 
 {$mode objfpc}{$H+}
@@ -431,7 +432,7 @@ var
   k, i: integer;
 begin
   for k := Low(c) to High(c) do
-    if TWinControl(c[k]).Enabled and (TWinControl(c[k]).Tag <> 1) then
+    if TWinControl(c[k]).Enabled and not (TWinControl(c[k]).Tag in [1, 3]) then
       if c[k] is TLabeledEdit then
         with TLabeledEdit(c[k]) do
           if bRead then
@@ -1022,8 +1023,8 @@ begin
       c := jo.f[l].s[k];
       if c.getval('Checked') = '1' then
       begin
-        fn := c.getval('filenum');
-        ni := c.getval('index');
+        fn := IntToStr(l);
+        ni := IntToStr(k);
         if fn <> fb then
           Inc(cf);
         fb := fn;
@@ -1054,9 +1055,9 @@ begin
     end;
     fc := fc + 'concat=n=' + IntToStr(cf) + ':v=' + IntToStr(cv + 1) +
       ':a=' + IntToStr(ca + 1) + fc2 + '"';
-    for k := 0 to High(jo.f) do
+    for l := 0 to High(jo.f) do
     begin
-      c := TCont(jo.f[k]);
+      c := TCont(jo.f[l]);
       ssi := c.getval(cmbDurationss1.Name);
       if test and (rso = 0) then
       begin
@@ -1075,7 +1076,7 @@ begin
       si := si + IfThen(sti <> '', ' -t ' + sti);
       s := c.getval(cmbAddOptsI.Name);
       si := si + IfThen(s <> '', ' ' + s);
-      si := si + ' -i "' + myGetAnsiFN(jo.f[k].getval('filename')) + '"';
+      si := si + ' -i "' + myGetAnsiFN(jo.f[l].getval('filename')) + '"';
     end;
   end
 
@@ -2585,17 +2586,20 @@ end;
 
 function TfrmGUIta.myAutoCrop(jo: TJob; co: TCont): string;
 var
-  s, c, m, ss, si: string;
+  s, c, ss, si: string;
   sl: TStringList;
-  k: integer;
+  l: integer;
 begin
   ss := jo.getval(cmbDurationss2.Name);
   si := myStrReplace('"$ffmpeg"') + IfThen(ss <> '', ' -ss ' + ss);
-  for k := 0 to High(jo.f) do
-    si := si + ' -i "' + myGetAnsiFN(jo.f[k].getval('filename')) + '"';
-  if (co.getval('codec_type') = 'video') then
-    m := ' -map ' + co.getval('filenum') + ':' + co.getval('index');
-  si := si + ' -frames:v 20 -vf "framestep=60, cropdetect" -an -sn' + m + ' -y NUL.mkv';
+  for l := 0 to High(jo.f) do
+    si := si + ' -i "' + myGetAnsiFN(jo.f[l].getval('filename')) + '"';
+  si := si + ' -frames:v 20 -vf "framestep=60, cropdetect" -an -sn -f avi -';
+  //{$IFDEF MSWINDOWS}
+  //+ ' -y NUL.mkv';
+  //{$ELSE}
+  //+ ' -y /dev/null';
+  //{$ENDIF}
   //myGetDosOut(si, '', '', SynMemo2, StatusBar1);
   myGetDosOut2(si, SynMemo2);
   s := SynMemo2.Text;
@@ -2835,12 +2839,10 @@ begin
     jo.setval(edtOfn.Name, myGetOutFN(s, 'screengrab', '.mpg'));
     SetLength(jo.f[0].s, 1);
     jo.f[0].s[0] := TCont.Create;
-    jo.f[0].s[0].setval('filenum', '0');
     jo.f[0].s[0].setval('codec_type', 'video');
     jo.f[0].s[0].setval('Checked', '1');
     SetLength(jo.f[1].s, 1);
     jo.f[1].s[0] := TCont.Create;
-    jo.f[1].s[0].setval('filenum', '1');
     jo.f[1].s[0].setval('codec_type', 'audio');
     jo.f[1].s[0].setval('Checked', '1');
 
@@ -2902,11 +2904,11 @@ begin
   na := '-1';
   map := '';
   bfi := (jo.getval(chkFilterComplex.Name) = '1');
-  if bfi then
-  begin
-    fv := jo.getval(cmbFilterComplex.Name);
-    if fv <> '' then fv := ' -filter_complex "' + fv + '"';
-  end;
+  //if bfi then //cant get resize only filter from complex
+  //begin
+  //  fv := jo.getval(cmbFilterComplex.Name);
+  //  if fv <> '' then fv := ' -filter_complex "' + fv + '"';
+  //end;
   for l := 0 to High(jo.f) do
   for k := 0 to High(jo.f[l].s) do
     with jo.f[l].s[k] do
@@ -2915,19 +2917,19 @@ begin
         ty := getval('codec_type');
         if (ty = 'video') and (iv = '') then
         begin
-          iv := getval('index');
+          nv := IntToStr(l);
+          iv := IntToStr(k);
           if not bfi then
           begin
-            fv := myGetFilter(jo, jo.f[l].s[k], False);
+            fv := myGetFilter(jo, jo.f[l].s[k], False); //resize only filter
             if fv <> '' then fv := ' -filter:v "' + fv + '"';
           end;
-          nv := getval('filenum');
         end
         else if (ty = 'audio') and (ia = '') then
         begin
-          ia := getval('index');
+          na := IntToStr(l);
+          ia := IntToStr(k);
           fa := ' -filter_complex "showwaves=s=1200x480:mode=line"';
-          na := getval('filenum');
         end;
       end;
   k := StrToIntDef(nv, -1);
@@ -3048,12 +3050,11 @@ var
   co: TCont;
   frmCrop: TfrmCrop;
   Ini: TIniFile;
-  iv, nv, fn: string;
+  iv, fn: string;
 begin
   if myCantUpd(2) then
     Exit;
   jo := TJob(LVjobs.Selected.Data);
-  //co := TCont(LVstreams.Selected.Data);
   myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
   co := jo.f[l].s[k];
   if cmbCrop.Text = '' then
@@ -3061,17 +3062,11 @@ begin
     cmbCrop.Text := myAutoCrop(jo, co);
     xmyChange1v(cmbCrop);
   end;
-  iv := co.getval('index');
-  nv := co.getval('filenum');
-  k := StrToIntDef(nv, -1);
-  if (k < 0) or (k > High(jo.f)) then
-    k := 0;
-  fn := jo.f[k].getval('filename');
+  iv := ' -map 0:' + IntToStr(k);
+  fn := jo.f[l].getval('filename');
   if not FileExistsUTF8(fn) then
     Exit;
   Application.CreateForm(TfrmCrop, frmCrop);
-  if iv <> '' then
-    iv := ' -map 0:' + iv;
   frmCrop.LabeledEdit2.Text := iv;
   frmCrop.LabeledEdit1.EditLabel.Caption := fn;
   frmCrop.LabeledEdit1.Text := jo.getval('ssi');
@@ -3345,7 +3340,11 @@ begin
   sn := '';
   filenum := -1;
   bfi := (jo.getval(chkFilterComplex.Name) = '1');
-  //if bfi then ffplay doesnt support filter_complex
+  //if bfi then
+{
+ffplay doesnt support filter_complex, do something like that:
+ffmpeg <...> -f avi - | ffplay -i -
+}
   //  vf := ' -filter_complex "' + jo.getval(cmbFilterComplex.Name) + '"';
   for l := 0 to High(jo.f) do
   for k := 0 to High(jo.f[l].s) do
@@ -3356,17 +3355,17 @@ begin
       s := c.getval('codec_type');
       if (s = 'video') and (vn = '') then
       begin
-        vn := ' -vst ' + IntToStr(k); //getval('index');
+        filenum := l;
+        vn := ' -vst ' + IntToStr(k);
         if not bfi then
         begin
           vf := myGetFilter(jo, c);
           if vf <> '' then vf := ' -vf "' + vf + '"';
         end;
-        filenum := l; //getval('filenum');
       end
       else if (s = 'audio') and (an = '') then
       begin
-        an := ' -ast ' + IntToStr(k); //getval('index');
+        an := ' -ast ' + IntToStr(k);
         if not bfi then
         begin
           af := myGetFilter(jo, c);
@@ -3374,7 +3373,7 @@ begin
         end;
       end
       else if (s = 'subtitle') and (sn = '') then
-        sn := ' -sst ' + IntToStr(k); //getval('index');
+        sn := ' -sst ' + IntToStr(k);
     end;
   end;
   if vn = '' then
@@ -3383,20 +3382,19 @@ begin
     an := ' -an';
   if sn = '' then
     sn := ' -sn'; //ffplay 1.0.10 - Missing argument for option 'sn'
-  //k := StrToIntDef(filenum, 0);
-  k := filenum;
-  if (k < 0) or (k > High(jo.f)) then
-    k := 0;
+  l := filenum;
+  if (l < 0) or (l > High(jo.f)) then
+    l := 0;
   si := '"$ffplay"';
   ss := jo.getval(cmbDurationss2.Name);
   si := si + IfThen(ss <> '', ' -ss ' + ss);
-  s := TCont(jo.f[k]).getval(cmbDurationss1.Name);
+  s := TCont(jo.f[l]).getval(cmbDurationss1.Name);
   si := si + IfThen((ss = '') and (s <> ''), ' -ss ' + s);
   t := jo.getval(cmbDurationt2.Name);
   si := si + IfThen(t <> '', ' -t ' + t);
-  s := TCont(jo.f[k]).getval(cmbDurationt1.Name);
+  s := TCont(jo.f[l]).getval(cmbDurationt1.Name);
   si := si + IfThen((t = '') and (s <> ''), ' -ss ' + s);
-  si := si + ' -i "' + myGetAnsiFN(jo.f[k].getval('filename')) + '" -autoexit';
+  si := si + ' -i "' + myGetAnsiFN(jo.f[l].getval('filename')) + '" -autoexit';
   s := myStrReplace(si + vf + af + vn + an + sn);
   if chkDebug.Checked then
     memJournal.Lines.Add(s);
@@ -3469,7 +3467,6 @@ begin
     end;
     Ini := TIniFile.Create(UTF8ToSys(s));
     mySets2(Ini, '1', [TabOutput], False);
-    Ini.DeleteKey('1', edtOfn.Name);
     mySets2(Ini, 'input', [TabInput], False);
     mySets2(Ini, 'video', [TabVideo], False);
     mySets2(Ini, 'audio', [TabAudio], False);
@@ -3797,17 +3794,18 @@ begin
   Ini := TIniFile.Create(UTF8ToSys(s));
   jo := TJob(LVjobs.Selected.Data);
   jo.setval(cmbProfile.Name, cmbProfile.Text);
-  jo.setval(cmbFormat.Name, Ini.ReadString('1', cmbFormat.Name, ''));
+  for i := 0 to TabOutput.ControlCount - 1 do
+  if (TabOutput.Controls[i].Tag in [0, 2]) then
+  begin
+      s := Ini.ReadString('1', TabOutput.Controls[i].Name, '');
+      jo.setval(TabOutput.Controls[i].Name, s);
+  end;
   se := Ini.ReadString('1', cmbExt.Name, '');
-  jo.setval(cmbExt.Name, se);
+  //jo.setval(cmbExt.Name, se);
   jo.setval(edtOfn.Name, ChangeFileExt(jo.getval(edtOfn.Name), se));
   {$IFDEF MSWINDOWS}
   jo.setval(edtOfna.Name, ChangeFileExt(jo.getval(edtOfna.Name), se));
   {$ENDIF}
-  //jo.setval(cmbAddOptsI.Name, Ini.ReadString('1', cmbAddOptsI.Name, ''));
-  jo.setval(cmbAddOptsO.Name, Ini.ReadString('1', cmbAddOptsO.Name, ''));
-  jo.setval(cmbDurationss2.Name, Ini.ReadString('1', cmbDurationss2.Name, ''));
-  jo.setval(cmbDurationt2.Name, Ini.ReadString('1', cmbDurationt2.Name, ''));
   for l := 0 to High(jo.f) do
   begin
     for i := 0 to TabInput.ControlCount - 1 do

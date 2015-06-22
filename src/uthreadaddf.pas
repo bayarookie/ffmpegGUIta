@@ -124,7 +124,6 @@ begin
     k := High(jo.f[filenum].s) + 1;
     SetLength(jo.f[filenum].s, k + 1);
     jo.f[filenum].s[k] := TCont.Create;
-    jo.f[filenum].s[k].setval('filenum', IntToStr(filenum));
     for i := 0 to sl.Count - 1 do
     begin
       j := Pos('=', sl[i]);
