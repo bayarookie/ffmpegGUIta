@@ -65,6 +65,8 @@ type
     btnMaskAdd: TButton;
     btnMaskEdit: TButton;
     btnMaskDel: TButton;
+    chkRunMode: TCheckBox;
+    chkPlayerIn: TCheckBox;
     chkConcat: TCheckBox;
     chkFilterComplex: TCheckBox;
     chkUseMasks: TCheckBox;
@@ -120,6 +122,8 @@ type
     cmbAddOptsV: TComboBox;
     cmbAddTracks: TComboBox;
     cmbFilterComplex: TComboBox;
+    edtxtermopts: TComboBox;
+    edtxterm: TComboBox;
     edtFileExts: TComboBox;
     edtBitrateA: TLabeledEdit;
     edtDirOut: TLabeledEdit;
@@ -129,11 +133,11 @@ type
     edtffprobe: TLabeledEdit;
     edtMediaInfo: TLabeledEdit;
     edtOfn: TLabeledEdit;
-    edtxterm: TLabeledEdit;
-    edtxtermopts: TLabeledEdit;
     ImageList1: TImageList;
     edtBitrateV: TLabeledEdit;
     edtOfna: TLabeledEdit;
+    lblxtermopts: TLabel;
+    lblxterm: TLabel;
     lblAddOptsI: TLabel;
     lblDurationss1: TLabel;
     lblDurationss2: TLabel;
@@ -272,6 +276,7 @@ type
     procedure cmbLanguageChange(Sender: TObject);
     procedure cmbProfileChange(Sender: TObject);
     procedure edtOfnChange(Sender: TObject);
+    procedure edtxtermSelect(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormDropFiles(Sender: TObject; const FileNames: array of string);
@@ -370,8 +375,9 @@ type
     function myGetDosOut(cmd, beg, fin: string; mem: TSynMemo;
       stb: TStatusBar; OEM: boolean = True): integer;
     function myGetDosOut2(cmd: string; mem: TSynMemo): integer;
+    procedure myRunCmd(cmd: string);
     function myGetFilter(jo: TJob; v: TCont; all: boolean = True): string;
-    function myGetCmdFromJo(jo: TJob; test: boolean = False): string;
+    function myGetCmdFromJo(jo: TJob; mode: integer = 0): string;
     function myGetPic(ss, fn, fv: string; sm: TSynMemo; st: TStatusBar): string;
     function myStrReplace(s: string): string;
     function myValFPS(a: array of string): extended;
@@ -838,6 +844,7 @@ begin
     4: s := s + 'hflip';
     5: s := s + 'vflip';
     6: s := s + 'hflip, vflip';
+    7: ;
     else
       if chkDebug.Checked then
         memJournal.Lines.Add('rotate not in range: ' + IntToStr(i));
@@ -848,7 +855,7 @@ begin
   Result := s;
 end;
 
-function TfrmGUIta.myGetCmdFromJo(jo: TJob; test: boolean = False): string;
+function TfrmGUIta.myGetCmdFromJo(jo: TJob; mode: integer = 0): string;
 var
   k, l, cf, cv, ca, cs, ct, cd: integer;
   c: TCont;
@@ -971,16 +978,16 @@ begin
   // -ss input, output, test
   ssi := '';
   sso := jo.getval(cmbDurationss2.Name);
-  sst := IfThen(test, Trim(cmbTestDurationss.Text));
+  sst := IfThen(mode = 1, Trim(cmbTestDurationss.Text));
   // -t input, output, test
   sti := '';
   sto := jo.getval(cmbDurationt2.Name);
-  stt := IfThen(test, Trim(cmbTestDurationt.Text));
+  stt := IfThen(mode = 1, Trim(cmbTestDurationt.Text));
   // calc time range for test
   rd := myTimeStrToReal(jo.getval('duration'));
   rso := myTimeStrToReal(sso);
   rto := myTimeStrToReal(sto);
-  if test then
+  if mode = 1 then
   begin
     rst := myTimeStrToReal(sst);
     rtt := myTimeStrToReal(stt);
@@ -1059,7 +1066,7 @@ begin
     begin
       c := TCont(jo.f[l]);
       ssi := c.getval(cmbDurationss1.Name);
-      if test and (rso = 0) then
+      if (mode = 1) and (rso = 0) then
       begin
         rsi := myTimeStrToReal(ssi);
         if (rsi < rst) then
@@ -1067,7 +1074,7 @@ begin
       end;
       si := si + IfThen(ssi <> '', ' -ss ' + ssi);
       sti := c.getval(cmbDurationt1.Name);
-      if test and (rto = 0) then
+      if (mode = 1) and (rto = 0) then
       begin
         rti := myTimeStrToReal(sti);
         if (rti = 0) or (rti > rtt) then
@@ -1086,7 +1093,7 @@ begin
     for l := 0 to High(jo.f) do
     begin
       ssi := jo.f[l].getval(cmbDurationss1.Name);
-      if test and (rso = 0) then
+      if (mode = 1) and (rso = 0) then
       begin
         rsi := myTimeStrToReal(ssi);
         if (rsi < rst) then
@@ -1094,7 +1101,7 @@ begin
       end;
       si := si + IfThen(ssi <> '', ' -ss ' + ssi);
       sti := jo.f[l].getval(cmbDurationt1.Name);
-      if test and (rto = 0) then
+      if (mode = 1) and (rto = 0) then
       begin
         rti := myTimeStrToReal(sti);
         if (rti = 0) or (rti > rtt) then
@@ -1140,7 +1147,7 @@ begin
   if au = '' then au := ' -an'; //no audio
   if su = '' then su := ' -sn'; //no subtitle
   // params for output file
-  if test then
+  if mode = 1 then
   begin
     if (rso > 0) and (rso < rst) then
       sso := sst;
@@ -1154,7 +1161,7 @@ begin
   so := so + IfThen(s <> '', ' -f ' + s);
   // output filename
   fno := jo.getval(edtOfn.Name);
-  if fno <> '' then
+  if (fno <> '') and (mode <> 2) then
   begin
     if FileExistsUTF8(fno) then
     begin
@@ -1177,11 +1184,11 @@ begin
   end
   else
   begin
-    fn1 := '';
-    fn2 := '';
+    fn1 := ' -';
+    fn2 := ' -';
   end;
   // final
-  if sp1 <> '' then
+  if (sp1 <> '') and (mode <> 2) then
     Result := si + fc + fi + vi + au + su + ma + sp1 + so + fn1 + LineEnding
             + si + fc + fi + vi + au + su + ma + sp2 + so + fn2
   else
@@ -1320,6 +1327,29 @@ begin
     pr.Free;
     MemStream.Free;
   end;
+end;
+
+procedure TfrmGUIta.myRunCmd(cmd: string);
+var
+  sl: TStringList;
+  i: integer;
+  p: TProcessUTF8;
+begin
+  p := TProcessUTF8.Create(nil);
+  p.Executable := edtxterm.Text;
+  p.Parameters.Add(edtxtermopts.Text);
+  if chkRunMode.Checked then
+    p.Parameters.Add(cmd)
+  else
+  begin
+    sl := TStringList.Create;
+    process.CommandToList(cmd, sl);
+    for i := 0 to sl.Count - 1 do
+      p.Parameters.Add(sl[i]);
+    sl.Free;
+  end;
+  p.Execute;
+  p.Free;
 end;
 
 procedure TfrmGUIta.myFindFiles(dir: string; c: array of TObject);
@@ -2596,7 +2626,7 @@ begin
     si := si + ' -i "' + myGetAnsiFN(jo.f[l].getval('filename')) + '"';
   si := si + ' -frames:v 20 -vf "framestep=60, cropdetect" -an -sn -f avi -';
   //{$IFDEF MSWINDOWS}
-  //+ ' -y NUL.mkv';
+  //+ ' -f matroska -y NUL';
   //{$ELSE}
   //+ ' -y /dev/null';
   //{$ENDIF}
@@ -2996,25 +3026,11 @@ end;
 procedure TfrmGUIta.btnCmdRunClick(Sender: TObject);
 var
   s: string;
-  sl: TStringList;
-  i: integer;
-  st: array of string;
 begin
   s := myStrReplace(cmbRunCmd.Text);
   if chkRunInWindow.Checked then
   begin
-    sl := TStringList.Create;
-    s := edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + s;
-    process.CommandToList(s, sl);
-    for i := 1 to sl.Count - 1 do
-    begin
-      SetLength(st, i);
-      st[i - 1] := sl[i];
-    end;
-    ExecuteProcess(sl[0], st);
-    //myExecProc1(s);
-    //myExecProc(sl[0], st);
-    sl.Free;
+    myRunCmd(s);
   end
   else
   if chkRunInMem.Checked then
@@ -3333,72 +3349,78 @@ begin
   if LVjobs.Selected = nil then
     Exit;
   jo := TJob(LVjobs.Selected.Data);
-  vf := '';
-  af := '';
-  vn := '';
-  an := '';
-  sn := '';
-  filenum := -1;
-  bfi := (jo.getval(chkFilterComplex.Name) = '1');
-  //if bfi then
-{
-ffplay doesnt support filter_complex, do something like that:
-ffmpeg <...> -f avi - | ffplay -i -
-}
-  //  vf := ' -filter_complex "' + jo.getval(cmbFilterComplex.Name) + '"';
-  for l := 0 to High(jo.f) do
-  for k := 0 to High(jo.f[l].s) do
+  if chkPlayerIn.Checked then
   begin
-    c := jo.f[l].s[k];
-    if (c.getval('Checked') = '1') then
+    s := myGetCmdFromJo(jo, 2) + myStrReplace(' | "$ffplay" -i -');
+    if chkDebug.Checked then
+      memJournal.Lines.Add(edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + s);
+    myRunCmd(s);
+  end
+  else
+  begin
+    vf := '';
+    af := '';
+    vn := '';
+    an := '';
+    sn := '';
+    filenum := -1;
+    bfi := (jo.getval(chkFilterComplex.Name) = '1');
+    //if bfi then
+    //  vf := ' -filter_complex "' + jo.getval(cmbFilterComplex.Name) + '"';
+    for l := 0 to High(jo.f) do
+    for k := 0 to High(jo.f[l].s) do
     begin
-      s := c.getval('codec_type');
-      if (s = 'video') and (vn = '') then
+      c := jo.f[l].s[k];
+      if (c.getval('Checked') = '1') then
       begin
-        filenum := l;
-        vn := ' -vst ' + IntToStr(k);
-        if not bfi then
+        s := c.getval('codec_type');
+        if (s = 'video') and (vn = '') then
         begin
-          vf := myGetFilter(jo, c);
-          if vf <> '' then vf := ' -vf "' + vf + '"';
-        end;
-      end
-      else if (s = 'audio') and (an = '') then
-      begin
-        an := ' -ast ' + IntToStr(k);
-        if not bfi then
+          filenum := l;
+          vn := ' -vst ' + IntToStr(k);
+          if not bfi then
+          begin
+            vf := myGetFilter(jo, c);
+            if vf <> '' then vf := ' -vf "' + vf + '"';
+          end;
+        end
+        else if (s = 'audio') and (an = '') then
         begin
-          af := myGetFilter(jo, c);
-          af := IfThen(af <> '', ' -af "' + af + '"');
-        end;
-      end
-      else if (s = 'subtitle') and (sn = '') then
-        sn := ' -sst ' + IntToStr(k);
+          an := ' -ast ' + IntToStr(k);
+          if not bfi then
+          begin
+            af := myGetFilter(jo, c);
+            af := IfThen(af <> '', ' -af "' + af + '"');
+          end;
+        end
+        else if (s = 'subtitle') and (sn = '') then
+          sn := ' -sst ' + IntToStr(k);
+      end;
     end;
+    if vn = '' then
+      vn := ' -vn';
+    if an = '' then
+      an := ' -an';
+    if sn = '' then
+      sn := ' -sn'; //ffplay 1.0.10 - Missing argument for option 'sn'
+    l := filenum;
+    if (l < 0) or (l > High(jo.f)) then
+      l := 0;
+    si := '"$ffplay"';
+    ss := jo.getval(cmbDurationss2.Name);
+    si := si + IfThen(ss <> '', ' -ss ' + ss);
+    s := TCont(jo.f[l]).getval(cmbDurationss1.Name);
+    si := si + IfThen((ss = '') and (s <> ''), ' -ss ' + s);
+    t := jo.getval(cmbDurationt2.Name);
+    si := si + IfThen(t <> '', ' -t ' + t);
+    s := TCont(jo.f[l]).getval(cmbDurationt1.Name);
+    si := si + IfThen((t = '') and (s <> ''), ' -ss ' + s);
+    si := si + ' -i "' + myGetAnsiFN(jo.f[l].getval('filename')) + '" -autoexit';
+    s := myStrReplace(si + vf + af + vn + an + sn);
+    if chkDebug.Checked then
+      memJournal.Lines.Add(s);
+    myExecProc1(s);
   end;
-  if vn = '' then
-    vn := ' -vn';
-  if an = '' then
-    an := ' -an';
-  if sn = '' then
-    sn := ' -sn'; //ffplay 1.0.10 - Missing argument for option 'sn'
-  l := filenum;
-  if (l < 0) or (l > High(jo.f)) then
-    l := 0;
-  si := '"$ffplay"';
-  ss := jo.getval(cmbDurationss2.Name);
-  si := si + IfThen(ss <> '', ' -ss ' + ss);
-  s := TCont(jo.f[l]).getval(cmbDurationss1.Name);
-  si := si + IfThen((ss = '') and (s <> ''), ' -ss ' + s);
-  t := jo.getval(cmbDurationt2.Name);
-  si := si + IfThen(t <> '', ' -t ' + t);
-  s := TCont(jo.f[l]).getval(cmbDurationt1.Name);
-  si := si + IfThen((t = '') and (s <> ''), ' -ss ' + s);
-  si := si + ' -i "' + myGetAnsiFN(jo.f[l].getval('filename')) + '" -autoexit';
-  s := myStrReplace(si + vf + af + vn + an + sn);
-  if chkDebug.Checked then
-    memJournal.Lines.Add(s);
-  myExecProc1(s);
 end;
 
 procedure TfrmGUIta.btnPlayOutClick(Sender: TObject);
@@ -3611,6 +3633,7 @@ procedure TfrmGUIta.chkFilterComplexChange(Sender: TObject);
 begin
   xmyChange0(Sender);
   cmbFilterComplex.Enabled := chkFilterComplex.Checked;
+  //for i := 0 to TabVideo do if controls[i].Tag = 2 then
   cmbCrop.Enabled := not chkFilterComplex.Checked;
   cmbScale.Enabled := not chkFilterComplex.Checked;
   cmbPad.Enabled := not chkFilterComplex.Checked;
@@ -3868,6 +3891,25 @@ begin
   xmyChange0(cmbFormat);
 end;
 
+procedure TfrmGUIta.edtxtermSelect(Sender: TObject);
+begin
+  if edtxterm.Text = 'cmd.exe' then
+    edtxtermopts.Text := '-c'
+  else
+  if edtxterm.Text = '/bin/sh' then
+    edtxtermopts.Text := '-c'
+  else
+  if edtxterm.Text = '/bin/xterm' then
+    edtxtermopts.Text := '-e'
+  else
+  if edtxterm.Text = '/usr/bin/x-terminal-emulator' then
+    edtxtermopts.Text := '-e'
+  else
+  if edtxterm.Text = '/usr/bin/gnome-terminal' then
+    edtxtermopts.Text := '-x'
+  ;
+end;
+
 procedure TfrmGUIta.FormCreate(Sender: TObject);
 var
   b: boolean;
@@ -3975,13 +4017,6 @@ begin
     cmbFont.Text := 'Ubuntu';
     edtxterm.Text := '/usr/bin/xterm';
     edtxtermopts.Text := '-e';
-    if FileExists('/usr/bin/x-terminal-emulator') then
-      edtxterm.Text := '/usr/bin/x-terminal-emulator';
-    if FileExists('/usr/bin/gnome-terminal') then
-    begin
-      edtxterm.Text :='/usr/bin/gnome-terminal';
-      edtxtermopts.Text := '-x';
-    end;
     {$ENDIF}
     s := myGetLocaleLanguage;
     if s <> '' then

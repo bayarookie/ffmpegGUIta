@@ -146,7 +146,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbAddOptsI: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 180
               Width = 514
               Anchors = [akTop, akLeft, akRight]
@@ -171,7 +171,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbDurationss1: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Hint = 'When used as an input option (before -i),'#10'seeks in this input file to position.'
               Top = 220
               Width = 100
@@ -210,7 +210,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbDurationt1: TComboBox
               Left = 422
-              Height = 20
+              Height = 21
               Hint = 'When used as an input option (before -i),'#10'limit the duration of data read from the input file.'
               Top = 220
               Width = 100
@@ -497,7 +497,7 @@ object frmGUIta: TfrmGUIta
               Left = 8
               Height = 26
               Top = 115
-              Width = 103
+              Width = 134
               Caption = 'use -filter complex'
               OnChange = chkFilterComplexChange
               TabOrder = 8
@@ -525,7 +525,7 @@ object frmGUIta: TfrmGUIta
               Height = 26
               Hint = 'Concatenate audio and video streams, joining them together one after the other.'#13#10'The filter works on segments of synchronized video and audio streams.'#13#10'All segments must have the same number of streams of each type,'#13#10'and that will also be the number of streams at output.'#13#10'All segments must start at timestamp 0.'#13#10'All corresponding streams must have the same parameters in all segments.'#13#10'http://ffmpeg.org/ffmpeg-filters.html#concat'
               Top = 240
-              Width = 81
+              Width = 99
               HelpType = htKeyword
               HelpKeyword = 'concat'
               Caption = 'Concatenate'
@@ -550,7 +550,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbEncoderV: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 20
               Width = 100
               DropDownCount = 50
@@ -587,7 +587,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbPass: TComboBox
               Left = 188
-              Height = 20
+              Height = 21
               Top = 20
               Width = 60
               ItemHeight = 0
@@ -619,7 +619,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbBitrateV: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 60
               Width = 242
               DropDownCount = 20
@@ -650,7 +650,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbx264preset: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 100
               Width = 80
               DropDownCount = 20
@@ -681,7 +681,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbx264tune: TComboBox
               Left = 96
-              Height = 20
+              Height = 21
               Top = 100
               Width = 80
               ItemHeight = 0
@@ -704,7 +704,7 @@ object frmGUIta: TfrmGUIta
             object cmbScale: TComboBox
               Tag = 2
               Left = 8
-              Height = 20
+              Height = 21
               Top = 140
               Width = 225
               DropDownCount = 20
@@ -737,7 +737,7 @@ object frmGUIta: TfrmGUIta
             object cmbRotate: TComboBox
               Tag = 2
               Left = 242
-              Height = 22
+              Height = 21
               Top = 180
               Width = 200
               DropDownCount = 20
@@ -767,7 +767,7 @@ object frmGUIta: TfrmGUIta
             object cmbPad: TComboBox
               Tag = 2
               Left = 242
-              Height = 20
+              Height = 21
               Top = 140
               Width = 200
               DropDownCount = 20
@@ -807,7 +807,7 @@ object frmGUIta: TfrmGUIta
             object cmbhqdn3d: TComboBox
               Tag = 2
               Left = 8
-              Height = 20
+              Height = 21
               Top = 180
               Width = 100
               DropDownCount = 20
@@ -832,7 +832,7 @@ object frmGUIta: TfrmGUIta
             object cmbFiltersV: TComboBox
               Tag = 2
               Left = 8
-              Height = 20
+              Height = 21
               Hint = 'Additional filters or instead of.'#10'Can be used some vars:'#10'$input or $inpu0 - main input filename,'#10'$inpu1, $inpu2 - second, third and etc track filenames'
               Top = 220
               Width = 510
@@ -879,7 +879,7 @@ object frmGUIta: TfrmGUIta
             object cmbCrop: TComboBox
               Tag = 2
               Left = 180
-              Height = 20
+              Height = 21
               Top = 100
               Width = 200
               DropDownCount = 20
@@ -934,7 +934,7 @@ object frmGUIta: TfrmGUIta
             object cmbSetDAR: TComboBox
               Tag = 2
               Left = 120
-              Height = 20
+              Height = 21
               Top = 180
               Width = 95
               DropDownCount = 20
@@ -960,7 +960,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbAddOptsV: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Hint = 'Additional video options'
               Top = 245
               Width = 510
@@ -985,7 +985,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbEncoderA: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 20
               Width = 100
               DropDownCount = 50
@@ -1003,7 +1003,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbBitrateA: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 60
               Width = 218
               DropDownCount = 20
@@ -1056,7 +1056,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbChannels: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 100
               Width = 58
               DropDownCount = 20
@@ -1081,7 +1081,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbSRate: TComboBox
               Left = 72
-              Height = 20
+              Height = 21
               Top = 100
               Width = 100
               DropDownCount = 20
@@ -1112,7 +1112,7 @@ object frmGUIta: TfrmGUIta
             object cmbFiltersA: TComboBox
               Tag = 2
               Left = 8
-              Height = 20
+              Height = 21
               Top = 140
               Width = 512
               Anchors = [akTop, akLeft, akRight]
@@ -1157,7 +1157,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbAddOptsA: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Hint = 'Additional  audio options'
               Top = 245
               Width = 510
@@ -1182,7 +1182,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbEncoderS: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 20
               Width = 100
               DropDownCount = 40
@@ -1192,7 +1192,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbAddOptsS: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Hint = 'Additional subtitle options'
               Top = 245
               Width = 510
@@ -2084,7 +2084,7 @@ object frmGUIta: TfrmGUIta
         Width = 210
         Caption = 'play output with external player'
         OnChange = chkPlayer3Change
-        TabOrder = 13
+        TabOrder = 14
       end
       object cmbLanguage: TComboBox
         Left = 466
@@ -2093,7 +2093,7 @@ object frmGUIta: TfrmGUIta
         Width = 148
         ItemHeight = 0
         OnChange = cmbLanguageChange
-        TabOrder = 34
+        TabOrder = 35
         Text = 'Default.lng'
       end
       object btnLanguage: TButton
@@ -2103,7 +2103,7 @@ object frmGUIta: TfrmGUIta
         Width = 75
         Caption = 'Language'
         OnClick = btnLanguageClick
-        TabOrder = 35
+        TabOrder = 36
       end
       object btnFindffmpeg: TBitBtn
         Left = 762
@@ -2425,7 +2425,7 @@ object frmGUIta: TfrmGUIta
         }
         Layout = blGlyphRight
         OnClick = btnFindExtPlayerClick
-        TabOrder = 15
+        TabOrder = 16
       end
       object cmbExtPlayer: TComboBox
         Left = 280
@@ -2439,7 +2439,7 @@ object frmGUIta: TfrmGUIta
         )
         OnChange = cmbExtPlayerChange
         OnDblClick = xmySelFile
-        TabOrder = 14
+        TabOrder = 15
         Text = '..\Media Player Classic\mpc-hc.exe'
       end
       object chkDebug: TCheckBox
@@ -2448,7 +2448,7 @@ object frmGUIta: TfrmGUIta
         Top = 454
         Width = 147
         Caption = 'Debug info to journal'
-        TabOrder = 32
+        TabOrder = 33
       end
       object cmbFont: TComboBox
         Left = 313
@@ -2458,7 +2458,7 @@ object frmGUIta: TfrmGUIta
         ItemHeight = 0
         OnGetItems = cmbFontGetItems
         OnSelect = cmbFontSelect
-        TabOrder = 33
+        TabOrder = 34
         Text = 'Tahoma'
       end
       object cmbDirLast: TComboBox
@@ -2469,7 +2469,7 @@ object frmGUIta: TfrmGUIta
         ItemHeight = 0
         OnChange = xmyCheckDir
         OnDblClick = xmySelDir
-        TabOrder = 24
+        TabOrder = 25
         Text = 'C:\'
       end
       object lblDirLast: TLabel
@@ -2504,7 +2504,7 @@ object frmGUIta: TfrmGUIta
           '30:00'
           '1:00:00'
         )
-        TabOrder = 25
+        TabOrder = 26
         Text = '5:00'
       end
       object cmbTestDurationt: TComboBox
@@ -2521,7 +2521,7 @@ object frmGUIta: TfrmGUIta
           '45'
           '60'
         )
-        TabOrder = 26
+        TabOrder = 27
         Text = '30'
       end
       object lblLangA: TLabel
@@ -2547,7 +2547,7 @@ object frmGUIta: TfrmGUIta
           'rus eng'
           ''
         )
-        TabOrder = 29
+        TabOrder = 30
       end
       object lblLangS: TLabel
         Left = 466
@@ -2570,7 +2570,7 @@ object frmGUIta: TfrmGUIta
           'en eng english'
           'rus eng'
         )
-        TabOrder = 30
+        TabOrder = 31
       end
       object cmbLangsList: TComboBox
         Tag = 1
@@ -2766,7 +2766,7 @@ object frmGUIta: TfrmGUIta
           'zha||za|Zhuang; Chuang|zhuang; chuang'
           'zul||zu|Zulu|zoulou'
         )
-        TabOrder = 31
+        TabOrder = 32
         Text = 'Langs List'
       end
       object chkAddTracks: TCheckBox
@@ -2775,7 +2775,7 @@ object frmGUIta: TfrmGUIta
         Top = 328
         Width = 139
         Caption = 'Add external tracks'
-        TabOrder = 22
+        TabOrder = 23
       end
       object chk1instance: TCheckBox
         Left = 8
@@ -2784,7 +2784,7 @@ object frmGUIta: TfrmGUIta
         Width = 86
         Caption = '1 instance'
         OnChange = chk1instanceChange
-        TabOrder = 28
+        TabOrder = 29
       end
       object chkSaveFormPos: TCheckBox
         Left = 8
@@ -2792,7 +2792,7 @@ object frmGUIta: TfrmGUIta
         Top = 400
         Width = 147
         Caption = 'Save forms positions'
-        TabOrder = 27
+        TabOrder = 28
       end
       object LVmasks: TListView
         Left = 110
@@ -2816,7 +2816,7 @@ object frmGUIta: TfrmGUIta
             Width = 301
           end>
         Enabled = False
-        TabOrder = 20
+        TabOrder = 21
         ViewStyle = vsReport
         OnDragDrop = LVjobsDragDrop
         OnDragOver = LVjobsDragOver
@@ -2829,7 +2829,7 @@ object frmGUIta: TfrmGUIta
         Caption = 'Add'
         Enabled = False
         OnClick = btnMaskAddClick
-        TabOrder = 17
+        TabOrder = 18
       end
       object btnMaskEdit: TButton
         Left = 8
@@ -2839,7 +2839,7 @@ object frmGUIta: TfrmGUIta
         Caption = 'Edit'
         Enabled = False
         OnClick = btnMaskEditClick
-        TabOrder = 18
+        TabOrder = 19
       end
       object btnMaskDel: TButton
         Left = 9
@@ -2849,7 +2849,7 @@ object frmGUIta: TfrmGUIta
         Caption = 'Delete'
         Enabled = False
         OnClick = btnMaskDelClick
-        TabOrder = 19
+        TabOrder = 20
       end
       object chkUseMasks: TCheckBox
         Left = 8
@@ -2858,7 +2858,7 @@ object frmGUIta: TfrmGUIta
         Width = 89
         Caption = 'Use masks'
         OnChange = chkUseMasksChange
-        TabOrder = 16
+        TabOrder = 17
       end
       object edtFileExts: TComboBox
         Left = 8
@@ -2871,7 +2871,7 @@ object frmGUIta: TfrmGUIta
         Items.Strings = (
           '*.avi;*.mkv;*.vob;*.mpg;*.mpeg;*.mp4;*.mov;*.flv;*.3gp;*.3g2;*.asf;*.wmv;*.m2ts;*.ts;*.ogv;*.webm;*.rm;*.qt;*.mp3;*.ac3'
         )
-        TabOrder = 21
+        TabOrder = 22
         Text = '*.avi;*.mkv;*.vob;*.mpg;*.mpeg;*.mp4;*.mov;*.flv;*.3gp;*.3g2;*.asf;*.wmv;*.m2ts;*.ts;*.ogv;*.webm;*.rm;*.qt;*.mp3;*.ac3'
       end
       object cmbAddTracks: TComboBox
@@ -2885,8 +2885,19 @@ object frmGUIta: TfrmGUIta
         Items.Strings = (
           '*.mp3;*.ac3;*.srt;*.ass;*.png'
         )
-        TabOrder = 23
+        TabOrder = 24
         Text = '*.mp3;*.ac3;*.srt;*.ass;*.png'
+      end
+      object chkPlayerIn: TCheckBox
+        Left = 408
+        Height = 26
+        Hint = 'this option for play input video with option -filter_complex'#10'or with external audio file.'#10'stream view, didnt work hotkeys - forward, rewind'
+        Top = 130
+        Width = 261
+        Caption = 'play input in terminal, ffmpeg pipe ffplay'
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 13
       end
     end
     object TabJournal: TTabSheet
@@ -3401,8 +3412,8 @@ object frmGUIta: TfrmGUIta
         TabOrder = 0
         object TabConsole1: TTabSheet
           Caption = 'Console'
-          ClientHeight = 485
-          ClientWidth = 788
+          ClientHeight = 453
+          ClientWidth = 784
           inline SynMemo2: TSynMemo
             Cursor = crIBeam
             Left = 0
@@ -3901,15 +3912,15 @@ object frmGUIta: TfrmGUIta
             Top = 0
             Width = 784
             Align = alTop
-            ClientHeight = 106
-            ClientWidth = 780
+            ClientHeight = 110
+            ClientWidth = 784
             TabOrder = 0
             object cmbRunCmd: TComboBox
               Left = 4
               Height = 20
               Hint = 'list of variables:'#13#10'$ffmpeg'#13#10'$ffplay'#13#10'$ffprobe'#13#10'$input'#13#10'$output'#13#10'$dirinp'#13#10'$dirout'#13#10'$dirtmp'
               Top = 4
-              Width = 778
+              Width = 782
               Anchors = [akTop, akLeft, akRight]
               DropDownCount = 20
               ItemHeight = 0
@@ -3938,7 +3949,7 @@ object frmGUIta: TfrmGUIta
               Text = '"$ffprobe" -show_streams -i "$input"'
             end
             object btnCmdRun: TButton
-              Left = 470
+              Left = 474
               Height = 25
               Top = 27
               Width = 75
@@ -3948,7 +3959,7 @@ object frmGUIta: TfrmGUIta
               TabOrder = 4
             end
             object btnLogSave: TButton
-              Left = 628
+              Left = 632
               Height = 25
               Top = 27
               Width = 75
@@ -3958,7 +3969,7 @@ object frmGUIta: TfrmGUIta
               TabOrder = 6
             end
             object btnLogClear: TButton
-              Left = 708
+              Left = 712
               Height = 25
               Top = 27
               Width = 75
@@ -3971,12 +3982,12 @@ object frmGUIta: TfrmGUIta
               Left = 8
               Height = 26
               Top = 27
-              Width = 112
+              Width = 89
               Caption = 'OEM codepage'
               TabOrder = 1
             end
             object btnCmdStop: TButton
-              Left = 550
+              Left = 554
               Height = 25
               Top = 27
               Width = 75
@@ -3990,7 +4001,7 @@ object frmGUIta: TfrmGUIta
               Left = 157
               Height = 26
               Top = 27
-              Width = 115
+              Width = 89
               Caption = 'Run in terminal'
               TabOrder = 2
             end
@@ -3998,58 +4009,74 @@ object frmGUIta: TfrmGUIta
               Left = 314
               Height = 26
               Top = 27
-              Width = 97
+              Width = 76
               Caption = 'Run in mem'
               TabOrder = 3
             end
-            object edtxterm: TLabeledEdit
-              Left = 136
+            object edtxterm: TComboBox
+              Left = 140
               Height = 20
               Top = 56
-              Width = 250
-              EditLabel.AnchorSideTop.Control = edtxterm
-              EditLabel.AnchorSideTop.Side = asrCenter
-              EditLabel.AnchorSideRight.Control = edtxterm
-              EditLabel.AnchorSideBottom.Control = edtxterm
-              EditLabel.AnchorSideBottom.Side = asrBottom
-              EditLabel.Left = 86
-              EditLabel.Height = 14
-              EditLabel.Top = 59
-              EditLabel.Width = 47
-              EditLabel.Caption = 'terminal'
-              EditLabel.ParentColor = False
-              LabelPosition = lpLeft
+              Width = 268
+              ItemHeight = 0
+              ItemIndex = 0
+              Items.Strings = (
+                'cmd.exe'
+                '/bin/sh'
+                '/usr/bin/xterm'
+                '/usr/bin/x-terminal-emulator'
+                '/usr/bin/gnome-terminal'
+              )
+              OnSelect = edtxtermSelect
               TabOrder = 8
               Text = 'cmd.exe'
-              OnChange = xmyCheckFile
-              OnDblClick = xmySelFile
             end
-            object edtxtermopts: TLabeledEdit
-              Left = 136
+            object lblxterm: TLabel
+              Left = 8
+              Height = 14
+              Top = 59
+              Width = 47
+              Caption = 'terminal'
+              ParentColor = False
+            end
+            object lblxtermopts: TLabel
+              Left = 8
+              Height = 14
+              Top = 86
+              Width = 92
+              Caption = 'terminal options'
+              ParentColor = False
+            end
+            object edtxtermopts: TComboBox
+              Left = 140
               Height = 20
-              Top = 77
-              Width = 112
-              EditLabel.AnchorSideTop.Control = edtxtermopts
-              EditLabel.AnchorSideTop.Side = asrCenter
-              EditLabel.AnchorSideRight.Control = edtxtermopts
-              EditLabel.AnchorSideBottom.Control = edtxtermopts
-              EditLabel.AnchorSideBottom.Side = asrBottom
-              EditLabel.Left = 41
-              EditLabel.Height = 14
-              EditLabel.Top = 80
-              EditLabel.Width = 92
-              EditLabel.Caption = 'terminal options'
-              EditLabel.ParentColor = False
-              LabelPosition = lpLeft
+              Top = 83
+              Width = 164
+              ItemHeight = 0
+              Items.Strings = (
+                '-c'
+                '-k'
+                '-e'
+                '-x'
+                '--hold -e'
+              )
               TabOrder = 9
-              Text = '/c'
+              Text = '-c'
+            end
+            object chkRunMode: TCheckBox
+              Left = 375
+              Height = 26
+              Top = 81
+              Width = 94
+              Caption = 'run as one string'
+              TabOrder = 10
             end
           end
         end
         object TabConsole2: TTabSheet
           Caption = 'Converting'
-          ClientHeight = 485
-          ClientWidth = 788
+          ClientHeight = 453
+          ClientWidth = 784
           inline SynMemo3: TSynMemo
             Cursor = crIBeam
             Left = 0
@@ -4545,8 +4572,8 @@ object frmGUIta: TfrmGUIta
         end
         object TabConsole3: TTabSheet
           Caption = 'Test job'
-          ClientHeight = 485
-          ClientWidth = 788
+          ClientHeight = 453
+          ClientWidth = 784
           inline SynMemo5: TSynMemo
             Cursor = crIBeam
             Left = 0
@@ -5045,8 +5072,8 @@ object frmGUIta: TfrmGUIta
             Top = 0
             Width = 784
             Align = alTop
-            ClientHeight = 21
-            ClientWidth = 780
+            ClientHeight = 25
+            ClientWidth = 784
             TabOrder = 1
             object btnTestStop: TButton
               Left = 1
@@ -5074,8 +5101,8 @@ object frmGUIta: TfrmGUIta
         end
         object TabConsole4: TTabSheet
           Caption = 'Add files'
-          ClientHeight = 485
-          ClientWidth = 788
+          ClientHeight = 453
+          ClientWidth = 784
           inline SynMemo6: TSynMemo
             Cursor = crIBeam
             Left = 0
@@ -5574,8 +5601,8 @@ object frmGUIta: TfrmGUIta
             Top = 0
             Width = 784
             Align = alTop
-            ClientHeight = 21
-            ClientWidth = 780
+            ClientHeight = 25
+            ClientWidth = 784
             TabOrder = 1
             object btnAddStop: TButton
               Left = 1

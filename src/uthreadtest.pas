@@ -49,7 +49,7 @@ begin
   frmGUIta.SynMemo5.Clear;
   jo := TJob(li.Data);
   frmGUIta.memJournal.Lines.Add(DateTimeToStr(dt) + ' - ' + jo.f[0].getval('filename'));
-  fcmd.Text := frmGUIta.myGetCmdFromJo(jo, True);
+  fcmd.Text := frmGUIta.myGetCmdFromJo(jo, 1);
   jo.setval('Completed', '2');
   frmGUIta.LVjobs.Refresh;
 end;
