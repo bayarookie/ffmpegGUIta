@@ -32,6 +32,7 @@ type
   TJob = class(TCont)
   public
     f: array of TFil; //files
+    m: array of string; //mapping of streams
   end;
 
 implementation

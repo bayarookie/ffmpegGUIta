@@ -122,6 +122,7 @@ type
     cmbAddOptsV: TComboBox;
     cmbAddTracks: TComboBox;
     cmbFilterComplex: TComboBox;
+    edtxtermopts2: TComboBox;
     edtxtermopts: TComboBox;
     edtxterm: TComboBox;
     edtFileExts: TComboBox;
@@ -136,6 +137,7 @@ type
     ImageList1: TImageList;
     edtBitrateV: TLabeledEdit;
     edtOfna: TLabeledEdit;
+    lblxtermopts2: TLabel;
     lblxtermopts: TLabel;
     lblxterm: TLabel;
     lblAddOptsI: TLabel;
@@ -296,6 +298,9 @@ type
     procedure LVjobsSelectItem(Sender: TObject; Item: TListItem;
       Selected: boolean);
     procedure LVstreamsClick(Sender: TObject);
+    procedure LVstreamsDragDrop(Sender, Source: TObject; X, Y: Integer);
+    procedure LVstreamsDragOver(Sender, Source: TObject; X, Y: Integer;
+      State: TDragState; var Accept: Boolean);
     procedure LVstreamsItemChecked(Sender: TObject; Item: TListItem);
     procedure LVstreamsSelectItem(Sender: TObject; Item: TListItem;
       Selected: boolean);
@@ -857,7 +862,7 @@ end;
 
 function TfrmGUIta.myGetCmdFromJo(jo: TJob; mode: integer = 0): string;
 var
-  k, l, cf, cv, ca, cs, ct, cd: integer;
+  i, k, l, cf, cv, ca, cs, ct, cd: integer;
   c: TCont;
   rd,
   rsi, rso, rst, rti, rto, rtt: double;
@@ -1122,13 +1127,15 @@ begin
       if s <> '' then fc := ' -filter_complex "' + s + '"';
     end;
     //map and params for every track
-    for l := 0 to High(jo.f) do
-    for k := 0 to High(jo.f[l].s) do
+    //for l := 0 to High(jo.f) do
+    //for k := 0 to High(jo.f[l].s) do
+    for i := 0 to High(jo.m) do
     begin
+      myGetFileStreamNums(jo.m[i], l, k);
       c := jo.f[l].s[k];
       if c.getval('Checked') = '1' then
       begin
-        //ma := ma + ' -map ' + IntToStr(l) + ':' + IntToStr(k);//c.getval('index'); sorting tracks disabled at now
+        ma := ma + ' -map ' + IntToStr(l) + ':' + IntToStr(k);
         ty := c.getval('codec_type');
         if ty = 'video' then
           my1v
@@ -1348,6 +1355,8 @@ begin
       p.Parameters.Add(sl[i]);
     sl.Free;
   end;
+  if edtxtermopts2.Text <> '' then
+    p.Parameters.Add(edtxtermopts2.Text);
   p.Execute;
   p.Free;
 end;
@@ -3029,15 +3038,10 @@ var
 begin
   s := myStrReplace(cmbRunCmd.Text);
   if chkRunInWindow.Checked then
-  begin
-    myRunCmd(s);
-  end
+    myRunCmd(s)
   else
   if chkRunInMem.Checked then
-  begin
-    //myGetDosOut(s, '', '', SynMemo2, StatusBar1);
-    myGetDosOut2(s, SynMemo2);
-  end
+    myGetDosOut2(s, SynMemo2)
   else
   begin
     if (ThreadCmdr <> nil) then
@@ -3353,7 +3357,7 @@ begin
   begin
     s := myGetCmdFromJo(jo, 2) + myStrReplace(' | "$ffplay" -i -');
     if chkDebug.Checked then
-      memJournal.Lines.Add(edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + s);
+      memJournal.Lines.Add(edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + s + ' ' + edtxtermopts2.Text);
     myRunCmd(s);
   end
   else
@@ -3893,21 +3897,31 @@ end;
 
 procedure TfrmGUIta.edtxtermSelect(Sender: TObject);
 begin
-  if edtxterm.Text = 'cmd.exe' then
-    edtxtermopts.Text := '-c'
-  else
-  if edtxterm.Text = '/bin/sh' then
-    edtxtermopts.Text := '-c'
-  else
-  if edtxterm.Text = '/bin/xterm' then
-    edtxtermopts.Text := '-e'
-  else
-  if edtxterm.Text = '/usr/bin/x-terminal-emulator' then
-    edtxtermopts.Text := '-e'
-  else
-  if edtxterm.Text = '/usr/bin/gnome-terminal' then
-    edtxtermopts.Text := '-x'
-  ;
+  if edtxterm.Text = 'cmd.exe' then begin
+    edtxtermopts.Text := '/c';
+    chkRunMode.Checked := False;
+    edtxtermopts2.Text := '';
+  end else
+  if edtxterm.Text = '/bin/sh' then begin
+    edtxtermopts.Text := '-c';
+    chkRunMode.Checked := True;
+    edtxtermopts2.Text := '';
+  end else
+  if edtxterm.Text = '/usr/bin/xterm' then begin
+    edtxtermopts.Text := '-e';
+    chkRunMode.Checked := True;
+    edtxtermopts2.Text := '';
+  end else
+  if edtxterm.Text = '/usr/bin/x-terminal-emulator' then begin
+    edtxtermopts.Text := '-e';
+    chkRunMode.Checked := False;
+    edtxtermopts2.Text := '';
+  end else
+  if edtxterm.Text = '/usr/bin/gnome-terminal' then begin
+    edtxtermopts.Text := '-x';
+    chkRunMode.Checked := False;
+    edtxtermopts2.Text := '';
+  end;
 end;
 
 procedure TfrmGUIta.FormCreate(Sender: TObject);
@@ -3985,7 +3999,7 @@ begin
   if b then
   begin
     bUpdFromCode := True;
-    mySets(True);
+    mySets(True); //load settings from config file
     bUpdFromCode := False;
     if chk1instance.Checked then
     begin
@@ -3995,7 +4009,7 @@ begin
       myUnik.Loaded;
     end;
   end
-  else
+  else //if config file doesnt exists then assign some sets
   begin
     cmbDirLast.Text := GetCurrentDir;
     {$IFDEF MSWINDOWS}
@@ -4015,8 +4029,9 @@ begin
     my1(['vlc', 'dragon', 'avplay', 'ffplay', 'mplayer', 'totem', 'xine']);
     cmbDirLast.Text := '$HOME';
     cmbFont.Text := 'Ubuntu';
-    edtxterm.Text := '/usr/bin/xterm';
-    edtxtermopts.Text := '-e';
+    edtxterm.Text := '/bin/sh';
+    edtxtermopts.Text := '-c';
+    chkRunMode.Checked := True;
     {$ENDIF}
     s := myGetLocaleLanguage;
     if s <> '' then
@@ -4070,7 +4085,7 @@ begin
   s := UpperCase(mes[6]);
   if SynUNIXShellScriptSyn1.SecondKeyWords.IndexOf(s) < 0 then
     SynUNIXShellScriptSyn1.SecondKeyWords.Add(s);
-  //end of mes
+  //load language
   myGetFileList(sDirApp, '*.lng', cmbLanguage.Items, False, False);
   if sInidir <> sDirApp then
     myGetFileList(sInidir, '*.lng', cmbLanguage.Items, False, False);
@@ -4078,6 +4093,7 @@ begin
   if cmbLanguage.Text <> '' then
     if cmbLanguage.Items.IndexOf(cmbLanguage.Text) >= 0 then
       myLanguage(True);
+  //load profiles
   myGetFileList(sInidir, '*.ini', cmbProfile.Items, False, False);
   cmbProfile.Sorted := True;
   if cmbProfile.Text <> '' then
@@ -4090,6 +4106,7 @@ begin
     if cmbProfile.Items.Count > 0 then
       cmbProfile.ItemIndex := 0;
   end;
+  //if masks empty then set defaults
   if LVmasks.Items.Count = 0 then
   begin
     li := LVmasks.Items.Add;
@@ -4516,7 +4533,7 @@ end;
 procedure TfrmGUIta.LVjobsSelectItem(Sender: TObject; Item: TListItem;
   Selected: boolean);
 var
-  k, l: integer;
+  i, k, l: integer;
   jo: TJob;
   li: TListItem;
 begin
@@ -4534,13 +4551,21 @@ begin
     li := LVfiles.Items.Add;
     li.Caption := IntToStr(l);;
     li.SubItems.Add(jo.f[l].getval('filename'));
-    for k := 0 to High(jo.f[l].s) do
-    begin
-      li := LVstreams.Items.Add;
-      li.Checked := jo.f[l].s[k].getval('Checked') = '1';
-      li.Caption := IntToStr(l) + ':' + IntToStr(k);
-      li.SubItems.Add(myGetCaptionCont(jo.f[l].s[k]));
-    end;
+    //for k := 0 to High(jo.f[l].s) do
+    //begin
+    //  li := LVstreams.Items.Add;
+    //  li.Checked := jo.f[l].s[k].getval('Checked') = '1';
+    //  li.Caption := IntToStr(l) + ':' + IntToStr(k);
+    //  li.SubItems.Add(myGetCaptionCont(jo.f[l].s[k]));
+    //end;
+  end;
+  for i := 0 to High(jo.m) do
+  begin
+    myGetFileStreamNums(jo.m[i], l, k);
+    li := LVstreams.Items.Add;
+    li.Checked := jo.f[l].s[k].getval('Checked') = '1';
+    li.Caption := jo.m[i];
+    li.SubItems.Add(myGetCaptionCont(jo.f[l].s[k]));
   end;
   if chkUseMasks.Checked then
     cmbProfile.Text := jo.getval(cmbProfile.Name);
@@ -4562,6 +4587,48 @@ begin
     myClear2([TabVideo, TabAudio, TabSubtitle, TabContRows]);
     PageControl2.ActivePage := TabOutput;
   end;
+end;
+
+procedure TfrmGUIta.LVstreamsDragDrop(Sender, Source: TObject; X, Y: Integer);
+var
+  currentItem, nextItem, dragItem, dropItem: TListItem;
+  i: integer;
+  jo: TJob;
+begin
+  if myCantUpd(0) then
+    Exit;
+  if Sender = Source then
+    with TListView(Sender) do
+    begin
+      dropItem := GetItemAt(X, Y);
+      currentItem := Selected;
+      while currentItem <> nil do
+      begin
+        nextItem := nil;
+        for i := 0 to Items.Count - 1 do
+          if (Items[i].Selected) and (currentItem.Index <> i) then
+          begin
+            nextItem := Items[i];
+            break;
+          end;
+        if Assigned(dropItem) then
+          dragItem := Items.Insert(dropItem.Index)
+        else
+          dragItem := Items.Add;
+        dragItem.Assign(currentItem);
+        currentItem.Free;
+        currentItem := nextItem;
+      end;
+    end;
+  jo := TJob(LVjobs.Selected.Data);
+  for i := 0 to High(jo.m) do
+    jo.m[i] := LVstreams.Items[i].Caption;
+end;
+
+procedure TfrmGUIta.LVstreamsDragOver(Sender, Source: TObject; X, Y: Integer;
+  State: TDragState; var Accept: Boolean);
+begin
+  Accept := (Sender = Source);
 end;
 
 procedure TfrmGUIta.LVstreamsItemChecked(Sender: TObject; Item: TListItem);

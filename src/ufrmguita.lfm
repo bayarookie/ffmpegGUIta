@@ -82,6 +82,8 @@ object frmGUIta: TfrmGUIta
             TabOrder = 0
             ViewStyle = vsReport
             OnClick = LVstreamsClick
+            OnDragDrop = LVstreamsDragDrop
+            OnDragOver = LVstreamsDragOver
             OnItemChecked = LVstreamsItemChecked
             OnSelectItem = LVstreamsSelectItem
           end
@@ -146,10 +148,11 @@ object frmGUIta: TfrmGUIta
             end
             object cmbAddOptsI: TComboBox
               Left = 8
-              Height = 21
+              Height = 20
               Top = 180
               Width = 514
               Anchors = [akTop, akLeft, akRight]
+              DropDownCount = 20
               ItemHeight = 0
               Items.Strings = (
                 ''
@@ -157,6 +160,8 @@ object frmGUIta: TfrmGUIta
                 '-f x11grab -video_size 1280x720 -framerate 25'
                 '-f alsa'
                 '-palette "000000, 000000, 000000, ffff00, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000"'
+                '-fflags +genpts'
+                '-fflags +genpts -palette "000000, 000000, 000000, ffff00, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000"'
               )
               OnChange = xmyChange0i
               TabOrder = 0
@@ -171,7 +176,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbDurationss1: TComboBox
               Left = 8
-              Height = 21
+              Height = 20
               Hint = 'When used as an input option (before -i),'#10'seeks in this input file to position.'
               Top = 220
               Width = 100
@@ -210,7 +215,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbDurationt1: TComboBox
               Left = 422
-              Height = 21
+              Height = 20
               Hint = 'When used as an input option (before -i),'#10'limit the duration of data read from the input file.'
               Top = 220
               Width = 100
@@ -2893,8 +2898,8 @@ object frmGUIta: TfrmGUIta
         Height = 26
         Hint = 'this option for play input video with option -filter_complex'#10'or with external audio file.'#10'stream view, didnt work hotkeys - forward, rewind'
         Top = 130
-        Width = 261
-        Caption = 'play input in terminal, ffmpeg pipe ffplay'
+        Width = 348
+        Caption = 'play input in terminal, ffmpeg pipe ffplay (experimental)'
         ParentShowHint = False
         ShowHint = True
         TabOrder = 13
@@ -3982,7 +3987,7 @@ object frmGUIta: TfrmGUIta
               Left = 8
               Height = 26
               Top = 27
-              Width = 89
+              Width = 112
               Caption = 'OEM codepage'
               TabOrder = 1
             end
@@ -4001,7 +4006,7 @@ object frmGUIta: TfrmGUIta
               Left = 157
               Height = 26
               Top = 27
-              Width = 89
+              Width = 115
               Caption = 'Run in terminal'
               TabOrder = 2
             end
@@ -4009,7 +4014,7 @@ object frmGUIta: TfrmGUIta
               Left = 314
               Height = 26
               Top = 27
-              Width = 76
+              Width = 97
               Caption = 'Run in mem'
               TabOrder = 3
             end
@@ -4053,6 +4058,7 @@ object frmGUIta: TfrmGUIta
               Top = 83
               Width = 164
               ItemHeight = 0
+              ItemIndex = 0
               Items.Strings = (
                 '-c'
                 '-k'
@@ -4064,12 +4070,32 @@ object frmGUIta: TfrmGUIta
               Text = '-c'
             end
             object chkRunMode: TCheckBox
-              Left = 375
+              Left = 313
               Height = 26
               Top = 81
-              Width = 94
+              Width = 125
               Caption = 'run as one string'
               TabOrder = 10
+            end
+            object lblxtermopts2: TLabel
+              Left = 489
+              Height = 14
+              Top = 86
+              Width = 171
+              Caption = 'terminal options after cmdline'
+              ParentColor = False
+            end
+            object edtxtermopts2: TComboBox
+              Left = 672
+              Height = 20
+              Top = 83
+              Width = 100
+              ItemHeight = 0
+              Items.Strings = (
+                ''
+                '&'
+              )
+              TabOrder = 11
             end
           end
         end
