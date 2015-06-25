@@ -123,7 +123,7 @@ begin
       Break;
     k := High(jo.f[filenum].s) + 1;
     SetLength(jo.f[filenum].s, k + 1);
-    SetLength(jo.m, High(jo.m) + 2); //add for map tracks
+    SetLength(jo.m, Length(jo.m) + 1); //add for map tracks
     jo.m[High(jo.m)] := IntToStr(filenum) + ':' + IntToStr(k);
     jo.f[filenum].s[k] := TCont.Create;
     for i := 0 to sl.Count - 1 do

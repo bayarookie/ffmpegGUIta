@@ -502,7 +502,7 @@ object frmGUIta: TfrmGUIta
               Left = 8
               Height = 26
               Top = 115
-              Width = 134
+              Width = 103
               Caption = 'use -filter complex'
               OnChange = chkFilterComplexChange
               TabOrder = 8
@@ -530,7 +530,7 @@ object frmGUIta: TfrmGUIta
               Height = 26
               Hint = 'Concatenate audio and video streams, joining them together one after the other.'#13#10'The filter works on segments of synchronized video and audio streams.'#13#10'All segments must have the same number of streams of each type,'#13#10'and that will also be the number of streams at output.'#13#10'All segments must start at timestamp 0.'#13#10'All corresponding streams must have the same parameters in all segments.'#13#10'http://ffmpeg.org/ffmpeg-filters.html#concat'
               Top = 240
-              Width = 99
+              Width = 81
               HelpType = htKeyword
               HelpKeyword = 'concat'
               Caption = 'Concatenate'
@@ -3417,8 +3417,8 @@ object frmGUIta: TfrmGUIta
         TabOrder = 0
         object TabConsole1: TTabSheet
           Caption = 'Console'
-          ClientHeight = 453
-          ClientWidth = 784
+          ClientHeight = 485
+          ClientWidth = 788
           inline SynMemo2: TSynMemo
             Cursor = crIBeam
             Left = 0
@@ -3917,8 +3917,8 @@ object frmGUIta: TfrmGUIta
             Top = 0
             Width = 784
             Align = alTop
-            ClientHeight = 110
-            ClientWidth = 784
+            ClientHeight = 106
+            ClientWidth = 780
             TabOrder = 0
             object cmbRunCmd: TComboBox
               Left = 4
@@ -4101,8 +4101,8 @@ object frmGUIta: TfrmGUIta
         end
         object TabConsole2: TTabSheet
           Caption = 'Converting'
-          ClientHeight = 453
-          ClientWidth = 784
+          ClientHeight = 485
+          ClientWidth = 788
           inline SynMemo3: TSynMemo
             Cursor = crIBeam
             Left = 0
@@ -4598,8 +4598,8 @@ object frmGUIta: TfrmGUIta
         end
         object TabConsole3: TTabSheet
           Caption = 'Test job'
-          ClientHeight = 453
-          ClientWidth = 784
+          ClientHeight = 485
+          ClientWidth = 788
           inline SynMemo5: TSynMemo
             Cursor = crIBeam
             Left = 0
@@ -5098,8 +5098,8 @@ object frmGUIta: TfrmGUIta
             Top = 0
             Width = 784
             Align = alTop
-            ClientHeight = 25
-            ClientWidth = 784
+            ClientHeight = 21
+            ClientWidth = 780
             TabOrder = 1
             object btnTestStop: TButton
               Left = 1
@@ -5127,8 +5127,8 @@ object frmGUIta: TfrmGUIta
         end
         object TabConsole4: TTabSheet
           Caption = 'Add files'
-          ClientHeight = 453
-          ClientWidth = 784
+          ClientHeight = 485
+          ClientWidth = 788
           inline SynMemo6: TSynMemo
             Cursor = crIBeam
             Left = 0
@@ -5627,8 +5627,8 @@ object frmGUIta: TfrmGUIta
             Top = 0
             Width = 784
             Align = alTop
-            ClientHeight = 25
-            ClientWidth = 784
+            ClientHeight = 21
+            ClientWidth = 780
             TabOrder = 1
             object btnAddStop: TButton
               Left = 1

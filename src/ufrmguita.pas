@@ -753,13 +753,13 @@ var
   i, j: integer;
 begin
   jo := TJob(li.Data);
-  i := High(jo.f);
+  i := Length(jo.f);
   for j := 0 to files.Count - 1 do
   begin
-    SetLength(jo.f, i + 2 + j);
-    jo.f[i + 1 + j] := TFil.Create;
-    jo.f[i + 1 + j].setval('filename', files[j]);
-    jo.f[i + 1 + j].setval('ffprobe', '0');
+    SetLength(jo.f, i + 1 + j);
+    jo.f[i + j] := TFil.Create;
+    jo.f[i + j].setval('filename', files[j]);
+    jo.f[i + j].setval('ffprobe', '0');
   end;
   Files2Add.Add(Pointer(jo));
   myAddFileStart;
@@ -1025,7 +1025,7 @@ begin
   fn := '';
   fb := '-';
   bfi := (jo.getval(chkFilterComplex.Name) = '1');
-  //--- concat ---
+  // --- concat ---
   if (jo.getval(chkConcat.Name) = '1') then
   begin
     fc := ' -filter_complex "';
@@ -1091,10 +1091,10 @@ begin
       si := si + ' -i "' + myGetAnsiFN(jo.f[l].getval('filename')) + '"';
     end;
   end
-
-  else //mix mux
+  else
+  // --- mix mux ---
   begin
-    //input params
+    // input params
     for l := 0 to High(jo.f) do
     begin
       ssi := jo.f[l].getval(cmbDurationss1.Name);
@@ -1126,9 +1126,7 @@ begin
       s := jo.getval(cmbFilterComplex.Name);
       if s <> '' then fc := ' -filter_complex "' + s + '"';
     end;
-    //map and params for every track
-    //for l := 0 to High(jo.f) do
-    //for k := 0 to High(jo.f[l].s) do
+    // map and params for every track
     for i := 0 to High(jo.m) do
     begin
       myGetFileStreamNums(jo.m[i], l, k);
@@ -1788,7 +1786,7 @@ begin
   myLng5([PageControl1, PageControl2, PageControl3]);
   myLng3([Panel1, Panel2, Panel3]);
   myLng1([LVjobs]);
-  myLng4([PopupMenu1, PopupMenu2]);
+  myLng4([PopupMenu1, PopupMenu2, PopupMenu3]);
   for i := Low(mes) to High(mes) do
     if bRead then
       mes[i] := Ini.ReadString(s3, IntToStr(i), mes[i])
@@ -1890,7 +1888,7 @@ begin
   b3 := b1 and (LowerCase(ExtractFileExt(LVjobs.Selected.SubItems[0])) = '.avs');
   mnuEditAvs.Enabled := b3;
   mnuCopyAsAvs.Enabled := b1 and not b3;
-  chkConcat.Enabled := b and (High(TJob(LVjobs.Selected.Data).f) > 0);
+  chkConcat.Enabled := b and (Length(TJob(LVjobs.Selected.Data).f) > 1);
 end;
 
 function TfrmGUIta.myGetCaptionCont(p: TCont): string;
@@ -2461,8 +2459,8 @@ end;
 function TfrmGUIta.myCantUpd(i: integer = 0): boolean;
 begin
   Result := bUpdFromCode or (LVjobs.Selected = nil)
-    or ((i = 1) and (LVfiles.Selected = nil))
-    or ((i = 2) and (LVstreams.Selected = nil));
+    or ((i > 0) and (LVfiles.Selected = nil))
+    or ((i > 1) and (LVstreams.Selected = nil));
 end;
 
 procedure TfrmGUIta.myGetss4Compare(jo: TJob; rs: double = 0; rt: double = 0);
@@ -2634,12 +2632,6 @@ begin
   for l := 0 to High(jo.f) do
     si := si + ' -i "' + myGetAnsiFN(jo.f[l].getval('filename')) + '"';
   si := si + ' -frames:v 20 -vf "framestep=60, cropdetect" -an -sn -f avi -';
-  //{$IFDEF MSWINDOWS}
-  //+ ' -f matroska -y NUL';
-  //{$ELSE}
-  //+ ' -y /dev/null';
-  //{$ENDIF}
-  //myGetDosOut(si, '', '', SynMemo2, StatusBar1);
   myGetDosOut2(si, SynMemo2);
   s := SynMemo2.Text;
   sl := TStringList.Create;
@@ -2926,8 +2918,8 @@ var
   Ini: TIniFile;
   jo: TJob;
   frmCompare: TfrmCompare;
-  ty, iv, ia, fv, fa, nv, na, fn, map: string;
-  k, l: integer;
+  ty, iv, ia, fv, fa, fn, map: string;
+  k, l, nv, na: integer;
   bfi: boolean;
 begin
   if LVjobs.Selected = nil then
@@ -2939,8 +2931,8 @@ begin
   ia := '';
   fv := '';
   fa := '';
-  nv := '-1';
-  na := '-1';
+  nv := -1;
+  na := -1;
   map := '';
   bfi := (jo.getval(chkFilterComplex.Name) = '1');
   //if bfi then //cant get resize only filter from complex
@@ -2956,7 +2948,7 @@ begin
         ty := getval('codec_type');
         if (ty = 'video') and (iv = '') then
         begin
-          nv := IntToStr(l);
+          nv := l;
           iv := IntToStr(k);
           if not bfi then
           begin
@@ -2966,17 +2958,17 @@ begin
         end
         else if (ty = 'audio') and (ia = '') then
         begin
-          na := IntToStr(l);
+          na := l;
           ia := IntToStr(k);
           fa := ' -filter_complex "showwaves=s=1200x480:mode=line"';
         end;
       end;
-  k := StrToIntDef(nv, -1);
-  if (k < 0) or (k > High(jo.f)) then
-    k := StrToIntDef(na, -1);
-  if (k < 0) or (k > High(jo.f)) then
-    k := 0;
-  fn := jo.f[k].getval('filename');
+  l := nv;
+  if (l < 0) or (l > High(jo.f)) then
+    l := na;
+  if (l < 0) or (l > High(jo.f)) then
+    l := 0;
+  fn := jo.f[l].getval('filename');
   if not FileExistsUTF8(fn) then
     Exit;
   if iv <> '' then
@@ -3176,11 +3168,8 @@ begin
       Exit;
   end;
   s := myGetAnsiFN(d + cmbLanguage.Text);
-  //ExecuteProcess('notepad.exe', [UTF8ToSys(s)]);
-  //myLanguage(True);
   myOpenDoc(s);
   cmbLanguage.Items.Clear;
-  //myGetFileList(d, '*.lng', cmbLanguage.Items, False, False);
   myGetFileList(sDirApp, '*.lng', cmbLanguage.Items, False, False);
   if sInidir <> sDirApp then
     myGetFileList(sInidir, '*.lng', cmbLanguage.Items, False, False);
@@ -3369,8 +3358,6 @@ begin
     sn := '';
     filenum := -1;
     bfi := (jo.getval(chkFilterComplex.Name) = '1');
-    //if bfi then
-    //  vf := ' -filter_complex "' + jo.getval(cmbFilterComplex.Name) + '"';
     for l := 0 to High(jo.f) do
     for k := 0 to High(jo.f[l].s) do
     begin
@@ -3900,27 +3887,22 @@ begin
   if edtxterm.Text = 'cmd.exe' then begin
     edtxtermopts.Text := '/c';
     chkRunMode.Checked := False;
-    edtxtermopts2.Text := '';
   end else
   if edtxterm.Text = '/bin/sh' then begin
     edtxtermopts.Text := '-c';
     chkRunMode.Checked := True;
-    edtxtermopts2.Text := '';
   end else
   if edtxterm.Text = '/usr/bin/xterm' then begin
     edtxtermopts.Text := '-e';
     chkRunMode.Checked := True;
-    edtxtermopts2.Text := '';
   end else
   if edtxterm.Text = '/usr/bin/x-terminal-emulator' then begin
     edtxtermopts.Text := '-e';
     chkRunMode.Checked := False;
-    edtxtermopts2.Text := '';
   end else
   if edtxterm.Text = '/usr/bin/gnome-terminal' then begin
     edtxtermopts.Text := '-x';
     chkRunMode.Checked := False;
-    edtxtermopts2.Text := '';
   end;
 end;
 
@@ -4384,41 +4366,37 @@ var
   jo: TJob;
   s: string;
 begin
-  if (LVjobs.Selected <> nil) and (LVfiles.Selected <> nil) then
+  if (LVjobs.Selected = nil) then Exit;
+  if (LVfiles.Selected = nil) then Exit;
+  jo := TJob(LVjobs.Selected.Data);
+  l := LVfiles.Selected.Index;
+  if (l < 0) and (l > High(jo.f)) then Exit;
+  myGetValsFromCont(TabInput, TCont(jo.f[l]));
+  if bUpdFromCode then Exit;
+  bUpdFromCode := True;
+  j := -1;
+  k := -1;
+  for i := 0 to LVstreams.Items.Count - 1 do
   begin
-    jo := TJob(LVjobs.Selected.Data);
-    l := LVfiles.Selected.Index;
-    if (l >= 0) and (l <= High(jo.f)) then
+    s := LVstreams.Items[i].Caption;
+    if (Length(s) > 0) and (s[1] = IntToStr(l)) then
     begin
-      myGetValsFromCont(TabInput, TCont(jo.f[l]));
-      if bUpdFromCode then
-        Exit;
-      bUpdFromCode := True;
-      j := -1;
-      k := -1;
-      for i := 0 to LVstreams.Items.Count - 1 do
-      begin
-        s := LVstreams.Items[i].Caption;
-        if (Length(s) > 0) and (s[1] = IntToStr(l)) then
-        begin
-          if (j < 0) and LVstreams.Items[i].Checked then
-            j := i;
-          if (k < 0) then
-            k := i;
-        end;
-        LVstreams.Items[i].Selected := False;
-      end;
-      if (j >= 0) then
-        i := j
-      else if (k >= 0) then
-        i := k
-      else
-        i := -1;
-      bUpdFromCode := False;
-      if (i >= 0) then
-        LVstreams.Items[i].Selected := True;
+      if (j < 0) and LVstreams.Items[i].Checked then
+        j := i;
+      if (k < 0) then
+        k := i;
     end;
+    LVstreams.Items[i].Selected := False;
   end;
+  if (j >= 0) then
+    i := j
+  else if (k >= 0) then
+    i := k
+  else
+    i := -1;
+  bUpdFromCode := False;
+  if (i >= 0) then
+    LVstreams.Items[i].Selected := True;
 end;
 
 procedure TfrmGUIta.LVjobsClick(Sender: TObject);
@@ -4471,29 +4449,29 @@ var
   currentItem, nextItem, dragItem, dropItem: TListItem;
   i: integer;
 begin
-  if Sender = Source then
-    with TListView(Sender) do
+  if Sender <> Source then Exit;
+  with TListView(Sender) do
+  begin
+    dropItem := GetItemAt(X, Y);
+    currentItem := Selected;
+    while currentItem <> nil do
     begin
-      dropItem := GetItemAt(X, Y);
-      currentItem := Selected;
-      while currentItem <> nil do
-      begin
-        nextItem := nil;
-        for i := 0 to Items.Count - 1 do
-          if (Items[i].Selected) and (currentItem.Index <> i) then
-          begin
-            nextItem := Items[i];
-            break;
-          end;
-        if Assigned(dropItem) then
-          dragItem := Items.Insert(dropItem.Index)
-        else
-          dragItem := Items.Add;
-        dragItem.Assign(currentItem);
-        currentItem.Free;
-        currentItem := nextItem;
-      end;
+      nextItem := nil;
+      for i := 0 to Items.Count - 1 do
+        if (Items[i].Selected) and (currentItem.Index <> i) then
+        begin
+          nextItem := Items[i];
+          break;
+        end;
+      if Assigned(dropItem) then
+        dragItem := Items.Insert(dropItem.Index)
+      else
+        dragItem := Items.Add;
+      dragItem.Assign(currentItem);
+      currentItem.Free;
+      currentItem := nextItem;
     end;
+  end;
 end;
 
 procedure TfrmGUIta.LVjobsDragOver(Sender, Source: TObject; X, Y: integer;
@@ -4551,13 +4529,6 @@ begin
     li := LVfiles.Items.Add;
     li.Caption := IntToStr(l);;
     li.SubItems.Add(jo.f[l].getval('filename'));
-    //for k := 0 to High(jo.f[l].s) do
-    //begin
-    //  li := LVstreams.Items.Add;
-    //  li.Checked := jo.f[l].s[k].getval('Checked') = '1';
-    //  li.Caption := IntToStr(l) + ':' + IntToStr(k);
-    //  li.SubItems.Add(myGetCaptionCont(jo.f[l].s[k]));
-    //end;
   end;
   for i := 0 to High(jo.m) do
   begin
@@ -4576,8 +4547,6 @@ begin
     LVfiles.Items[0].Selected := True;
     LVfilesSelectItem(Sender, LVfiles.Selected, True);
   end;
-  //else
-  //  TabVideoShow(PageControl2.ActivePage);
 end;
 
 procedure TfrmGUIta.LVstreamsClick(Sender: TObject);
@@ -4597,29 +4566,29 @@ var
 begin
   if myCantUpd(0) then
     Exit;
-  if Sender = Source then
-    with TListView(Sender) do
+  if Sender <> Source then Exit;
+  with TListView(Sender) do
+  begin
+    dropItem := GetItemAt(X, Y);
+    currentItem := Selected;
+    while currentItem <> nil do
     begin
-      dropItem := GetItemAt(X, Y);
-      currentItem := Selected;
-      while currentItem <> nil do
-      begin
-        nextItem := nil;
-        for i := 0 to Items.Count - 1 do
-          if (Items[i].Selected) and (currentItem.Index <> i) then
-          begin
-            nextItem := Items[i];
-            break;
-          end;
-        if Assigned(dropItem) then
-          dragItem := Items.Insert(dropItem.Index)
-        else
-          dragItem := Items.Add;
-        dragItem.Assign(currentItem);
-        currentItem.Free;
-        currentItem := nextItem;
-      end;
+      nextItem := nil;
+      for i := 0 to Items.Count - 1 do
+        if (Items[i].Selected) and (currentItem.Index <> i) then
+        begin
+          nextItem := Items[i];
+          break;
+        end;
+      if Assigned(dropItem) then
+        dragItem := Items.Insert(dropItem.Index)
+      else
+        dragItem := Items.Add;
+      dragItem.Assign(currentItem);
+      currentItem.Free;
+      currentItem := nextItem;
     end;
+  end;
   jo := TJob(LVjobs.Selected.Data);
   for i := 0 to High(jo.m) do
     jo.m[i] := LVstreams.Items[i].Caption;
@@ -4742,15 +4711,22 @@ end;
 procedure TfrmGUIta.mnuDeleteFileClick(Sender: TObject);
 var
   jo: TJob;
-  i: integer;
+  i, k, l: integer;
 begin
   if LVjobs.Selected = nil then Exit;
   if LVfiles.Selected = nil then Exit;
   if LVfiles.Items.Count = 1 then Exit;
   jo := TJob(LVjobs.Selected.Data);
-  for i := LVfiles.Selected.Index to High(jo.f) - 1 do
+  for i := LVfiles.Selected.Index to LVfiles.Items.Count - 2 do
     jo.f[i] := jo.f[i + 1];
-  SetLength(jo.f, High(jo.f));
+  SetLength(jo.f, Length(jo.f) - 1);
+  SetLength(jo.m, 0);
+  for l := 0 to High(jo.f) do
+  for k := 0 to High(jo.f[l].s) do
+  begin
+    SetLength(jo.m, Length(jo.m) + 1);
+    jo.m[High(jo.m)] := IntToStr(l) + ':' + IntToStr(k);
+  end;
   LVjobsSelectItem(Sender, LVjobs.Selected, True);
 end;
 
@@ -4909,7 +4885,6 @@ begin
     begin
       myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
       c := TJob(LVjobs.Selected.Data).f[l].s[k];
-      //c := TCont(LVstreams.Selected.Data);
       for i := 0 to c.sk.Count - 1 do
         SynMemo4.Lines.Add(c.sk[i] + '=' + c.sv[i]);
     end;
@@ -4943,7 +4918,6 @@ begin
   begin
     myGetFileStreamNums(LVstreams.Items[i].Caption, l, k);
     s := TJob(LVjobs.Selected.Data).f[l].s[k].getval('codec_type');
-    //s := TCont(LVstreams.Items[i].Data).getval('codec_type');
     if (s = LowerCase(Copy(TTabSheet(Sender).Name, 4, 8))) then
     begin
       if (j < 0) and LVstreams.Items[i].Checked then

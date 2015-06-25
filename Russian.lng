@@ -111,6 +111,8 @@ mnuEditAvs=Редактировать avs
 mnuCheck=Пометить или разотметить всё
 mnuDeleteJob=Удалить задание
 mnuPasteTracks=Добавить дорожки из буфера
+mnuPasteFiles=Добавить файлы из буфера
+mnuDeleteFile=Удалить выделенный файл из задачи
 
 [LVjobs]
 0=Номер
@@ -231,6 +233,8 @@ mnuEditAvs=
 mnuCheck=
 mnuDeleteJob=
 mnuPasteTracks=
+mnuPasteFiles=
+mnuDeleteFile=
 
 [LVmasks]
 0=Имя файла
