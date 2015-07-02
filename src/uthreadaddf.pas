@@ -121,7 +121,7 @@ begin
     sl.Text := myBetween(s, '[STREAM]', '[/STREAM]');
     if (sl.Text = '') then
       Break;
-    k := High(jo.f[filenum].s) + 1;
+    k := Length(jo.f[filenum].s);
     SetLength(jo.f[filenum].s, k + 1);
     SetLength(jo.m, Length(jo.m) + 1); //add for map tracks
     jo.m[High(jo.m)] := IntToStr(filenum) + ':' + IntToStr(k);
@@ -243,6 +243,8 @@ begin
   if pr.ExitStatus <> 0 then
     s := s + ' - ' + mes[6] + ': ' + IntToStr(pr.ExitStatus);
   frmGUIta.StatusBar1.SimpleText := s;
+  if frmGUIta.chkDebug.Checked then
+    ;
   v := '';
   a := '';
   s := '';
@@ -279,7 +281,7 @@ begin
   if (frmGUIta.LVjobs.Items.Count = 1) then
   begin
     frmGUIta.LVjobs.Items[0].Selected := True;
-    frmGUIta.LVjobsSelectItem(nil, frmGUIta.LVjobs.Items[0], True);
+    //frmGUIta.LVjobsSelectItem(nil, frmGUIta.LVjobs.Items[0], True);
   end;
 end;
 
@@ -381,4 +383,4 @@ begin
   inherited Create(CreateSuspended);
 end;
 
-end.
+end.

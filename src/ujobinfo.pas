@@ -13,9 +13,8 @@ type
 
   TCont = class(TObject)
   public
-    sk: TStringList;
-    sv: TStringList;
-    constructor Create; overload;
+    sk: array of string;
+    sv: array of string;
     function getval(key: string): string;
     procedure setval(key, Value: string);
   end;
@@ -33,42 +32,41 @@ type
   public
     f: array of TFil; //files
     m: array of string; //mapping of streams
+    c: array of string; //command line
   end;
 
 implementation
 
 { TCont }
 
-constructor TCont.Create;
-begin
-  inherited;
-  sk := TStringList.Create;
-  sv := TStringList.Create;
-end;
-
 function TCont.getval(key: string): string;
 var
   i: integer;
 begin
-  i := sk.IndexOf(key);
-  if (i >= 0) and (i < sv.Count) then
-    Result := sv[i]
-  else
-    Result := '';
+  Result := '';
+  for i := 0 to High(sk) do
+  if key = sk[i] then
+  begin
+    Result := sv[i];
+    Exit;
+  end;
 end;
 
 procedure TCont.setval(key, Value: string);
 var
   i: integer;
 begin
-  i := sk.IndexOf(key);
-  if (i >= 0) and (i < sv.Count) then
-    sv[i] := Value
-  else
+  for i := 0 to High(sk) do
+  if key = sk[i] then
   begin
-    sk.Add(key);
-    sv.Add(Value);
+    sv[i] := Value;
+    Exit;
   end;
+  i := Length(sk) + 1;
+  SetLength(sk, i);
+  SetLength(sv, i);
+  sk[High(sk)] := key;
+  sv[High(sv)] := Value;
 end;
 
 end.

@@ -65,6 +65,7 @@ type
     btnMaskAdd: TButton;
     btnMaskEdit: TButton;
     btnMaskDel: TButton;
+    chkUseEditedCmd: TCheckBox;
     chkRunMode: TCheckBox;
     chkPlayerIn: TCheckBox;
     chkConcat: TCheckBox;
@@ -200,6 +201,7 @@ type
     Panel4: TPanel;
     Panel5: TPanel;
     Panel6: TPanel;
+    Panel7: TPanel;
     PopupMenu1: TPopupMenu;
     PopupMenu2: TPopupMenu;
     PopupMenu3: TPopupMenu;
@@ -283,6 +285,8 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure FormDropFiles(Sender: TObject; const FileNames: array of string);
     procedure FormShow(Sender: TObject);
+    procedure LVfilesCustomDrawItem(Sender: TCustomListView; Item: TListItem;
+      State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure LVfilesSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
     procedure LVjobsClick(Sender: TObject);
@@ -298,6 +302,8 @@ type
     procedure LVjobsSelectItem(Sender: TObject; Item: TListItem;
       Selected: boolean);
     procedure LVstreamsClick(Sender: TObject);
+    procedure LVstreamsCustomDrawItem(Sender: TCustomListView; Item: TListItem;
+      State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure LVstreamsDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure LVstreamsDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
@@ -321,17 +327,16 @@ type
     procedure PopupMenu3Popup(Sender: TObject);
     procedure TabCmdlineShow(Sender: TObject);
     procedure TabContRowsShow(Sender: TObject);
-    procedure TabInputShow(Sender: TObject);
     procedure TabVideoShow(Sender: TObject);
     procedure UniqueInstance1OtherInstance(Sender: TObject;
       ParamCount: Integer; Parameters: array of String);
     procedure xmyChange0(Sender: TObject);
-    procedure xmyChange0i(Sender: TObject);
     procedure xmyChange0o(Sender: TObject);
-    procedure xmyChange1(Sender: TObject);
-    procedure xmyChange1v(Sender: TObject);
-    procedure xmyChange1a(Sender: TObject);
-    procedure xmyChange1o(Sender: TObject);
+    procedure xmyChange1i(Sender: TObject);
+    procedure xmyChange2(Sender: TObject);
+    procedure xmyChange2v(Sender: TObject);
+    procedure xmyChange2a(Sender: TObject);
+    procedure xmyChange2o(Sender: TObject);
     procedure xmyCheckDir(Sender: TObject);
     procedure xmyCheckFile(Sender: TObject);
     procedure xmySelDir(Sender: TObject);
@@ -545,6 +550,8 @@ begin
     end
     else if (t.Controls[i] is TLabeledEdit) then
       TLabeledEdit(t.Controls[i]).Text := v.getval(t.Controls[i].Name)
+    else if (t.Controls[i] is TMemo) then
+      TMemo(t.Controls[i]).Text := v.getval(t.Controls[i].Name)
     else if (t.Controls[i] is TCheckBox) then
       TCheckBox(t.Controls[i]).Checked := v.getval(t.Controls[i].Name) = '1'
     else if (t.Controls[i] is TSpinEdit) then
@@ -565,6 +572,8 @@ begin
   end
   else if (Sender is TLabeledEdit) then
     TLabeledEdit(Sender).Text := s
+  else if (Sender is TMemo) then
+    TMemo(Sender).Text := s
   else if (Sender is TCheckBox) then
     TCheckBox(Sender).Checked := (s = '1')
   else if (Sender is TSpinEdit) then
@@ -582,6 +591,8 @@ begin
   end
   else if (Sender is TLabeledEdit) then
     Result := TLabeledEdit(Sender).Text
+  else if (Sender is TMemo) then
+    Result := TMemo(Sender).Text
   else if (Sender is TCheckBox) then
     Result := IfThen(TCheckBox(Sender).Checked, '1', '0')
   else if (Sender is TSpinEdit) then
@@ -601,6 +612,8 @@ begin
         TLabeledEdit(TTabSheet(ts[j]).Controls[i]).Text := ''
       else if TTabSheet(ts[j]).Controls[i] is TComboBox then
         TComboBox(TTabSheet(ts[j]).Controls[i]).Text := ''
+      else if TTabSheet(ts[j]).Controls[i] is TCheckBox then
+        TCheckBox(TTabSheet(ts[j]).Controls[i]).Checked := False
       else if TTabSheet(ts[j]).Controls[i] is TSpinEdit then
         TSpinEdit(TTabSheet(ts[j]).Controls[i]).Text := '1'
       else if TTabSheet(ts[j]).Controls[i] is TSynMemo then
@@ -980,6 +993,11 @@ var
   end;
 
 begin
+  if (jo.getval(chkUseEditedCmd.Name) = '1') then
+  begin
+    Result := jo.getval(memCmdlines.Name);
+    Exit;
+  end;
   // -ss input, output, test
   ssi := '';
   sso := jo.getval(cmbDurationss2.Name);
@@ -1865,6 +1883,7 @@ procedure TfrmGUIta.myDisComp;
 var
   b, b1, b2, b3: boolean;
   //i: integer;
+  jo: TJob;
 begin
   b := (ThreadConv <> nil);
   btnStart.Enabled := not b;
@@ -1873,7 +1892,9 @@ begin
   b := (LVjobs.Selected <> nil);
   //for i := 0 to PageControl2.ControlCount - 1 do
   //  TControl(PageControl2.Controls[i]).Enabled := b;
-  b1 := b and FileExistsUTF8(LVjobs.Selected.SubItems[0]);
+  if b then
+    jo := TJob(LVjobs.Selected.Data);
+  b1 := b and FileExistsUTF8(jo.f[0].getval('filename'));
   btnPlayIn.Enabled := b1;
   mnuOpen.Enabled := b1;
   mnuView.Enabled := b1;
@@ -1881,14 +1902,14 @@ begin
   mnuMediaInfo.Enabled := b1 and b3;
   btnMediaInfo1.Enabled := b1 and b3;
   btnTest.Enabled := b1 and (ThreadTest = nil);
-  b2 := b and FileExistsUTF8(TJob(LVjobs.Selected.Data).getval(edtOfn.Name));
+  b2 := b and FileExistsUTF8(jo.getval(edtOfn.Name));
   btnMediaInfo2.Enabled := b2 and b3;
   btnPlayOut.Enabled := b2;
   btnCompare.Enabled := b1 and b2;
-  b3 := b1 and (LowerCase(ExtractFileExt(LVjobs.Selected.SubItems[0])) = '.avs');
+  b3 := b1 and (LowerCase(ExtractFileExt(jo.f[0].getval('filename'))) = '.avs');
   mnuEditAvs.Enabled := b3;
   mnuCopyAsAvs.Enabled := b1 and not b3;
-  chkConcat.Enabled := b and (Length(TJob(LVjobs.Selected.Data).f) > 1);
+  chkConcat.Enabled := b and (Length(jo.f) > 1);
 end;
 
 function TfrmGUIta.myGetCaptionCont(p: TCont): string;
@@ -2459,8 +2480,8 @@ end;
 function TfrmGUIta.myCantUpd(i: integer = 0): boolean;
 begin
   Result := bUpdFromCode or (LVjobs.Selected = nil)
-    or ((i > 0) and (LVfiles.Selected = nil))
-    or ((i > 1) and (LVstreams.Selected = nil));
+    or ((i = 1) and (LVfiles.Selected = nil))
+    or ((i = 2) and (LVstreams.Selected = nil));
 end;
 
 procedure TfrmGUIta.myGetss4Compare(jo: TJob; rs: double = 0; rt: double = 0);
@@ -2893,7 +2914,7 @@ begin
     if (LVjobs.Items.Count = 1) then
     begin
       LVjobs.Items[0].Selected := True;
-      LVjobsSelectItem(nil, LVjobs.Items[0], True);
+      //LVjobsSelectItem(Sender, LVjobs.Items[0], True);
     end;
   end;
   frmGrab.Free;
@@ -3072,7 +3093,7 @@ begin
   if cmbCrop.Text = '' then
   begin
     cmbCrop.Text := myAutoCrop(jo, co);
-    xmyChange1v(cmbCrop);
+    xmyChange2v(cmbCrop);
   end;
   iv := ' -map 0:' + IntToStr(k);
   fn := jo.f[l].getval('filename');
@@ -3108,7 +3129,7 @@ begin
   if frmCrop.ShowModal = mrOk then
   begin
     cmbCrop.Text := frmCrop.Caption;
-    xmyChange1v(cmbCrop);
+    xmyChange2v(cmbCrop);
   end;
   myFormPosSave(frmCrop, Ini);
   frmCrop.Free;
@@ -3666,7 +3687,7 @@ begin
   lblkoefA.Enabled := b;
   if myCantUpd(2) then
     Exit;
-  xmyChange1(Sender);
+  xmyChange2(Sender);
   myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
   edtBitrateA.Text := myCalcBRa(TJob(LVjobs.Selected.Data).f[l].s[k]);
 end;
@@ -3681,7 +3702,7 @@ begin
   lblkoefV.Enabled := b;
   if myCantUpd(2) then
     Exit;
-  xmyChange1(Sender);
+  xmyChange2(Sender);
   myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
   edtBitrateV.Text := myCalcBRv(TJob(LVjobs.Selected.Data).f[l].s[k]);
 end;
@@ -3712,7 +3733,7 @@ begin
       else
         c.Controls[i].Enabled := (b and (c.Controls[i].Tag = 0))
         or (b and b1 and (c.Controls[i].Tag = 2));
-  xmyChange1(Sender);
+  xmyChange2(Sender);
 end;
 
 procedure TfrmGUIta.cmbExtChange(Sender: TObject);
@@ -3811,8 +3832,8 @@ begin
   for i := 0 to TabOutput.ControlCount - 1 do
   if (TabOutput.Controls[i].Tag in [0, 2]) then
   begin
-      s := Ini.ReadString('1', TabOutput.Controls[i].Name, '');
-      jo.setval(TabOutput.Controls[i].Name, s);
+    s := Ini.ReadString('1', TabOutput.Controls[i].Name, '');
+    jo.setval(TabOutput.Controls[i].Name, s);
   end;
   se := Ini.ReadString('1', cmbExt.Name, '');
   //jo.setval(cmbExt.Name, se);
@@ -3827,28 +3848,27 @@ begin
       s := Ini.ReadString('input', TabInput.Controls[i].Name, '');
       jo.f[l].setval(TabInput.Controls[i].Name, s);
     end;
-  end;
-  for l := 0 to High(jo.f) do
-  for k := 0 to High(jo.f[l].s) do
-  begin
-    c := jo.f[l].s[k].getval('codec_type');
-    if c = 'video' then
-      t := TabVideo
-    else if c = 'audio' then
-      t := TabAudio
-    else if c = 'subtitle' then
-      t := TabSubtitle
-    else
-      Continue;
-    for i := 0 to t.ControlCount - 1 do
+    for k := 0 to High(jo.f[l].s) do
     begin
-      s := Ini.ReadString(c, t.Controls[i].Name, '');
-      jo.f[l].s[k].setval(t.Controls[i].Name, s);
+      c := jo.f[l].s[k].getval('codec_type');
+      if c = 'video' then
+        t := TabVideo
+      else if c = 'audio' then
+        t := TabAudio
+      else if c = 'subtitle' then
+        t := TabSubtitle
+      else
+        Continue;
+      for i := 0 to t.ControlCount - 1 do
+      begin
+        s := Ini.ReadString(c, t.Controls[i].Name, '');
+        jo.f[l].s[k].setval(t.Controls[i].Name, s);
+      end;
+      if c = 'video' then
+        jo.f[l].s[k].setval(edtBitrateV.Name, myCalcBRv(jo.f[l].s[k]))
+      else if c = 'audio' then
+        jo.f[l].s[k].setval(edtBitrateA.Name, myCalcBRa(jo.f[l].s[k]));
     end;
-    if c = 'video' then
-      jo.f[l].s[k].setval(edtBitrateV.Name, myCalcBRv(jo.f[l].s[k]))
-    else if c = 'audio' then
-      jo.f[l].s[k].setval(edtBitrateA.Name, myCalcBRa(jo.f[l].s[k]));
   end;
   Ini.Free;
   LVjobs.Selected.SubItems[2] := myCalcOutSize(jo);
@@ -4008,6 +4028,7 @@ begin
     edtDirTmp.Text := '/tmp';
     edtDirOut.Text := '$HOME';
     edtMediaInfo.Text:= 'mediainfo-gui';
+    cmbExtPlayer.Text:= 'mplayer';
     my1(['vlc', 'dragon', 'avplay', 'ffplay', 'mplayer', 'totem', 'xine']);
     cmbDirLast.Text := '$HOME';
     cmbFont.Text := 'Ubuntu';
@@ -4359,10 +4380,25 @@ begin
   end;
 end;
 
+procedure TfrmGUIta.LVfilesCustomDrawItem(Sender: TCustomListView;
+  Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
+begin
+  if Item.Selected then
+  begin
+    Sender.Canvas.Brush.Color := clHighlight;
+    Sender.Canvas.Font.Color := clHighlightText;
+  end
+  else
+  begin
+    Sender.Canvas.Brush.Color := clWindow;
+    Sender.Canvas.Font.Color := clWindowText;
+  end;
+end;
+
 procedure TfrmGUIta.LVfilesSelectItem(Sender: TObject; Item: TListItem;
   Selected: Boolean);
 var
-  i, j, k, l: integer;
+  i, j, l, m: integer;
   jo: TJob;
   s: string;
 begin
@@ -4375,7 +4411,14 @@ begin
   if bUpdFromCode then Exit;
   bUpdFromCode := True;
   j := -1;
-  k := -1;
+  m := -1;
+  if LVstreams.Selected <> nil then
+  begin
+    s := LVstreams.Selected.Caption;
+    if (Length(s) > 0) and (s[1] = IntToStr(l)) then
+      j := LVstreams.Selected.Index;
+  end;
+  if j < 0 then
   for i := 0 to LVstreams.Items.Count - 1 do
   begin
     s := LVstreams.Items[i].Caption;
@@ -4383,15 +4426,15 @@ begin
     begin
       if (j < 0) and LVstreams.Items[i].Checked then
         j := i;
-      if (k < 0) then
-        k := i;
+      if (m < 0) then
+        m := i;
     end;
     LVstreams.Items[i].Selected := False;
   end;
   if (j >= 0) then
     i := j
-  else if (k >= 0) then
-    i := k
+  else if (m >= 0) then
+    i := m
   else
     i := -1;
   bUpdFromCode := False;
@@ -4407,15 +4450,14 @@ begin
     myClear2([TabInput, TabOutput, TabVideo, TabAudio, TabSubtitle, TabContRows, TabCmdline]);
     LVfiles.Clear;
     LVstreams.Clear;
+    myDisComp;
   end;
-  myDisComp;
 end;
 
 procedure TfrmGUIta.LVjobsContextPopup(Sender: TObject; MousePos: TPoint;
   var Handled: boolean);
 begin
-  if LVjobs.Selected = nil then
-    myDisComp;
+  myDisComp;
 end;
 
 procedure TfrmGUIta.LVjobsCustomDrawItem(Sender: TCustomListView;
@@ -4515,6 +4557,7 @@ var
   jo: TJob;
   li: TListItem;
 begin
+  if bUpdFromCode then Exit;
   bUpdFromCode := True;
   LVfiles.Clear;
   LVstreams.Clear;
@@ -4524,6 +4567,7 @@ begin
   else
     jo := TJob(Item.Data);
   myGetValsFromCont(TabOutput, jo);
+  myGetValsFromCont(TabCmdline, jo);
   for l := 0 to High(jo.f) do
   begin
     li := LVfiles.Items.Add;
@@ -4542,11 +4586,14 @@ begin
     cmbProfile.Text := jo.getval(cmbProfile.Name);
   bUpdFromCode := False;
   myDisComp;
-  if LVfiles.Items.Count > 0 then
-  begin
-    LVfiles.Items[0].Selected := True;
-    LVfilesSelectItem(Sender, LVfiles.Selected, True);
-  end;
+  if (PageControl2.ActivePage = TabVideo)
+  or (PageControl2.ActivePage = TabAudio)
+  or (PageControl2.ActivePage = TabSubtitle) then
+    TabVideoShow(PageControl2.ActivePage)
+  else if LVstreams.Items.Count > 0 then
+    LVstreams.Items[0].Selected := True;
+  if PageControl2.ActivePage = TabCmdline then
+    TabCmdlineShow(Sender);
 end;
 
 procedure TfrmGUIta.LVstreamsClick(Sender: TObject);
@@ -4555,6 +4602,21 @@ begin
   begin
     myClear2([TabVideo, TabAudio, TabSubtitle, TabContRows]);
     PageControl2.ActivePage := TabOutput;
+  end;
+end;
+
+procedure TfrmGUIta.LVstreamsCustomDrawItem(Sender: TCustomListView;
+  Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
+begin
+  if Item.Selected then
+  begin
+    Sender.Canvas.Brush.Color := clHighlight;
+    Sender.Canvas.Font.Color := clHighlightText;
+  end
+  else
+  begin
+    Sender.Canvas.Brush.Color := clWindow;
+    Sender.Canvas.Font.Color := clWindowText;
   end;
 end;
 
@@ -4623,55 +4685,43 @@ var
   c: TCont;
   s: string;
   k, l: integer;
-  ts: TTabSheet;
+  t: TTabSheet;
 begin
   if myCantUpd(2) then
     Exit;
   bUpdFromCode := True;
   myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
+  //for i := 0 to LVfiles.Items.Count - 1 do
+  //  LVfiles.Items[i].Selected := False;
+  LVfiles.Items[l].Selected := True;
   c := TJob(LVjobs.Selected.Data).f[l].s[k];
-  //TabVideo.Enabled := False;
-  //TabAudio.Enabled := False;
-  //TabSubtitle.Enabled := False;
   s := c.getval('codec_type');
   if s = 'video' then
   begin
-    myGetValsFromCont(TabVideo, c);
-    //TabVideo.Enabled := True;
-    ts := TabVideo;
+    t := TabVideo;
     cmbBitrateVChange(cmbBitrateV);
     cmbEncoderVChange(cmbEncoderV);
   end
   else if s = 'audio' then
   begin
-    myGetValsFromCont(TabAudio, c);
-    //TabAudio.Enabled := True;
-    ts := TabAudio;
+    t := TabAudio;
     cmbBitrateAChange(cmbBitrateA);
     cmbEncoderVChange(cmbEncoderA);
   end
   else if s = 'subtitle' then
   begin
-    myGetValsFromCont(TabSubtitle, c);
-    //TabSubtitle.Enabled := True;
-    ts := TabSubtitle;
+    t := TabSubtitle;
     cmbEncoderVChange(cmbEncoderS);
   end;
   if (PageControl2.ActivePage = TabVideo)
   or (PageControl2.ActivePage = TabAudio)
   or (PageControl2.ActivePage = TabSubtitle) then
-    PageControl2.ActivePage := ts
-  else if (PageControl2.ActivePage = TabInput) then
-    TabInputShow(nil)
-  else if (PageControl2.ActivePage = TabOutput) then
   begin
-    cmbFormatChange(cmbFormat);
-    cmbExtChange(cmbExt);
+    myGetValsFromCont(t, c);
+    PageControl2.ActivePage := t;
   end
   else if (PageControl2.ActivePage = TabContRows) then
-    TabContRowsShow(nil)
-  else if (PageControl2.ActivePage = TabCmdline) then
-    TabCmdlineShow(nil);
+    TabContRowsShow(nil);
   bUpdFromCode := False;
 end;
 
@@ -4859,9 +4909,15 @@ begin
 end;
 
 procedure TfrmGUIta.TabCmdlineShow(Sender: TObject);
+var
+  jo: TJob;
 begin
-  if (LVjobs.Selected <> nil) then
-    memCmdlines.Text := myGetCmdFromJo(TJob(LVjobs.Selected.Data));
+  if LVjobs.Selected = nil then Exit;
+  bUpdFromCode := True;
+  jo := TJob(LVjobs.Selected.Data);
+  chkUseEditedCmd.Checked := (jo.getval(chkUseEditedCmd.Name) = '1');
+  memCmdlines.Text := myGetCmdFromJo(jo);
+  bUpdFromCode := False;
 end;
 
 procedure TfrmGUIta.TabContRowsShow(Sender: TObject);
@@ -4871,36 +4927,21 @@ var
   c: TCont;
 begin
   SynMemo4.Clear;
-  if LVjobs.Selected <> nil then
+  if LVjobs.Selected = nil then Exit;
+  jo := TJob(LVjobs.Selected.Data);
+  if LVstreams.Selected = nil then
   begin
-    jo := TJob(LVjobs.Selected.Data);
-    if LVstreams.Selected = nil then
-    begin
-      for i := 0 to High(jo.f) do
-        SynMemo4.Lines.Add('$inpu' + IntToStr(i) + '=' + jo.f[i].getval('filename'));
-      for i := 0 to jo.sk.Count - 1 do
-        SynMemo4.Lines.Add(jo.sk[i] + '=' + jo.sv[i]);
-    end
-    else
-    begin
-      myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
-      c := TJob(LVjobs.Selected.Data).f[l].s[k];
-      for i := 0 to c.sk.Count - 1 do
-        SynMemo4.Lines.Add(c.sk[i] + '=' + c.sv[i]);
-    end;
-  end;
-end;
-
-procedure TfrmGUIta.TabInputShow(Sender: TObject);
-var
-  i, k, l: integer;
-begin
-  for i := 0 to LVfiles.Items.Count - 1 do
-    LVfiles.Items[i].Selected := False;
-  if (LVstreams.Selected <> nil) then
+    for i := 0 to High(jo.f) do
+      SynMemo4.Lines.Add('$inpu' + IntToStr(i) + '=' + jo.f[i].getval('filename'));
+    for i := 0 to High(jo.sk) do
+      SynMemo4.Lines.Add(jo.sk[i] + '=' + jo.sv[i]);
+  end
+  else
   begin
     myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
-    LVfiles.Items[l].Selected := True;
+    c := jo.f[l].s[k];
+    for i := 0 to High(c.sk) do
+      SynMemo4.Lines.Add(c.sk[i] + '=' + c.sv[i]);
   end;
 end;
 
@@ -4911,6 +4952,16 @@ var
 begin
   if myCantUpd(0) then
     Exit;
+  if LVstreams.Selected <> nil then
+  begin
+    myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
+    s := TJob(LVjobs.Selected.Data).f[l].s[k].getval('codec_type');
+    if (s = LowerCase(Copy(TTabSheet(Sender).Name, 4, 8))) then
+    begin
+      LVstreamsSelectItem(Sender, LVstreams.Selected, True);
+      Exit;
+    end;
+  end;
   bUpdFromCode := True;
   j := -1;
   m := -1;
@@ -4953,25 +5004,6 @@ begin
   BringToFront;
 end;
 
-procedure TfrmGUIta.xmyChange0i(Sender: TObject);
-var
-  s1, s2: string;
-  i: integer;
-  jo: TJob;
-begin
-  if myCantUpd(0) then
-    Exit;
-  s1 := (Sender as TControl).Name;
-  s2 := myGet2(Sender);
-  jo := TJob(LVjobs.Selected.Data);
-  if (LVfiles.Selected <> nil) then
-    i := LVfiles.Selected.Index
-  else
-    i := -1;
-  if (i >= 0) and (i <= High(jo.f)) then
-    jo.f[i].setval(s1, s2);
-end;
-
 procedure TfrmGUIta.xmyChange0(Sender: TObject);
 var
   s1, s2: string;
@@ -4981,7 +5013,8 @@ begin
   s1 := (Sender as TControl).Name;
   s2 := myGet2(Sender);
   TJob(LVjobs.Selected.Data).setval(s1, s2);
-  myDisComp;
+  if (Sender as TControl).Tag = 3 then //output filename
+    myDisComp;
 end;
 
 procedure TfrmGUIta.xmyChange0o(Sender: TObject);
@@ -4992,7 +5025,23 @@ begin
   LVjobs.Selected.SubItems[2] := myCalcOutSize(TJob(LVjobs.Selected.Data));
 end;
 
-procedure TfrmGUIta.xmyChange1(Sender: TObject);
+procedure TfrmGUIta.xmyChange1i(Sender: TObject);
+var
+  s1, s2: string;
+  i: integer;
+  jo: TJob;
+begin
+  if myCantUpd(1) then
+    Exit;
+  s1 := (Sender as TControl).Name;
+  s2 := myGet2(Sender);
+  jo := TJob(LVjobs.Selected.Data);
+  i := LVfiles.Selected.Index;
+  if (i >= 0) and (i <= High(jo.f)) then
+    jo.f[i].setval(s1, s2);
+end;
+
+procedure TfrmGUIta.xmyChange2(Sender: TObject);
 var
   s1, s2: string;
   k, l: integer;
@@ -5005,33 +5054,33 @@ begin
   TJob(LVjobs.Selected.Data).f[l].s[k].setval(s1, s2);
 end;
 
-procedure TfrmGUIta.xmyChange1v(Sender: TObject);
+procedure TfrmGUIta.xmyChange2v(Sender: TObject);
 var
   k, l: integer;
 begin
   if myCantUpd(2) then
     Exit;
-  xmyChange1(Sender);
+  xmyChange2(Sender);
   myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
   edtBitrateV.Text := myCalcBRv(TJob(LVjobs.Selected.Data).f[l].s[k]);
 end;
 
-procedure TfrmGUIta.xmyChange1a(Sender: TObject);
+procedure TfrmGUIta.xmyChange2a(Sender: TObject);
 var
   k, l: integer;
 begin
   if myCantUpd(2) then
     Exit;
-  xmyChange1(Sender);
+  xmyChange2(Sender);
   myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
   edtBitrateA.Text := myCalcBRa(TJob(LVjobs.Selected.Data).f[l].s[k]);
 end;
 
-procedure TfrmGUIta.xmyChange1o(Sender: TObject);
+procedure TfrmGUIta.xmyChange2o(Sender: TObject);
 begin
   if myCantUpd(2) then
     Exit;
-  xmyChange1(Sender);
+  xmyChange2(Sender);
   LVjobs.Selected.SubItems[2] := myCalcOutSize(TJob(LVjobs.Selected.Data));
 end;
 
@@ -5121,4 +5170,4 @@ begin
   od.Free;
 end;
 
-end.
+end.

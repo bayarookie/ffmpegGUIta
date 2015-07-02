@@ -17,7 +17,7 @@ uses
 {$I revision.inc} // Lazarus revision number
 
 const
-  taVersion   = '0.1.0';
+  taVersion   = '0.1.1';
   taBuildDate = {$I %DATE%};
   lazVersion  = lcl_version;         // Lazarus version (major.minor.micro)
   lazRevision = RevisionStr;         // Lazarus SVN revision
