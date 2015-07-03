@@ -374,7 +374,7 @@ type
     procedure myFillEnc;
     procedure myFillFmt;
     function myCantUpd(i: integer = 0): boolean;
-    function myAutoCrop(jo: TJob; co: TCont): string;
+    function myAutoCrop(jo: TJob; l, k: integer): string;
     procedure myGetClipboardFileNames(files: TStrings; test: boolean = False);
     function myGetColor: integer;
     function myGetExts: string;
@@ -535,32 +535,6 @@ begin
         end;
 end;
 
-procedure myGetValsFromCont(t: TTabSheet; v: TCont);
-var
-  i: integer;
-begin
-  for i := 0 to t.ControlCount - 1 do
-    if (t.Controls[i] is TComboBox) then
-    begin
-      if TComboBox(t.Controls[i]).ReadOnly then
-        TComboBox(t.Controls[i]).ItemIndex :=
-          StrToIntDef(v.getval(t.Controls[i].Name), -1)
-      else
-        TComboBox(t.Controls[i]).Text := v.getval(t.Controls[i].Name);
-    end
-    else if (t.Controls[i] is TLabeledEdit) then
-      TLabeledEdit(t.Controls[i]).Text := v.getval(t.Controls[i].Name)
-    else if (t.Controls[i] is TMemo) then
-      TMemo(t.Controls[i]).Text := v.getval(t.Controls[i].Name)
-    else if (t.Controls[i] is TCheckBox) then
-      TCheckBox(t.Controls[i]).Checked := v.getval(t.Controls[i].Name) = '1'
-    else if (t.Controls[i] is TSpinEdit) then
-    begin
-      TSpinEdit(t.Controls[i]).Value := StrToIntDef(v.getval(t.Controls[i].Name), 0);
-      TSpinEdit(t.Controls[i]).Text := v.getval(t.Controls[i].Name);
-    end;
-end;
-
 procedure mySet2(Sender: TObject; s: string);
 begin
   if (Sender is TComboBox) then
@@ -601,26 +575,21 @@ begin
     Result := '';
 end;
 
+procedure myGetValsFromCont(t: TTabSheet; v: TCont);
+var
+  i: integer;
+begin
+  for i := 0 to t.ControlCount - 1 do
+    mySet2(t.Controls[i], v.getval(t.Controls[i].Name));
+end;
+
 procedure myClear2(ts: array of TTabSheet);
 var
   i, j: integer;
 begin
   for j := Low(ts) to High(ts) do
-  begin
     for i := 0 to TTabSheet(ts[j]).ControlCount - 1 do
-      if TTabSheet(ts[j]).Controls[i] is TLabeledEdit then
-        TLabeledEdit(TTabSheet(ts[j]).Controls[i]).Text := ''
-      else if TTabSheet(ts[j]).Controls[i] is TComboBox then
-        TComboBox(TTabSheet(ts[j]).Controls[i]).Text := ''
-      else if TTabSheet(ts[j]).Controls[i] is TCheckBox then
-        TCheckBox(TTabSheet(ts[j]).Controls[i]).Checked := False
-      else if TTabSheet(ts[j]).Controls[i] is TSpinEdit then
-        TSpinEdit(TTabSheet(ts[j]).Controls[i]).Text := '1'
-      else if TTabSheet(ts[j]).Controls[i] is TSynMemo then
-        TSynMemo(TTabSheet(ts[j]).Controls[i]).Clear
-      else if TTabSheet(ts[j]).Controls[i] is TMemo then
-        TMemo(TTabSheet(ts[j]).Controls[i]).Clear;
-  end;
+      mySet2(TTabSheet(ts[j]).Controls[i], '');
 end;
 
 { TfrmGUIta }
@@ -880,7 +849,7 @@ var
   rd,
   rsi, rso, rst, rti, rto, rtt: double;
   ssi, sso, sst, sti, sto, stt,
-  s, co, ty, si, fc, fc2, fi, fn, fb, ni, vi, au, su, ma,
+  s, co, ty, si, fc2, fi, fn, fb, ni, vi, au, su, ma,
   so, tmp, f1p, sp1, sp2, fn1, fn2, fno, fnoa: string;
   bfi: boolean;
 
@@ -899,9 +868,13 @@ var
           s := myGetFilter(jo, c);
           fi := fi + IfThen(s <> '', ' -filter:v:' + ni + ' "' + s + '"');
         end;
-        s := c.getval(edtBitrateV.Name);
-        vi := vi + IfThen(s <> '', ' -b:v:' + ni + ' ' + s);
-        if (co = 'libx264') or (co = 'libx264rgb') then
+        s := c.getval(cmbBitrateV.Name);
+        if s <> '' then
+        begin
+          s := c.getval(edtBitrateV.Name);
+          vi := vi + IfThen(s <> '', ' -b:v:' + ni + ' ' + s);
+        end;
+        if (co = 'libx264') or (co = 'libx264rgb') or (co = 'libx265') then
         begin
           s := c.getval(cmbx264preset.Name);
           vi := vi + IfThen(s <> '', ' -preset ' + s);
@@ -944,8 +917,12 @@ var
           s := myGetFilter(jo, c);
           fi := fi + IfThen(s <> '', ' -filter:a:' + ni + ' "' + s + '"');
         end;
-        s := c.getval(edtBitrateA.Name);
-        au := au + IfThen(s <> '', ' -b:a:' + ni + ' ' + s);
+        s := c.getval(cmbBitrateA.Name);
+        if s <> '' then
+        begin
+          s := c.getval(edtBitrateA.Name);
+          au := au + IfThen(s <> '', ' -b:a:' + ni + ' ' + s);
+        end;
         s := c.getval(cmbSRate.Name);
         au := au + IfThen(s <> '', ' -ar:a:' + ni + ' ' + s);
         s := c.getval(cmbChannels.Name);
@@ -1024,7 +1001,6 @@ begin
   end;
   // init vars
   si := '"$ffmpeg"';
-  fc := '';
   fc2 := '';
   fi := '';
   vi := '';
@@ -1042,11 +1018,39 @@ begin
   cd := -1;
   fn := '';
   fb := '-';
-  bfi := (jo.getval(chkFilterComplex.Name) = '1');
-  // --- concat ---
+  // input params
+  for l := 0 to High(jo.f) do
+  begin
+    ssi := jo.f[l].getval(cmbDurationss1.Name);
+    if (mode = 1) and (rso = 0) then
+    begin
+      rsi := myTimeStrToReal(ssi);
+      if (rsi < rst) then
+        ssi := sst;
+    end;
+    si := si + IfThen(ssi <> '', ' -ss ' + ssi);
+    sti := jo.f[l].getval(cmbDurationt1.Name);
+    if (mode = 1) and (rto = 0) then
+    begin
+      rti := myTimeStrToReal(sti);
+      if (rti = 0) or (rti > rtt) then
+        sti := stt;
+    end;
+    si := si + IfThen(sti <> '', ' -t ' + sti);
+    s := jo.f[l].getval(cmbAddOptsI.Name);
+    si := si + IfThen(s <> '', ' ' + s);
+    s := myGetAnsiFN(jo.f[l].getval('filename'));
+    if LowerCase(ExtractFileExt(s)) = '.vob' then
+      si := si + ' -analyzeduration 100M -probesize 100M -i "' + s + '"'
+    else
+      si := si + ' -i "' + s + '"';
+  end;
+  bfi := (jo.getval(chkFilterComplex.Name) = '1')
+  or (jo.getval(chkConcat.Name) = '1');
+  // --- if concat ---
   if (jo.getval(chkConcat.Name) = '1') then
   begin
-    fc := ' -filter_complex "';
+    fi := ' -filter_complex "';
     for l := 0 to High(jo.f) do
     for k := 0 to High(jo.f[l].s) do
     begin
@@ -1061,7 +1065,7 @@ begin
         ty := c.getval('codec_type');
         if ty = 'video' then
         begin
-          fc := fc + '[' + fn + ':' + ni + '] ';
+          fi := fi + '[' + fn + ':' + ni + '] ';
           if fn = '0' then
           begin
             s := '[v' + ni + ']';
@@ -1072,7 +1076,7 @@ begin
         end
         else if ty = 'audio' then
         begin
-          fc := fc + '[' + fn + ':' + ni + '] ';
+          fi := fi + '[' + fn + ':' + ni + '] ';
           if fn = '0' then
           begin
             s := '[a' + ni + ']';
@@ -1083,66 +1087,16 @@ begin
         end;
       end;
     end;
-    fc := fc + 'concat=n=' + IntToStr(cf) + ':v=' + IntToStr(cv + 1) +
+    fi := fi + 'concat=n=' + IntToStr(cf) + ':v=' + IntToStr(cv + 1) +
       ':a=' + IntToStr(ca + 1) + fc2 + '"';
-    for l := 0 to High(jo.f) do
-    begin
-      c := TCont(jo.f[l]);
-      ssi := c.getval(cmbDurationss1.Name);
-      if (mode = 1) and (rso = 0) then
-      begin
-        rsi := myTimeStrToReal(ssi);
-        if (rsi < rst) then
-          ssi := sst;
-      end;
-      si := si + IfThen(ssi <> '', ' -ss ' + ssi);
-      sti := c.getval(cmbDurationt1.Name);
-      if (mode = 1) and (rto = 0) then
-      begin
-        rti := myTimeStrToReal(sti);
-        if (rti = 0) or (rti > rtt) then
-          sti := stt;
-      end;
-      si := si + IfThen(sti <> '', ' -t ' + sti);
-      s := c.getval(cmbAddOptsI.Name);
-      si := si + IfThen(s <> '', ' ' + s);
-      si := si + ' -i "' + myGetAnsiFN(jo.f[l].getval('filename')) + '"';
-    end;
   end
   else
   // --- mix mux ---
   begin
-    // input params
-    for l := 0 to High(jo.f) do
-    begin
-      ssi := jo.f[l].getval(cmbDurationss1.Name);
-      if (mode = 1) and (rso = 0) then
-      begin
-        rsi := myTimeStrToReal(ssi);
-        if (rsi < rst) then
-          ssi := sst;
-      end;
-      si := si + IfThen(ssi <> '', ' -ss ' + ssi);
-      sti := jo.f[l].getval(cmbDurationt1.Name);
-      if (mode = 1) and (rto = 0) then
-      begin
-        rti := myTimeStrToReal(sti);
-        if (rti = 0) or (rti > rtt) then
-          sti := stt;
-      end;
-      si := si + IfThen(sti <> '', ' -t ' + sti);
-      s := jo.f[l].getval(cmbAddOptsI.Name);
-      si := si + IfThen(s <> '', ' ' + s);
-      s := myGetAnsiFN(jo.f[l].getval('filename'));
-      if LowerCase(ExtractFileExt(s)) = '.vob' then
-        si := si + ' -analyzeduration 100M -probesize 100M -i "' + s + '"'
-      else
-        si := si + ' -i "' + s + '"';
-    end;
-    if bfi then
+    if (jo.getval(chkFilterComplex.Name) = '1') then
     begin
       s := jo.getval(cmbFilterComplex.Name);
-      if s <> '' then fc := ' -filter_complex "' + s + '"';
+      if s <> '' then fi := ' -filter_complex "' + s + '"';
     end;
     // map and params for every track
     for i := 0 to High(jo.m) do
@@ -1212,10 +1166,10 @@ begin
   end;
   // final
   if (sp1 <> '') and (mode <> 2) then
-    Result := si + fc + fi + vi + au + su + ma + sp1 + so + fn1 + LineEnding
-            + si + fc + fi + vi + au + su + ma + sp2 + so + fn2
+    Result := si + fi + vi + au + su + ma + sp1 + so + fn1 + LineEnding
+            + si + fi + vi + au + su + ma + sp2 + so + fn2
   else
-    Result := si + fc + fi + vi + au + su + ma + so + fn2;
+    Result := si + fi + vi + au + su + ma + so + fn2;
   Result := myStrReplace(Result);
 end;
 
@@ -1802,7 +1756,7 @@ begin
   s2 := 'Hints';
   s3 := 'Messages';
   myLng5([PageControl1, PageControl2, PageControl3]);
-  myLng3([Panel1, Panel2, Panel3]);
+  myLng3([Panel1, Panel2, Panel3, Panel7]);
   myLng1([LVjobs]);
   myLng4([PopupMenu1, PopupMenu2, PopupMenu3]);
   for i := Low(mes) to High(mes) do
@@ -2642,17 +2596,24 @@ begin
 end;
 {$ENDIF}
 
-function TfrmGUIta.myAutoCrop(jo: TJob; co: TCont): string;
+function TfrmGUIta.myAutoCrop(jo: TJob; l, k: integer): string;
 var
   s, c, ss, si: string;
   sl: TStringList;
-  l: integer;
+  i, j: integer;
 begin
   ss := jo.getval(cmbDurationss2.Name);
   si := myStrReplace('"$ffmpeg"') + IfThen(ss <> '', ' -ss ' + ss);
-  for l := 0 to High(jo.f) do
-    si := si + ' -i "' + myGetAnsiFN(jo.f[l].getval('filename')) + '"';
-  si := si + ' -frames:v 20 -vf "framestep=60, cropdetect" -an -sn -f avi -';
+  si := si + ' -i "' + myGetAnsiFN(jo.f[l].getval('filename')) + '"';
+  j := -1;
+  for i := 0 to High(jo.f[l].s) do
+  begin
+    if jo.f[l].s[i].getval('codec_type') = 'video' then
+      inc(j);
+    if i = k then Break;
+  end;
+  si := si + ' -frames:v 20 -filter:v:' + IntToStr(j)
+  + ' "framestep=60, cropdetect" -an -sn -map 0:' + IntToStr(k) + ' -f avi -';
   myGetDosOut2(si, SynMemo2);
   s := SynMemo2.Text;
   sl := TStringList.Create;
@@ -3092,7 +3053,7 @@ begin
   co := jo.f[l].s[k];
   if cmbCrop.Text = '' then
   begin
-    cmbCrop.Text := myAutoCrop(jo, co);
+    cmbCrop.Text := myAutoCrop(jo, l, k);
     xmyChange2v(cmbCrop);
   end;
   iv := ' -map 0:' + IntToStr(k);
@@ -3482,7 +3443,8 @@ begin
   sd.DefaultExt := '.ini';
   if not myDirExists(sd.InitialDir, '') then
     Exit;
-  b := (cmbEncoderV.Text = 'libx264') or (cmbEncoderV.Text = 'libx264rgb');
+  b := (cmbEncoderV.Text = 'libx264') or (cmbEncoderV.Text = 'libx264rgb')
+  or (cmbEncoderV.Text = 'libx265');
   sd.FileName := cmbEncoderV.Text + IfThen(b, ' ' + cmbx264preset.Text +
     ' ' + cmbx264tune.Text) + '-' + cmbEncoderA.Text + '-' + cmbFormat.Text + '.ini';
   if sd.Execute then
@@ -3680,37 +3642,28 @@ end;
 procedure TfrmGUIta.cmbBitrateAChange(Sender: TObject);
 var
   b: boolean;
-  k, l: integer;
 begin
   b := Pos('$koefa', cmbBitrateA.Text) > 0;
   spnKoefA.Enabled := b;
   lblkoefA.Enabled := b;
-  if myCantUpd(2) then
-    Exit;
-  xmyChange2(Sender);
-  myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
-  edtBitrateA.Text := myCalcBRa(TJob(LVjobs.Selected.Data).f[l].s[k]);
+  xmyChange2a(Sender);
 end;
 
 procedure TfrmGUIta.cmbBitrateVChange(Sender: TObject);
 var
   b: boolean;
-  k, l: integer;
 begin
   b := Pos('$koefv', cmbBitrateV.Text) > 0;
   spnKoefV.Enabled := b;
   lblkoefV.Enabled := b;
-  if myCantUpd(2) then
-    Exit;
-  xmyChange2(Sender);
-  myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
-  edtBitrateV.Text := myCalcBRv(TJob(LVjobs.Selected.Data).f[l].s[k]);
+  xmyChange2v(Sender);
 end;
 
 procedure TfrmGUIta.cmbEncoderVChange(Sender: TObject);
 var
   b, b1, b2: boolean;
   i: integer;
+  s: string;
   c: TWinControl;
 begin
   if (Sender is TComboBox) then
@@ -3721,10 +3674,10 @@ begin
     else
       Font.Color := clWindowText;
   end;
-  b := (TComboBox(Sender).Text <> 'copy');
+  s := TComboBox(Sender).Text;
+  b := (s <> 'copy');
   b1 := not chkFilterComplex.Checked;
-  b2 := b and ((TComboBox(Sender).Text = 'libx264') or
-    (TComboBox(Sender).Text = 'libx264rgb'));
+  b2 := b and ((s = 'libx264') or (s = 'libx264rgb') or (s = 'libx265'));
   c := TControl(Sender).Parent;
   for i := 0 to c.ControlCount - 1 do
     if c.Controls[i].Name <> TControl(Sender).Name then
@@ -4383,6 +4336,7 @@ end;
 procedure TfrmGUIta.LVfilesCustomDrawItem(Sender: TCustomListView;
   Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
 begin
+  {$IFDEF MSWINDOWS}
   if Item.Selected then
   begin
     Sender.Canvas.Brush.Color := clHighlight;
@@ -4393,6 +4347,7 @@ begin
     Sender.Canvas.Brush.Color := clWindow;
     Sender.Canvas.Font.Color := clWindowText;
   end;
+  {$ENDIF}
 end;
 
 procedure TfrmGUIta.LVfilesSelectItem(Sender: TObject; Item: TListItem;
@@ -4474,6 +4429,7 @@ begin
       i := 3;
     Item.ImageIndex := i;
   end;
+  {$IFDEF MSWINDOWS}
   if Item.Selected then
   begin
     Sender.Canvas.Brush.Color := clHighlight;
@@ -4484,6 +4440,7 @@ begin
     Sender.Canvas.Brush.Color := clWindow;
     Sender.Canvas.Font.Color := clWindowText;
   end;
+  {$ENDIF}
 end;
 
 procedure TfrmGUIta.LVjobsDragDrop(Sender, Source: TObject; X, Y: integer);
@@ -4608,6 +4565,7 @@ end;
 procedure TfrmGUIta.LVstreamsCustomDrawItem(Sender: TCustomListView;
   Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
 begin
+  {$IFDEF MSWINDOWS}
   if Item.Selected then
   begin
     Sender.Canvas.Brush.Color := clHighlight;
@@ -4618,6 +4576,7 @@ begin
     Sender.Canvas.Brush.Color := clWindow;
     Sender.Canvas.Font.Color := clWindowText;
   end;
+  {$ENDIF}
 end;
 
 procedure TfrmGUIta.LVstreamsDragDrop(Sender, Source: TObject; X, Y: Integer);
@@ -5170,4 +5129,4 @@ begin
   od.Free;
 end;
 
-end.
+end.
