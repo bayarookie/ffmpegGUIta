@@ -42,6 +42,7 @@ uses ufrmGUIta;
 procedure TThreadAddF.DataGet;
 var
   l: integer;
+  s: string;
 begin
   dt := Now;
   filenum := -1;
@@ -55,13 +56,17 @@ begin
       jo.f[l].setval('ffprobe', '1');
       filenamew := jo.f[l].getval('filename');
       filename := myGetAnsiFN(filenamew);
-      if LowerCase(ExtractFileExt(filename)) = '.vob' then
-        fcmd := frmGUIta.myStrReplace('"$ffprobe"')
-        + ' -show_streams -analyzeduration 100M -probesize 100M "' +
-        filename + '"'
+      fcmd := frmGUIta.myStrReplace('"$ffprobe"');
+      s := LowerCase(ExtractFileExt(filename));
+      if s = '.vob' then
+        fcmd := fcmd + ' -show_streams -analyzeduration 100M -probesize 100M "' + filename + '"'
       else
-        fcmd := frmGUIta.myStrReplace('"$ffprobe"')
-        + ' -show_streams "' + filename + '"';
+      {$IFDEF MSWINDOWS}
+      if s = '.jpg' then
+        fcmd := fcmd + ' -show_streams "' + ExtractShortPathNameUTF8(filenamew) + '"'
+      else
+      {$ENDIF}
+        fcmd := fcmd + ' -show_streams "' + filename + '"';
       filenum := l;
       Break;
     end;
@@ -383,4 +388,4 @@ begin
   inherited Create(CreateSuspended);
 end;
 
-end.
+end.

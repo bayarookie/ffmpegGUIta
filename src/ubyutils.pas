@@ -289,7 +289,6 @@ var
   sa: ansistring;
   h: THandle;
   i: integer;
-  //buffer: array[0..MAX_PATH-1] of widechar;
 
   function my2(w: string; l: integer): string;
   var
@@ -318,25 +317,21 @@ var
 
 begin
   wfn := AnsiDequotedStr(wfn, '"');
+  if wfn = '' then Exit;
   sa := Utf8ToAnsi(wfn);
   Result := AnsiToUtf8(sa);
   if (Result <> '') and (Pos('?', Result) = 0) then
   begin
-    if FileExistsUTF8(Result) then
-      Exit;
-    if DirectoryExistsUTF8(Result) then
-      Exit;
+    if FileExistsUTF8(Result) then Exit;
+    if DirectoryExistsUTF8(Result) then Exit;
   end;
-  //s4 := UTF8ToSys(ExtractShortPathNameUTF8(wfn));
-  //Result := AnsiToUtf8(s4);
-  //SetString(Result, buffer, GetShortPathNameW(pwchar(wfn), buffer, MAX_PATH - 1));
-  Result := ExtractShortPathNameUTF8(wfn);
+  sa := Utf8ToAnsi(ExtractShortPathNameUTF8(wfn));
+  Result := AnsiToUtf8(sa);
+  //Result := ExtractShortPathNameUTF8(wfn);
   if (Result <> '') and (Pos('?', Result) = 0) then
   begin
-    if FileExistsUTF8(Result) then
-      Exit;
-    if DirectoryExistsUTF8(Result) then
-      Exit;
+    if FileExistsUTF8(Result) then Exit;
+    if DirectoryExistsUTF8(Result) then Exit;
   end;
   Result := StringReplace(Result, '?', '_', [rfReplaceAll]);
   //если не нашёл, например, отключено в реестре
@@ -374,14 +369,12 @@ begin
     //RaiseLastOSError;
   end;
   CloseHandle(h);
-  s4 := UTF8ToSys(ExtractShortPathNameUTF8(wfn));
-  Result := AnsiToUtf8(s4);
+  sa := Utf8ToAnsi(ExtractShortPathNameUTF8(wfn));
+  Result := AnsiToUtf8(sa);
   if Pos('?', Result) = 0 then
   begin
-    if FileExistsUTF8(Result) then
-      Exit;
-    if DirectoryExistsUTF8(Result) then
-      Exit;
+    if FileExistsUTF8(Result) then Exit;
+    if DirectoryExistsUTF8(Result) then Exit;
   end;
   Result := StringReplace(Result, '?', '_', [rfReplaceAll]);
 {$ELSE}

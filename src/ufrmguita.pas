@@ -1044,6 +1044,11 @@ begin
     if LowerCase(ExtractFileExt(s)) = '.vob' then
       si := si + ' -analyzeduration 100M -probesize 100M -i "' + s + '"'
     else
+    {$IFDEF MSWINDOWS}
+    if LowerCase(ExtractFileExt(s)) = '.jpg' then
+      si := si + ' -i "' + ExtractShortPathNameUTF8(s) + '"'
+    else
+    {$ENDIF}
       si := si + ' -i "' + s + '"';
   end;
   bfi := (jo.getval(chkFilterComplex.Name) = '1')
@@ -2486,6 +2491,10 @@ var
   s, sf: string;
 begin
   sf := myGetAnsiFN(fn);
+  {$IFDEF MSWINDOWS}
+  if LowerCase(ExtractFileExt(sf)) = '.jpg' then
+    sf := ExtractShortPathNameUTF8(sf);
+  {$ENDIF}
   Result := myGetOutFN(myStrReplace('$dirtmp'), 'tmp', '.bmp');
   if ss = '' then
     ss := '0';
@@ -2603,7 +2612,12 @@ var
 begin
   ss := jo.getval(cmbDurationss2.Name);
   si := myStrReplace('"$ffmpeg"') + IfThen(ss <> '', ' -ss ' + ss);
-  si := si + ' -i "' + myGetAnsiFN(jo.f[l].getval('filename')) + '"';
+  s := myGetAnsiFN(jo.f[l].getval('filename'));
+  {$IFDEF MSWINDOWS}
+  if LowerCase(ExtractFileExt(s)) = '.jpg' then
+    s := ExtractShortPathNameUTF8(s);
+  {$ENDIF}
+  si := si + ' -i "' + s + '"';
   j := -1;
   for i := 0 to High(jo.f[l].s) do
   begin
@@ -3381,13 +3395,18 @@ begin
     si := '"$ffplay"';
     ss := jo.getval(cmbDurationss2.Name);
     si := si + IfThen(ss <> '', ' -ss ' + ss);
-    s := TCont(jo.f[l]).getval(cmbDurationss1.Name);
+    s := jo.f[l].getval(cmbDurationss1.Name);
     si := si + IfThen((ss = '') and (s <> ''), ' -ss ' + s);
     t := jo.getval(cmbDurationt2.Name);
     si := si + IfThen(t <> '', ' -t ' + t);
-    s := TCont(jo.f[l]).getval(cmbDurationt1.Name);
+    s := jo.f[l].getval(cmbDurationt1.Name);
     si := si + IfThen((t = '') and (s <> ''), ' -ss ' + s);
-    si := si + ' -i "' + myGetAnsiFN(jo.f[l].getval('filename')) + '" -autoexit';
+    s := myGetAnsiFN(jo.f[l].getval('filename'));
+    {$IFDEF MSWINDOWS}
+    if LowerCase(ExtractFileExt(s)) = '.jpg' then
+      s := ExtractShortPathNameUTF8(s);
+    {$ENDIF}
+    si := si + ' -i "' + s + '"'; // -autoexit
     s := myStrReplace(si + vf + af + vn + an + sn);
     if chkDebug.Checked then
       memJournal.Lines.Add(s);
@@ -3424,7 +3443,7 @@ begin
   end
   else
   begin
-    s := myStrReplace('"$ffplay"') + ' -i "' + s + '" -autoexit';
+    s := myStrReplace('"$ffplay"') + ' -i "' + s + '"'; // -autoexit
     myExecProc1(s);
   end;
 end;
