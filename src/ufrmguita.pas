@@ -65,6 +65,7 @@ type
     btnMaskAdd: TButton;
     btnMaskEdit: TButton;
     btnMaskDel: TButton;
+    chkSynColor: TCheckBox;
     chkUseEditedCmd: TCheckBox;
     chkRunMode: TCheckBox;
     chkPlayerIn: TCheckBox;
@@ -128,7 +129,6 @@ type
     edtxterm: TComboBox;
     edtFileExts: TComboBox;
     edtBitrateA: TLabeledEdit;
-    edtDirOut: TLabeledEdit;
     edtDirTmp: TLabeledEdit;
     edtffmpeg: TLabeledEdit;
     edtffplay: TLabeledEdit;
@@ -138,6 +138,7 @@ type
     ImageList1: TImageList;
     edtBitrateV: TLabeledEdit;
     edtOfna: TLabeledEdit;
+    edtDirOut: TLabeledEdit;
     lblxtermopts2: TLabel;
     lblxtermopts: TLabel;
     lblxterm: TLabel;
@@ -1810,8 +1811,6 @@ begin
     for i := 0 to LVjobs.Columns.Count - 1 do
       myToIni(Ini, LVjobs.Name, IntToStr(i), IntToStr(LVjobs.Column[i].Width));
     myFormPosSave(frmGUIta, Ini);
-    //if edtDirOut.Text = '' then
-    //  Ini.WriteString(s, edtDirOut.Name, '');
     for i := 0 to 15 do
     begin
       if i < LVmasks.Items.Count then
@@ -3917,15 +3916,6 @@ begin
   SynMemo4.Clear;
   SynMemo5.Clear;
   SynMemo6.Clear;
-  if myGetColor < 400 then  //if dark theme
-  begin
-    SynUNIXShellScriptSyn1.CommentAttri.Foreground := clLime;  //Green
-    SynUNIXShellScriptSyn1.NumberAttri.Foreground := clAqua;  //Blue
-    SynUNIXShellScriptSyn1.SecondKeyAttri.Foreground := clRed; //Maroon
-    SynUNIXShellScriptSyn1.StringAttri.Foreground := clYellow; //Olive
-    //SynUNIXShellScriptSyn1.SymbolAttri.Foreground := clAqua;  //Teal
-    SynUNIXShellScriptSyn1.VarAttri.Foreground := clFuchsia;   //Purple
-  end;
   Files2Add := TList.Create;
   Counter := 0;
   fs.DecimalSeparator := '.';
@@ -3968,9 +3958,7 @@ begin
   begin
     cmbDirLast.Text := GetCurrentDir;
     {$IFDEF MSWINDOWS}
-    s := 'C:\TEMP';
-    if DirectoryExistsUTF8(s) then
-      edtDirOut.Text := s;
+    edtDirOut.Text := 'C:\TEMP';
     cmbExtPlayer.Items.Add('%ProgramFiles%\Windows Media Player\wmplayer.exe');
     edtxterm.Text := 'cmd.exe';
     edtxtermopts.Text := '/c';
@@ -4007,6 +3995,16 @@ begin
       cmbLanguage.Text := s + '.lng';
       cmbLangA.Text := t;
     end;
+    chkSynColor.Checked := myGetColor < 400;
+  end;
+  if chkSynColor.Checked then  //if dark theme
+  begin
+    SynUNIXShellScriptSyn1.CommentAttri.Foreground := clLime;  //Green
+    SynUNIXShellScriptSyn1.NumberAttri.Foreground := clAqua;  //Blue
+    SynUNIXShellScriptSyn1.SecondKeyAttri.Foreground := clRed; //Maroon
+    SynUNIXShellScriptSyn1.StringAttri.Foreground := clYellow; //Olive
+    //SynUNIXShellScriptSyn1.SymbolAttri.Foreground := clAqua;  //Teal
+    SynUNIXShellScriptSyn1.VarAttri.Foreground := clFuchsia;   //Purple
   end;
   frmGUIta.Font.Name := cmbFont.Text;
   //messages
@@ -5129,4 +5127,4 @@ begin
   od.Free;
 end;
 
-end.
+end.

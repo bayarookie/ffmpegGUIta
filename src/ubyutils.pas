@@ -286,8 +286,10 @@ function myGetAnsiFN(wfn: string): string;
 var
   FullPath: string;
   w, ext, s4: string;
+  sa: ansistring;
   h: THandle;
   i: integer;
+  //buffer: array[0..MAX_PATH-1] of widechar;
 
   function my2(w: string; l: integer): string;
   var
@@ -316,18 +318,20 @@ var
 
 begin
   wfn := AnsiDequotedStr(wfn, '"');
-  s4 := UTF8ToSys(wfn);
-  Result := AnsiToUtf8(s4);
-  if Pos('?', Result) = 0 then
+  sa := Utf8ToAnsi(wfn);
+  Result := AnsiToUtf8(sa);
+  if (Result <> '') and (Pos('?', Result) = 0) then
   begin
     if FileExistsUTF8(Result) then
       Exit;
     if DirectoryExistsUTF8(Result) then
       Exit;
   end;
-  s4 := UTF8ToSys(ExtractShortPathNameUTF8(wfn));
-  Result := AnsiToUtf8(s4);
-  if Pos('?', Result) = 0 then
+  //s4 := UTF8ToSys(ExtractShortPathNameUTF8(wfn));
+  //Result := AnsiToUtf8(s4);
+  //SetString(Result, buffer, GetShortPathNameW(pwchar(wfn), buffer, MAX_PATH - 1));
+  Result := ExtractShortPathNameUTF8(wfn);
+  if (Result <> '') and (Pos('?', Result) = 0) then
   begin
     if FileExistsUTF8(Result) then
       Exit;
@@ -554,4 +558,4 @@ begin
 {$ENDIF}
 end;
 
-end.
+end.

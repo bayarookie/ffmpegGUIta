@@ -19,14 +19,14 @@ object frmGUIta: TfrmGUIta
   LCLVersion = '1.2.6.0'
   object StatusBar1: TStatusBar
     Left = 0
-    Height = 15
-    Top = 525
+    Height = 23
+    Top = 517
     Width = 800
     Panels = <>
   end
   object PageControl1: TPageControl
     Left = 0
-    Height = 525
+    Height = 517
     Top = 0
     Width = 800
     ActivePage = TabConvJob
@@ -35,12 +35,12 @@ object frmGUIta: TfrmGUIta
     TabOrder = 0
     object TabConvJob: TTabSheet
       Caption = 'Parameters of converting'
-      ClientHeight = 489
+      ClientHeight = 491
       ClientWidth = 792
       object Panel4: TPanel
         Left = 0
         Height = 313
-        Top = 176
+        Top = 178
         Width = 792
         Align = alBottom
         Caption = 'Panel4'
@@ -68,11 +68,11 @@ object frmGUIta: TfrmGUIta
                 AutoSize = True
                 MaxWidth = 50
                 MinWidth = 35
-                Width = 35
+                Width = 242
               end            
               item
                 AutoSize = True
-                Width = 190
+                Width = 25
               end>
             DragMode = dmAutomatic
             PopupMenu = PopupMenu2
@@ -90,19 +90,19 @@ object frmGUIta: TfrmGUIta
           end
           object lblProfile: TLabel
             Left = 8
-            Height = 14
+            Height = 13
             Top = 243
-            Width = 36
+            Width = 30
             Caption = 'Profile'
             ParentColor = False
           end
           object cmbProfile: TComboBox
             Left = 8
-            Height = 20
+            Height = 21
             Top = 259
             Width = 240
             DropDownCount = 20
-            ItemHeight = 0
+            ItemHeight = 13
             OnChange = cmbProfileChange
             TabOrder = 2
           end
@@ -153,7 +153,7 @@ object frmGUIta: TfrmGUIta
               Width = 514
               Anchors = [akTop, akLeft, akRight]
               DropDownCount = 20
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 '-f h264'
@@ -181,7 +181,7 @@ object frmGUIta: TfrmGUIta
               Top = 220
               Width = 100
               DropDownCount = 40
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 '1:00'
@@ -220,7 +220,7 @@ object frmGUIta: TfrmGUIta
               Top = 220
               Width = 100
               DropDownCount = 40
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 '10'
@@ -241,11 +241,11 @@ object frmGUIta: TfrmGUIta
               Columns = <              
                 item
                   AutoSize = True
-                  Width = 12
+                  Width = 526
                 end              
                 item
                   AutoSize = True
-                  Width = 497
+                  Width = 25
                 end>
               PopupMenu = PopupMenu3
               ReadOnly = True
@@ -258,30 +258,30 @@ object frmGUIta: TfrmGUIta
           end
           object TabOutput: TTabSheet
             Caption = 'Output file'
-            ClientHeight = 275
+            ClientHeight = 285
             ClientWidth = 530
             object cmbAddOptsO: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 180
               Width = 514
               Anchors = [akTop, akLeft, akRight]
-              ItemHeight = 0
+              ItemHeight = 13
               OnChange = xmyChange0
               TabOrder = 10
             end
             object lblAddOptsO: TLabel
               Left = 8
-              Height = 14
+              Height = 13
               Top = 165
-              Width = 181
+              Width = 153
               Caption = 'additional options for output file'
               ParentColor = False
             end
             object edtOfn: TLabeledEdit
               Tag = 3
               Left = 8
-              Height = 20
+              Height = 21
               Top = 20
               Width = 490
               Anchors = [akTop, akLeft, akRight]
@@ -290,8 +290,8 @@ object frmGUIta: TfrmGUIta
               EditLabel.AnchorSideRight.Side = asrBottom
               EditLabel.AnchorSideBottom.Control = edtOfn
               EditLabel.Left = 8
-              EditLabel.Height = 14
-              EditLabel.Top = 3
+              EditLabel.Height = 13
+              EditLabel.Top = 4
               EditLabel.Width = 490
               EditLabel.Caption = 'Output filename'
               EditLabel.ParentColor = False
@@ -301,38 +301,38 @@ object frmGUIta: TfrmGUIta
             end
             object lblFormat: TLabel
               Left = 8
-              Height = 14
+              Height = 13
               Top = 85
-              Width = 97
+              Width = 82
               Caption = 'Container format'
               ParentColor = False
             end
             object cmbFormat: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 100
               Width = 110
               DropDownCount = 40
-              ItemHeight = 0
+              ItemHeight = 13
               OnChange = cmbFormatChange
               OnSelect = cmbFormatSelect
               TabOrder = 6
             end
             object lblExt: TLabel
               Left = 128
-              Height = 14
+              Height = 13
               Top = 85
-              Width = 55
+              Width = 47
               Caption = 'Extension'
               ParentColor = False
             end
             object cmbExt: TComboBox
               Left = 128
-              Height = 20
+              Height = 21
               Top = 100
               Width = 100
               DropDownCount = 40
-              ItemHeight = 0
+              ItemHeight = 13
               OnChange = cmbExtChange
               OnSelect = cmbExtSelect
               TabOrder = 7
@@ -370,7 +370,7 @@ object frmGUIta: TfrmGUIta
             object edtOfna: TLabeledEdit
               Tag = 3
               Left = 8
-              Height = 20
+              Height = 21
               Top = 60
               Width = 282
               Anchors = [akTop, akLeft, akRight]
@@ -379,8 +379,8 @@ object frmGUIta: TfrmGUIta
               EditLabel.AnchorSideRight.Side = asrBottom
               EditLabel.AnchorSideBottom.Control = edtOfna
               EditLabel.Left = 8
-              EditLabel.Height = 14
-              EditLabel.Top = 43
+              EditLabel.Height = 13
+              EditLabel.Top = 44
               EditLabel.Width = 282
               EditLabel.Caption = 'Ansi or short filename'
               EditLabel.ParentColor = False
@@ -437,20 +437,20 @@ object frmGUIta: TfrmGUIta
             end
             object lblDurationt2: TLabel
               Left = 8
-              Height = 14
+              Height = 13
               Top = 205
-              Width = 59
+              Width = 51
               Caption = '-t duration'
               ParentColor = False
             end
             object cmbDurationt2: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Hint = 'When used as an output option (before an output filename),'#10'stop writing the output after its duration reaches duration.'
               Top = 220
               Width = 100
               DropDownCount = 40
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 '10'
@@ -464,20 +464,20 @@ object frmGUIta: TfrmGUIta
             end
             object lblDurationss2: TLabel
               Left = 422
-              Height = 14
+              Height = 13
               Top = 205
-              Width = 57
+              Width = 48
               Caption = '-ss from *'
               ParentColor = False
             end
             object cmbDurationss2: TComboBox
               Left = 422
-              Height = 20
+              Height = 21
               Hint = 'When used as an output option (before an output filename),'#10'stop writing the output after its duration reaches duration.'
               Top = 220
               Width = 100
               DropDownCount = 40
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 '1:00'
@@ -501,21 +501,21 @@ object frmGUIta: TfrmGUIta
             end
             object chkFilterComplex: TCheckBox
               Left = 8
-              Height = 26
+              Height = 19
               Top = 115
-              Width = 134
+              Width = 108
               Caption = 'use -filter complex'
               OnChange = chkFilterComplexChange
               TabOrder = 8
             end
             object cmbFilterComplex: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 140
               Width = 514
               Anchors = [akTop, akLeft, akRight]
               Enabled = False
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 '[0:v][0:s]overlay'
@@ -528,10 +528,10 @@ object frmGUIta: TfrmGUIta
             end
             object chkConcat: TCheckBox
               Left = 249
-              Height = 26
+              Height = 19
               Hint = 'Concatenate audio and video streams, joining them together one after the other.'#13#10'The filter works on segments of synchronized video and audio streams.'#13#10'All segments must have the same number of streams of each type,'#13#10'and that will also be the number of streams at output.'#13#10'All segments must start at timestamp 0.'#13#10'All corresponding streams must have the same parameters in all segments.'#13#10'http://ffmpeg.org/ffmpeg-filters.html#concat'
               Top = 240
-              Width = 99
+              Width = 82
               HelpType = htKeyword
               HelpKeyword = 'concat'
               Caption = 'Concatenate'
@@ -556,11 +556,11 @@ object frmGUIta: TfrmGUIta
             end
             object cmbEncoderV: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 20
               Width = 100
               DropDownCount = 50
-              ItemHeight = 0
+              ItemHeight = 13
               OnChange = cmbEncoderVChange
               TabOrder = 0
             end
@@ -593,10 +593,10 @@ object frmGUIta: TfrmGUIta
             end
             object cmbPass: TComboBox
               Left = 188
-              Height = 20
+              Height = 21
               Top = 20
               Width = 60
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 '2'
@@ -622,11 +622,11 @@ object frmGUIta: TfrmGUIta
             end
             object cmbBitrateV: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 60
               Width = 242
               DropDownCount = 20
-              ItemHeight = 0
+              ItemHeight = 13
               ItemIndex = 0
               Items.Strings = (
                 'round(w*h*fps*$koefv/sqrt(w*h)/4500)'
@@ -653,11 +653,11 @@ object frmGUIta: TfrmGUIta
             end
             object cmbx264preset: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 100
               Width = 80
               DropDownCount = 20
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 'ultrafast'
@@ -684,10 +684,10 @@ object frmGUIta: TfrmGUIta
             end
             object cmbx264tune: TComboBox
               Left = 96
-              Height = 20
+              Height = 21
               Top = 100
               Width = 80
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 'animation'
@@ -707,11 +707,11 @@ object frmGUIta: TfrmGUIta
             object cmbScale: TComboBox
               Tag = 2
               Left = 8
-              Height = 20
+              Height = 21
               Top = 140
               Width = 225
               DropDownCount = 20
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 '176:trunc(176/dar/16)*16'
@@ -740,11 +740,11 @@ object frmGUIta: TfrmGUIta
             object cmbRotate: TComboBox
               Tag = 2
               Left = 242
-              Height = 22
+              Height = 21
               Top = 180
               Width = 200
               DropDownCount = 20
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 '0 - counterclockwise and vertically flip'
                 '1 - clockwise'
@@ -770,11 +770,11 @@ object frmGUIta: TfrmGUIta
             object cmbPad: TComboBox
               Tag = 2
               Left = 242
-              Height = 20
+              Height = 21
               Top = 140
               Width = 200
               DropDownCount = 20
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 '640:480:0:40:violet'
@@ -810,11 +810,11 @@ object frmGUIta: TfrmGUIta
             object cmbhqdn3d: TComboBox
               Tag = 2
               Left = 8
-              Height = 20
+              Height = 21
               Top = 180
               Width = 100
               DropDownCount = 20
-              ItemHeight = 0
+              ItemHeight = 13
               ItemIndex = 0
               Items.Strings = (
                 ''
@@ -835,13 +835,13 @@ object frmGUIta: TfrmGUIta
             object cmbFiltersV: TComboBox
               Tag = 2
               Left = 8
-              Height = 20
+              Height = 21
               Hint = 'Additional filters or instead of.'#10'Can be used some vars:'#10'$input or $inpu0 - main input filename,'#10'$inpu1, $inpu2 - second, third and etc track filenames'
               Top = 220
               Width = 510
               Anchors = [akTop, akLeft, akRight]
               DropDownCount = 30
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 'fps=15'
@@ -882,11 +882,11 @@ object frmGUIta: TfrmGUIta
             object cmbCrop: TComboBox
               Tag = 2
               Left = 180
-              Height = 20
+              Height = 21
               Top = 100
               Width = 200
               DropDownCount = 20
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 '720:400:0:88'
@@ -937,11 +937,11 @@ object frmGUIta: TfrmGUIta
             object cmbSetDAR: TComboBox
               Tag = 2
               Left = 120
-              Height = 20
+              Height = 21
               Top = 180
               Width = 95
               DropDownCount = 20
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 '4:3'
@@ -963,12 +963,12 @@ object frmGUIta: TfrmGUIta
             end
             object cmbAddOptsV: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Hint = 'Additional video options'
               Top = 245
               Width = 510
               Anchors = [akTop, akLeft, akRight]
-              ItemHeight = 0
+              ItemHeight = 13
               OnChange = xmyChange2
               TabOrder = 16
             end
@@ -988,11 +988,11 @@ object frmGUIta: TfrmGUIta
             end
             object cmbEncoderA: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 20
               Width = 100
               DropDownCount = 50
-              ItemHeight = 0
+              ItemHeight = 13
               OnChange = cmbEncoderVChange
               TabOrder = 0
             end
@@ -1006,11 +1006,11 @@ object frmGUIta: TfrmGUIta
             end
             object cmbBitrateA: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 60
               Width = 218
               DropDownCount = 20
-              ItemHeight = 0
+              ItemHeight = 13
               ItemIndex = 0
               Items.Strings = (
                 'round(srate*ch*$koefa/1600000)*16'
@@ -1059,11 +1059,11 @@ object frmGUIta: TfrmGUIta
             end
             object cmbChannels: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Top = 100
               Width = 58
               DropDownCount = 20
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 '1'
@@ -1084,11 +1084,11 @@ object frmGUIta: TfrmGUIta
             end
             object cmbSRate: TComboBox
               Left = 72
-              Height = 20
+              Height = 21
               Top = 100
               Width = 100
               DropDownCount = 20
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 '4000'
@@ -1115,12 +1115,12 @@ object frmGUIta: TfrmGUIta
             object cmbFiltersA: TComboBox
               Tag = 2
               Left = 8
-              Height = 20
+              Height = 21
               Top = 140
               Width = 512
               Anchors = [akTop, akLeft, akRight]
               DropDownCount = 20
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 'aecho=0.8:0.88:60:0.4'
@@ -1160,12 +1160,12 @@ object frmGUIta: TfrmGUIta
             end
             object cmbAddOptsA: TComboBox
               Left = 8
-              Height = 20
+              Height = 21
               Hint = 'Additional  audio options'
               Top = 245
               Width = 510
               Anchors = [akTop, akLeft, akRight]
-              ItemHeight = 0
+              ItemHeight = 13
               OnChange = xmyChange2
               TabOrder = 7
             end
@@ -1189,7 +1189,7 @@ object frmGUIta: TfrmGUIta
               Top = 20
               Width = 100
               DropDownCount = 40
-              ItemHeight = 0
+              ItemHeight = 13
               OnChange = cmbEncoderVChange
               TabOrder = 0
             end
@@ -1200,7 +1200,7 @@ object frmGUIta: TfrmGUIta
               Top = 245
               Width = 510
               Anchors = [akTop, akLeft, akRight]
-              ItemHeight = 0
+              ItemHeight = 13
               OnChange = xmyChange2
               TabOrder = 1
             end
@@ -1742,7 +1742,7 @@ object frmGUIta: TfrmGUIta
       end
       object LVjobs: TListView
         Left = 0
-        Height = 150
+        Height = 152
         Top = 26
         Width = 792
         Align = alClient
@@ -1948,11 +1948,11 @@ object frmGUIta: TfrmGUIta
     end
     object TabDefSets: TTabSheet
       Caption = 'Default Settings'
-      ClientHeight = 489
+      ClientHeight = 491
       ClientWidth = 792
       object edtffmpeg: TLabeledEdit
         Left = 110
-        Height = 20
+        Height = 21
         Top = 4
         Width = 650
         Anchors = [akTop, akLeft, akRight]
@@ -1961,10 +1961,10 @@ object frmGUIta: TfrmGUIta
         EditLabel.AnchorSideRight.Control = edtffmpeg
         EditLabel.AnchorSideBottom.Control = edtffmpeg
         EditLabel.AnchorSideBottom.Side = asrBottom
-        EditLabel.Left = 67
-        EditLabel.Height = 14
-        EditLabel.Top = 7
-        EditLabel.Width = 40
+        EditLabel.Left = 73
+        EditLabel.Height = 13
+        EditLabel.Top = 8
+        EditLabel.Width = 34
         EditLabel.Caption = 'ffmpeg'
         EditLabel.ParentColor = False
         LabelPosition = lpLeft
@@ -1975,7 +1975,7 @@ object frmGUIta: TfrmGUIta
       end
       object edtffplay: TLabeledEdit
         Left = 110
-        Height = 20
+        Height = 21
         Top = 25
         Width = 650
         Anchors = [akTop, akLeft, akRight]
@@ -1984,10 +1984,10 @@ object frmGUIta: TfrmGUIta
         EditLabel.AnchorSideRight.Control = edtffplay
         EditLabel.AnchorSideBottom.Control = edtffplay
         EditLabel.AnchorSideBottom.Side = asrBottom
-        EditLabel.Left = 75
-        EditLabel.Height = 14
-        EditLabel.Top = 28
-        EditLabel.Width = 32
+        EditLabel.Left = 79
+        EditLabel.Height = 13
+        EditLabel.Top = 29
+        EditLabel.Width = 28
         EditLabel.Caption = 'ffplay'
         EditLabel.ParentColor = False
         LabelPosition = lpLeft
@@ -1998,7 +1998,7 @@ object frmGUIta: TfrmGUIta
       end
       object edtffprobe: TLabeledEdit
         Left = 110
-        Height = 20
+        Height = 21
         Top = 46
         Width = 650
         Anchors = [akTop, akLeft, akRight]
@@ -2007,10 +2007,10 @@ object frmGUIta: TfrmGUIta
         EditLabel.AnchorSideRight.Control = edtffprobe
         EditLabel.AnchorSideBottom.Control = edtffprobe
         EditLabel.AnchorSideBottom.Side = asrBottom
-        EditLabel.Left = 66
-        EditLabel.Height = 14
-        EditLabel.Top = 49
-        EditLabel.Width = 41
+        EditLabel.Left = 71
+        EditLabel.Height = 13
+        EditLabel.Top = 50
+        EditLabel.Width = 36
         EditLabel.Caption = 'ffprobe'
         EditLabel.ParentColor = False
         LabelPosition = lpLeft
@@ -2021,7 +2021,7 @@ object frmGUIta: TfrmGUIta
       end
       object edtDirTmp: TLabeledEdit
         Left = 110
-        Height = 20
+        Height = 21
         Top = 67
         Width = 650
         Anchors = [akTop, akLeft, akRight]
@@ -2030,10 +2030,10 @@ object frmGUIta: TfrmGUIta
         EditLabel.AnchorSideRight.Control = edtDirTmp
         EditLabel.AnchorSideBottom.Control = edtDirTmp
         EditLabel.AnchorSideBottom.Side = asrBottom
-        EditLabel.Left = 40
-        EditLabel.Height = 14
-        EditLabel.Top = 70
-        EditLabel.Width = 67
+        EditLabel.Left = 50
+        EditLabel.Height = 13
+        EditLabel.Top = 71
+        EditLabel.Width = 57
         EditLabel.Caption = 'Temp folder'
         EditLabel.ParentColor = False
         LabelPosition = lpLeft
@@ -2042,35 +2042,9 @@ object frmGUIta: TfrmGUIta
         OnChange = xmyCheckDir
         OnDblClick = xmySelDir
       end
-      object edtDirOut: TLabeledEdit
-        Tag = 1
-        Left = 110
-        Height = 20
-        Hint = 'empty for save to input dir'
-        Top = 88
-        Width = 650
-        Anchors = [akTop, akLeft, akRight]
-        EditLabel.AnchorSideTop.Control = edtDirOut
-        EditLabel.AnchorSideTop.Side = asrCenter
-        EditLabel.AnchorSideRight.Control = edtDirOut
-        EditLabel.AnchorSideBottom.Control = edtDirOut
-        EditLabel.AnchorSideBottom.Side = asrBottom
-        EditLabel.Left = 27
-        EditLabel.Height = 14
-        EditLabel.Top = 91
-        EditLabel.Width = 80
-        EditLabel.Caption = 'Save to folder'
-        EditLabel.ParentColor = False
-        LabelPosition = lpLeft
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 8
-        OnChange = xmyCheckDir
-        OnDblClick = xmySelDir
-      end
       object edtMediaInfo: TLabeledEdit
         Left = 110
-        Height = 20
+        Height = 21
         Top = 109
         Width = 650
         Anchors = [akTop, akLeft, akRight]
@@ -2079,10 +2053,10 @@ object frmGUIta: TfrmGUIta
         EditLabel.AnchorSideRight.Control = edtMediaInfo
         EditLabel.AnchorSideBottom.Control = edtMediaInfo
         EditLabel.AnchorSideBottom.Side = asrBottom
-        EditLabel.Left = 53
-        EditLabel.Height = 14
-        EditLabel.Top = 112
-        EditLabel.Width = 54
+        EditLabel.Left = 59
+        EditLabel.Height = 13
+        EditLabel.Top = 113
+        EditLabel.Width = 48
         EditLabel.Caption = 'MediaInfo'
         EditLabel.ParentColor = False
         LabelPosition = lpLeft
@@ -2094,18 +2068,18 @@ object frmGUIta: TfrmGUIta
       end
       object chkPlayer2: TCheckBox
         Left = 8
-        Height = 26
+        Height = 19
         Top = 130
-        Width = 202
+        Width = 168
         Caption = 'play output with default player'
         OnChange = chkPlayer2Change
         TabOrder = 12
       end
       object chkPlayer3: TCheckBox
         Left = 8
-        Height = 26
+        Height = 19
         Top = 154
-        Width = 210
+        Width = 174
         Caption = 'play output with external player'
         OnChange = chkPlayer3Change
         TabOrder = 14
@@ -2115,7 +2089,7 @@ object frmGUIta: TfrmGUIta
         Height = 21
         Top = 460
         Width = 148
-        ItemHeight = 0
+        ItemHeight = 13
         OnChange = cmbLanguageChange
         TabOrder = 35
         Text = 'Default.lng'
@@ -2457,7 +2431,7 @@ object frmGUIta: TfrmGUIta
         Top = 157
         Width = 480
         Enabled = False
-        ItemHeight = 0
+        ItemHeight = 13
         Items.Strings = (
           ''
         )
@@ -2468,9 +2442,9 @@ object frmGUIta: TfrmGUIta
       end
       object chkDebug: TCheckBox
         Left = 8
-        Height = 26
+        Height = 19
         Top = 454
-        Width = 147
+        Width = 121
         Caption = 'Debug info to journal'
         TabOrder = 33
       end
@@ -2479,7 +2453,7 @@ object frmGUIta: TfrmGUIta
         Height = 21
         Top = 460
         Width = 148
-        ItemHeight = 0
+        ItemHeight = 13
         OnGetItems = cmbFontGetItems
         OnSelect = cmbFontSelect
         TabOrder = 34
@@ -2490,7 +2464,7 @@ object frmGUIta: TfrmGUIta
         Height = 21
         Top = 379
         Width = 300
-        ItemHeight = 0
+        ItemHeight = 13
         OnChange = xmyCheckDir
         OnDblClick = xmySelDir
         TabOrder = 25
@@ -2498,17 +2472,17 @@ object frmGUIta: TfrmGUIta
       end
       object lblDirLast: TLabel
         Left = 8
-        Height = 14
+        Height = 13
         Top = 363
-        Width = 60
+        Width = 51
         Caption = 'Last folder'
         ParentColor = False
       end
       object lblTestStartDurationTime: TLabel
         Left = 313
-        Height = 14
+        Height = 13
         Top = 363
-        Width = 146
+        Width = 125
         Alignment = taRightJustify
         Caption = 'Test start - duration times'
         ParentColor = False
@@ -2518,7 +2492,7 @@ object frmGUIta: TfrmGUIta
         Height = 21
         Top = 379
         Width = 75
-        ItemHeight = 0
+        ItemHeight = 13
         ItemIndex = 2
         Items.Strings = (
           ''
@@ -2536,7 +2510,7 @@ object frmGUIta: TfrmGUIta
         Height = 21
         Top = 379
         Width = 75
-        ItemHeight = 0
+        ItemHeight = 13
         ItemIndex = 2
         Items.Strings = (
           '10'
@@ -2550,9 +2524,9 @@ object frmGUIta: TfrmGUIta
       end
       object lblLangA: TLabel
         Left = 313
-        Height = 14
+        Height = 13
         Top = 415
-        Width = 146
+        Width = 123
         Caption = 'Prefered audio languages'
         ParentColor = False
       end
@@ -2561,7 +2535,7 @@ object frmGUIta: TfrmGUIta
         Height = 21
         Top = 433
         Width = 148
-        ItemHeight = 0
+        ItemHeight = 13
         ItemIndex = 5
         Items.Strings = (
           'rus'
@@ -2575,9 +2549,9 @@ object frmGUIta: TfrmGUIta
       end
       object lblLangS: TLabel
         Left = 466
-        Height = 14
+        Height = 13
         Top = 415
-        Width = 156
+        Width = 132
         Caption = 'Prefered subtitle languages'
         ParentColor = False
       end
@@ -2586,7 +2560,7 @@ object frmGUIta: TfrmGUIta
         Height = 21
         Top = 433
         Width = 148
-        ItemHeight = 0
+        ItemHeight = 13
         Items.Strings = (
           'rus'
           'eng'
@@ -2602,7 +2576,7 @@ object frmGUIta: TfrmGUIta
         Height = 21
         Top = 433
         Width = 100
-        ItemHeight = 0
+        ItemHeight = 13
         Items.Strings = (
           'aar||aa|Afar|afar'
           'abk||ab|Abkhazian|abkhaze'
@@ -2795,26 +2769,26 @@ object frmGUIta: TfrmGUIta
       end
       object chkAddTracks: TCheckBox
         Left = 8
-        Height = 26
+        Height = 19
         Top = 328
-        Width = 139
+        Width = 114
         Caption = 'Add external tracks'
         TabOrder = 23
       end
       object chk1instance: TCheckBox
         Left = 8
-        Height = 26
+        Height = 19
         Top = 427
-        Width = 86
+        Width = 69
         Caption = '1 instance'
         OnChange = chk1instanceChange
         TabOrder = 29
       end
       object chkSaveFormPos: TCheckBox
         Left = 8
-        Height = 26
+        Height = 19
         Top = 400
-        Width = 147
+        Width = 119
         Caption = 'Save forms positions'
         TabOrder = 28
       end
@@ -2837,9 +2811,12 @@ object frmGUIta: TfrmGUIta
           item
             AutoSize = True
             Caption = 'Profile'
-            Width = 301
+            Width = 318
           end>
+        DragMode = dmAutomatic
         Enabled = False
+        ReadOnly = True
+        RowSelect = True
         TabOrder = 21
         ViewStyle = vsReport
         OnDragDrop = LVjobsDragDrop
@@ -2877,9 +2854,9 @@ object frmGUIta: TfrmGUIta
       end
       object chkUseMasks: TCheckBox
         Left = 8
-        Height = 26
+        Height = 19
         Top = 184
-        Width = 89
+        Width = 70
         Caption = 'Use masks'
         OnChange = chkUseMasksChange
         TabOrder = 17
@@ -2890,7 +2867,7 @@ object frmGUIta: TfrmGUIta
         Top = 305
         Width = 774
         Anchors = [akTop, akLeft, akRight]
-        ItemHeight = 0
+        ItemHeight = 13
         ItemIndex = 0
         Items.Strings = (
           '*.avi;*.mkv;*.vob;*.mpg;*.mpeg;*.mp4;*.mov;*.flv;*.3gp;*.3g2;*.asf;*.wmv;*.m2ts;*.ts;*.ogv;*.webm;*.rm;*.qt;*.mp3;*.ac3'
@@ -2904,7 +2881,7 @@ object frmGUIta: TfrmGUIta
         Top = 331
         Width = 534
         Anchors = [akTop, akLeft, akRight]
-        ItemHeight = 0
+        ItemHeight = 13
         ItemIndex = 0
         Items.Strings = (
           '*.mp3;*.ac3;*.srt;*.ass;*.png'
@@ -2914,14 +2891,42 @@ object frmGUIta: TfrmGUIta
       end
       object chkPlayerIn: TCheckBox
         Left = 408
-        Height = 26
+        Height = 19
         Hint = 'this option for play input video with option -filter_complex'#10'or with external audio file.'#10'stream view, didnt work hotkeys - forward, rewind'
         Top = 130
-        Width = 348
+        Width = 287
         Caption = 'play input in terminal, ffmpeg pipe ffplay (experimental)'
         ParentShowHint = False
         ShowHint = True
         TabOrder = 13
+      end
+      object chkSynColor: TCheckBox
+        Left = 547
+        Height = 19
+        Top = 379
+        Width = 92
+        Caption = 'Synmemo color'
+        TabOrder = 37
+      end
+      object edtDirOut: TLabeledEdit
+        Left = 110
+        Height = 21
+        Top = 88
+        Width = 650
+        Anchors = [akTop, akLeft, akRight]
+        EditLabel.AnchorSideTop.Control = edtDirOut
+        EditLabel.AnchorSideTop.Side = asrCenter
+        EditLabel.AnchorSideRight.Control = edtDirOut
+        EditLabel.AnchorSideBottom.Control = edtDirOut
+        EditLabel.AnchorSideBottom.Side = asrBottom
+        EditLabel.Left = 42
+        EditLabel.Height = 13
+        EditLabel.Top = 92
+        EditLabel.Width = 65
+        EditLabel.Caption = 'Output folder'
+        EditLabel.ParentColor = False
+        LabelPosition = lpLeft
+        TabOrder = 8
       end
     end
     object TabJournal: TTabSheet
@@ -3436,8 +3441,8 @@ object frmGUIta: TfrmGUIta
         TabOrder = 0
         object TabConsole1: TTabSheet
           Caption = 'Console'
-          ClientHeight = 453
-          ClientWidth = 784
+          ClientHeight = 485
+          ClientWidth = 788
           inline SynMemo2: TSynMemo
             Cursor = crIBeam
             Left = 0
@@ -3941,13 +3946,13 @@ object frmGUIta: TfrmGUIta
             TabOrder = 0
             object cmbRunCmd: TComboBox
               Left = 4
-              Height = 20
+              Height = 21
               Hint = 'list of variables:'#13#10'$ffmpeg'#13#10'$ffplay'#13#10'$ffprobe'#13#10'$input'#13#10'$output'#13#10'$dirinp'#13#10'$dirout'#13#10'$dirtmp'
               Top = 4
               Width = 786
               Anchors = [akTop, akLeft, akRight]
               DropDownCount = 20
-              ItemHeight = 0
+              ItemHeight = 13
               ItemIndex = 1
               Items.Strings = (
                 '"$ffplay" -i "$input"'
@@ -4039,10 +4044,10 @@ object frmGUIta: TfrmGUIta
             end
             object edtxterm: TComboBox
               Left = 140
-              Height = 20
+              Height = 21
               Top = 56
               Width = 268
-              ItemHeight = 0
+              ItemHeight = 13
               ItemIndex = 0
               Items.Strings = (
                 'cmd.exe'
@@ -4073,10 +4078,10 @@ object frmGUIta: TfrmGUIta
             end
             object edtxtermopts: TComboBox
               Left = 140
-              Height = 20
+              Height = 21
               Top = 83
               Width = 164
-              ItemHeight = 0
+              ItemHeight = 13
               ItemIndex = 0
               Items.Strings = (
                 '-c'
@@ -4106,10 +4111,10 @@ object frmGUIta: TfrmGUIta
             end
             object edtxtermopts2: TComboBox
               Left = 672
-              Height = 20
+              Height = 21
               Top = 83
               Width = 100
-              ItemHeight = 0
+              ItemHeight = 13
               Items.Strings = (
                 ''
                 '&'
@@ -4120,8 +4125,8 @@ object frmGUIta: TfrmGUIta
         end
         object TabConsole2: TTabSheet
           Caption = 'Converting'
-          ClientHeight = 453
-          ClientWidth = 784
+          ClientHeight = 485
+          ClientWidth = 788
           inline SynMemo3: TSynMemo
             Cursor = crIBeam
             Left = 0
@@ -4617,8 +4622,8 @@ object frmGUIta: TfrmGUIta
         end
         object TabConsole3: TTabSheet
           Caption = 'Test job'
-          ClientHeight = 453
-          ClientWidth = 784
+          ClientHeight = 485
+          ClientWidth = 788
           inline SynMemo5: TSynMemo
             Cursor = crIBeam
             Left = 0
@@ -5146,8 +5151,8 @@ object frmGUIta: TfrmGUIta
         end
         object TabConsole4: TTabSheet
           Caption = 'Add files'
-          ClientHeight = 453
-          ClientWidth = 784
+          ClientHeight = 485
+          ClientWidth = 788
           inline SynMemo6: TSynMemo
             Cursor = crIBeam
             Left = 0
@@ -5906,4 +5911,4 @@ object frmGUIta: TfrmGUIta
       OnClick = mnuDeleteFileClick
     end
   end
-end
+end

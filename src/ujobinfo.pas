@@ -32,7 +32,6 @@ type
   public
     f: array of TFil; //files
     m: array of string; //mapping of streams
-    c: array of string; //command line
   end;
 
 implementation
@@ -70,4 +69,4 @@ begin
 end;
 
 end.
-
+
