@@ -267,6 +267,7 @@ type
     procedure chkFilterComplexChange(Sender: TObject);
     procedure chkPlayer2Change(Sender: TObject);
     procedure chkPlayer3Change(Sender: TObject);
+    procedure chkSynColorChange(Sender: TObject);
     procedure chkUseMasksChange(Sender: TObject);
     procedure cmbBitrateAChange(Sender: TObject);
     procedure cmbBitrateVChange(Sender: TObject);
@@ -286,8 +287,6 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure FormDropFiles(Sender: TObject; const FileNames: array of string);
     procedure FormShow(Sender: TObject);
-    procedure LVfilesCustomDrawItem(Sender: TCustomListView; Item: TListItem;
-      State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure LVfilesSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
     procedure LVjobsClick(Sender: TObject);
@@ -302,9 +301,12 @@ type
     procedure LVjobsKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure LVjobsSelectItem(Sender: TObject; Item: TListItem;
       Selected: boolean);
+    procedure LVmasksCustomDrawSubItem(Sender: TCustomListView;
+      Item: TListItem; SubItem: Integer; State: TCustomDrawState;
+      var DefaultDraw: Boolean);
+    procedure LVmasksDrawItem(Sender: TCustomListView; AItem: TListItem;
+      ARect: TRect; AState: TOwnerDrawState);
     procedure LVstreamsClick(Sender: TObject);
-    procedure LVstreamsCustomDrawItem(Sender: TCustomListView; Item: TListItem;
-      State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure LVstreamsDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure LVstreamsDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
@@ -2715,17 +2717,21 @@ end;
 {$ENDIF}
 function TfrmGUIta.myGetColor: integer;
 var
-  b: Graphics.TBitmap;
+  m: Graphics.TBitmap;
   t: TLazIntfImage;
+  r, g, b: word;
 begin
-  b := Graphics.TBitmap.Create;
-  b.SetSize(1, 1);
-  b.Canvas.Brush.Color := memJournal.Color;
-  b.Canvas.FillRect(0, 0, 0, 0);
-  t := b.CreateIntfImage;
-  Result := t.Colors[0, 0].red + t.Colors[0, 0].green + t.Colors[0, 0].blue;
+  m := Graphics.TBitmap.Create;
+  m.SetSize(1, 1);
+  m.Canvas.Brush.Color := memJournal.Color;
+  m.Canvas.FillRect(0, 0, 1, 1);
+  t := m.CreateIntfImage;
+  r := t.Colors[0, 0].red;
+  g := t.Colors[0, 0].green;
+  b := t.Colors[0, 0].blue;
+  Result := r + g + b;
   t.Free;
-  b.Free;
+  m.Free;
 end;
 
 function TfrmGUIta.myGetExts: string;
@@ -3649,6 +3655,29 @@ begin
   cmbExtPlayer.Enabled := chkPlayer3.Checked;
 end;
 
+procedure TfrmGUIta.chkSynColorChange(Sender: TObject);
+begin
+  if chkSynColor.Checked then  //if dark theme
+  begin
+    SynUNIXShellScriptSyn1.CommentAttri.Foreground := clLime;  //Green
+    SynUNIXShellScriptSyn1.NumberAttri.Foreground := clAqua;  //Blue
+    SynUNIXShellScriptSyn1.SecondKeyAttri.Foreground := clRed; //Maroon
+    SynUNIXShellScriptSyn1.StringAttri.Foreground := clYellow; //Olive
+    //SynUNIXShellScriptSyn1.SymbolAttri.Foreground := clAqua;  //Teal
+    SynUNIXShellScriptSyn1.VarAttri.Foreground := clFuchsia;   //Purple
+  end
+  else //if light theme
+  begin
+    SynUNIXShellScriptSyn1.CommentAttri.Foreground := clGreen;
+    SynUNIXShellScriptSyn1.NumberAttri.Foreground := clBlue;
+    SynUNIXShellScriptSyn1.SecondKeyAttri.Foreground := clMaroon;
+    SynUNIXShellScriptSyn1.StringAttri.Foreground := clOlive;
+    //SynUNIXShellScriptSyn1.SymbolAttri.Foreground := clTeal;
+    SynUNIXShellScriptSyn1.VarAttri.Foreground := clPurple;
+  end;
+  StatusBar1.SimpleText := IntToStr(myGetColor);
+end;
+
 procedure TfrmGUIta.chkUseMasksChange(Sender: TObject);
 begin
   LVmasks.Enabled := chkUseMasks.Checked;
@@ -4014,16 +4043,7 @@ begin
       cmbLanguage.Text := s + '.lng';
       cmbLangA.Text := t;
     end;
-    chkSynColor.Checked := myGetColor < 400;
-  end;
-  if chkSynColor.Checked then  //if dark theme
-  begin
-    SynUNIXShellScriptSyn1.CommentAttri.Foreground := clLime;  //Green
-    SynUNIXShellScriptSyn1.NumberAttri.Foreground := clAqua;  //Blue
-    SynUNIXShellScriptSyn1.SecondKeyAttri.Foreground := clRed; //Maroon
-    SynUNIXShellScriptSyn1.StringAttri.Foreground := clYellow; //Olive
-    //SynUNIXShellScriptSyn1.SymbolAttri.Foreground := clAqua;  //Teal
-    SynUNIXShellScriptSyn1.VarAttri.Foreground := clFuchsia;   //Purple
+    chkSynColor.Checked := myGetColor < 70000;
   end;
   frmGUIta.Font.Name := cmbFont.Text;
   //messages
@@ -4350,23 +4370,6 @@ begin
   end;
 end;
 
-procedure TfrmGUIta.LVfilesCustomDrawItem(Sender: TCustomListView;
-  Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
-begin
-  {$IFDEF MSWINDOWS}
-  if Item.Selected then
-  begin
-    Sender.Canvas.Brush.Color := clHighlight;
-    Sender.Canvas.Font.Color := clHighlightText;
-  end
-  else
-  begin
-    Sender.Canvas.Brush.Color := clWindow;
-    Sender.Canvas.Font.Color := clWindowText;
-  end;
-  {$ENDIF}
-end;
-
 procedure TfrmGUIta.LVfilesSelectItem(Sender: TObject; Item: TListItem;
   Selected: Boolean);
 var
@@ -4570,6 +4573,84 @@ begin
     TabCmdlineShow(Sender);
 end;
 
+procedure TfrmGUIta.LVmasksCustomDrawSubItem(Sender: TCustomListView;
+  Item: TListItem; SubItem: Integer; State: TCustomDrawState;
+  var DefaultDraw: Boolean);
+var
+  b, c: TColor;
+  mRect: TRect;
+  i: integer;
+  s: string;
+begin
+  DefaultDraw := True;
+  if Item.Selected then
+  begin
+    b := clHighlight;
+    c := clHighlightText;
+  end
+  else
+  begin
+    b := clWindow;
+    c := clWindowText;
+  end;
+  Sender.Canvas.Brush.Color := b;
+  Sender.Canvas.Font.Color := c;
+  if SubItem = 2 then
+  begin
+    mRect := Item.DisplayRect(drLabel);
+    for i := SubItem - 1 downto 0 do
+      mRect.Left := mRect.Left + Sender.Column[i].Width;
+    {$IFDEF MSWINDOWS}
+    mRect.Left := mRect.Left - 17;
+    {$ENDIF}
+    mRect.Right := mRect.Left + Sender.Column[SubItem].Width;
+    s := AppendPathDelim(sInidir) + Item.SubItems[1];
+    if not FileExists(s) then
+    begin
+      DefaultDraw := False;
+      Sender.Canvas.Font.Color := clRed;
+      Sender.Canvas.FillRect(mRect);
+      Sender.Canvas.TextRect(mRect, mRect.Left + 2, mRect.Top + 2, Item.SubItems[SubItem - 1]);
+    end;
+  end;
+end;
+
+procedure TfrmGUIta.LVmasksDrawItem(Sender: TCustomListView; AItem: TListItem;
+  ARect: TRect; AState: TOwnerDrawState);
+var
+  b, c: TColor;
+  s: string;
+  i: integer;
+  r: TRect;
+begin
+  if AItem.Selected then
+  begin
+    b := clHighlight;
+    c := clHighlightText;
+  end
+  else
+  begin
+    b := clWindow;
+    c := clWindowText;
+  end;
+  r := AItem.DisplayRect(drBounds);
+  Sender.Canvas.FillRect(r);
+  Sender.Canvas.Brush.Color := b;
+  Sender.Canvas.Font.Color := c;
+  Sender.Canvas.TextOut(r.Left, r.Top, AItem.Caption);
+  s := AppendPathDelim(sInidir) + AItem.SubItems[1];
+  if not FileExists(s) then
+    c := clRed;
+  for i := 1 to TListView(Sender).Columns.Count - 1 do
+  begin
+    r.Left := r.Right;
+    r.Right := r.Left + TListView(Sender).Columns.Items[i].Width - 1;
+    if i = 2 then
+      Sender.Canvas.Font.Color := c;
+    Sender.Canvas.TextRect(r, r.Left, r.Top, AItem.SubItems[i - 1]);
+  end;
+end;
+
 procedure TfrmGUIta.LVstreamsClick(Sender: TObject);
 begin
   if LVstreams.Selected = nil then
@@ -4577,23 +4658,6 @@ begin
     myClear2([TabVideo, TabAudio, TabSubtitle, TabContRows]);
     PageControl2.ActivePage := TabOutput;
   end;
-end;
-
-procedure TfrmGUIta.LVstreamsCustomDrawItem(Sender: TCustomListView;
-  Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
-begin
-  {$IFDEF MSWINDOWS}
-  if Item.Selected then
-  begin
-    Sender.Canvas.Brush.Color := clHighlight;
-    Sender.Canvas.Font.Color := clHighlightText;
-  end
-  else
-  begin
-    Sender.Canvas.Brush.Color := clWindow;
-    Sender.Canvas.Font.Color := clWindowText;
-  end;
-  {$ENDIF}
 end;
 
 procedure TfrmGUIta.LVstreamsDragDrop(Sender, Source: TObject; X, Y: Integer);
