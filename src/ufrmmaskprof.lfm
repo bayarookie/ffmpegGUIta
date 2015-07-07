@@ -2,18 +2,19 @@ object frmMaskProf: TfrmMaskProf
   Left = 236
   Height = 240
   Top = 163
-  Width = 320
+  Width = 400
   Caption = 'frmMaskProf'
   ClientHeight = 240
-  ClientWidth = 320
+  ClientWidth = 400
   Position = poMainFormCenter
   LCLVersion = '1.2.6.0'
   object ComboBox1: TComboBox
     Left = 8
     Height = 20
     Top = 28
-    Width = 308
+    Width = 388
     Anchors = [akTop, akLeft, akRight]
+    DropDownCount = 20
     ItemHeight = 0
     ItemIndex = 0
     Items.Strings = (
@@ -28,8 +29,9 @@ object frmMaskProf: TfrmMaskProf
     Left = 8
     Height = 20
     Top = 56
-    Width = 308
+    Width = 388
     Anchors = [akTop, akLeft, akRight]
+    DropDownCount = 20
     ItemHeight = 0
     ItemIndex = 0
     Items.Strings = (
@@ -46,8 +48,9 @@ object frmMaskProf: TfrmMaskProf
     Left = 8
     Height = 20
     Top = 84
-    Width = 308
+    Width = 388
     Anchors = [akTop, akLeft, akRight]
+    DropDownCount = 20
     ItemHeight = 0
     TabOrder = 2
   end
@@ -56,6 +59,7 @@ object frmMaskProf: TfrmMaskProf
     Height = 30
     Top = 193
     Width = 75
+    Anchors = [akLeft, akBottom]
     Default = True
     DefaultCaption = True
     Kind = bkOK
@@ -63,10 +67,11 @@ object frmMaskProf: TfrmMaskProf
     TabOrder = 3
   end
   object BitBtn2: TBitBtn
-    Left = 241
+    Left = 321
     Height = 30
     Top = 193
     Width = 75
+    Anchors = [akRight, akBottom]
     Cancel = True
     DefaultCaption = True
     Kind = bkCancel

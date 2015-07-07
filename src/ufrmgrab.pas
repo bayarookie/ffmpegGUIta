@@ -19,6 +19,8 @@ type
     ComboBox2: TComboBox;
     ComboBox3: TComboBox;
     ComboBox4: TComboBox;
+    Label1: TLabel;
+    Label2: TLabel;
   private
     { private declarations }
   public

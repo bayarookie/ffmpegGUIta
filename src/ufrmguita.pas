@@ -41,6 +41,7 @@ type
     btnFindMediaInfo: TBitBtn;
     btnFindDirTmp: TBitBtn;
     btnLanguage: TButton;
+    btnMediaInfo1: TButton;
     btnMediaInfo2: TButton;
     btnPlayOut: TButton;
     btnProfileSaveAs: TButton;
@@ -49,7 +50,6 @@ type
     btnLogClear: TButton;
     btnPlayIn: TButton;
     btnTest: TButton;
-    btnMediaInfo1: TButton;
     btnStop: TButton;
     btnStart: TButton;
     btnSuspend: TButton;
@@ -180,12 +180,12 @@ type
     LVjobs: TListView;
     LVstreams: TListView;
     memCmdlines: TMemo;
+    mnuMediainfo1: TMenuItem;
     mnuDeleteJob: TMenuItem;
     mnuDeleteFile: TMenuItem;
     mnuPasteFiles: TMenuItem;
     mnuCheck: TMenuItem;
     mnuPasteTracks: TMenuItem;
-    mnuMediaInfo: TMenuItem;
     mnuView: TMenuItem;
     mnuOpen: TMenuItem;
     mnuCopyAsAvs: TMenuItem;
@@ -719,12 +719,12 @@ begin
       Inc(Counter);
       jo.setval('index', IntToStr(Counter));
       jo.setval('Completed', '0');
-      jo.setval('cmbDurationss', myRealToTimeStr(k, False));
-      jo.setval('cmbDurationt', myRealToTimeStr(r, False));
+      jo.setval(cmbDurationt2.Name, myRealToTimeStr(r, False));
       SetLength(jo.f, 1);
       jo.f[0] := TFil.Create;
       jo.f[0].setval('filename', files[i]);
       jo.f[0].setval('ffprobe', '0');
+      jo.f[0].setval(cmbDurationss1.Name, myRealToTimeStr(k, False));
       Files2Add.Add(Pointer(jo));
       k := k + r;
     end;
@@ -1842,7 +1842,7 @@ end;
 procedure TfrmGUIta.myDisComp;
 var
   b, b1, b2, b3: boolean;
-  //i: integer;
+  l: integer;
   jo: TJob;
 begin
   b := (ThreadConv <> nil);
@@ -1854,12 +1854,16 @@ begin
   //  TControl(PageControl2.Controls[i]).Enabled := b;
   if b then
     jo := TJob(LVjobs.Selected.Data);
-  b1 := b and FileExistsUTF8(jo.f[0].getval('filename'));
+  if LVfiles.Selected <> nil then
+    l := LVfiles.Selected.Index
+  else
+    l := 0;
+  b1 := b and FileExistsUTF8(jo.f[l].getval('filename'));
   btnPlayIn.Enabled := b1;
   mnuOpen.Enabled := b1;
   mnuView.Enabled := b1;
   b3 := FileExistsUTF8(myExpandFN(edtMediaInfo.Text));
-  mnuMediaInfo.Enabled := b1 and b3;
+  mnuMediaInfo1.Enabled := b1 and b3;
   btnMediaInfo1.Enabled := b1 and b3;
   btnTest.Enabled := b1 and (ThreadTest = nil);
   b2 := b and FileExistsUTF8(jo.getval(edtOfn.Name));
@@ -2848,21 +2852,24 @@ var
   jo: TJob;
   s: string;
   li: TListItem;
-  frmGrab: TfrmGrab;
+  frmG: TfrmGrab;
 begin
-  Application.CreateForm(TfrmGrab, frmGrab);
-  if frmGrab.ShowModal = mrOK then
+  Application.CreateForm(TfrmGrab, frmG);
+  frmG.Caption := btnAddScreenGrab.Caption;
+  if frmG.ShowModal = mrOK then
   begin
     jo := TJob.Create;
     Inc(Counter);
     jo.setval('index', IntToStr(Counter));
     jo.setval('Completed', '0');
     SetLength(jo.f, 2);
-    jo.f[0].setval('filename', frmGrab.ComboBox1.Text);
-    jo.f[0].setval(cmbAddOptsI.Name, frmGrab.ComboBox2.Text);
+    jo.f[0] := TFil.Create;
+    jo.f[0].setval('filename', frmG.ComboBox1.Text);
+    jo.f[0].setval(cmbAddOptsI.Name, frmG.ComboBox2.Text);
     jo.f[0].setval('ffprobe', '1');
-    jo.f[1].setval('filename', frmGrab.ComboBox3.Text);
-    jo.f[1].setval(cmbAddOptsI.Name, frmGrab.ComboBox4.Text);
+    jo.f[1] := TFil.Create;
+    jo.f[1].setval('filename', frmG.ComboBox3.Text);
+    jo.f[1].setval(cmbAddOptsI.Name, frmG.ComboBox4.Text);
     jo.f[1].setval('ffprobe', '1');
     if Trim(edtDirOut.Text) <> '' then
       s := Trim(edtDirOut.Text)
@@ -2873,11 +2880,15 @@ begin
     jo.f[0].s[0] := TCont.Create;
     jo.f[0].s[0].setval('codec_type', 'video');
     jo.f[0].s[0].setval('Checked', '1');
+    jo.f[0].s[0].setval('TAG:title', 'screengrab');
     SetLength(jo.f[1].s, 1);
     jo.f[1].s[0] := TCont.Create;
     jo.f[1].s[0].setval('codec_type', 'audio');
     jo.f[1].s[0].setval('Checked', '1');
-
+    jo.f[1].s[0].setval('TAG:title', 'audiograb');
+    SetLength(jo.m, 2);
+    jo.m[0] := '0:0';
+    jo.m[1] := '1:0';
     li := LVjobs.Items.Add;
     li.Checked := True;
     li.Caption := IntToStr(Counter);
@@ -2892,10 +2903,7 @@ begin
     li.SubItems.Add('');
     li.Data := Pointer(jo);
     if (LVjobs.Items.Count = 1) then
-    begin
       LVjobs.Items[0].Selected := True;
-      //LVjobsSelectItem(Sender, LVjobs.Items[0], True);
-    end;
   end;
   frmGrab.Free;
 end;
@@ -3211,26 +3219,28 @@ end;
 procedure TfrmGUIta.btnMaskAddClick(Sender: TObject);
 var
   li: TListItem;
+  frmM: TfrmMaskProf;
 begin
   if LVmasks.Items.Count > 99 then
   begin
     ShowMessage('Too many masks');
     Exit;
   end;
-  Application.CreateForm(TfrmMaskProf, frmMaskProf);
-  frmMaskProf.ComboBox1.Text := '';
-  frmMaskProf.ComboBox2.Text := '';
-  frmMaskProf.ComboBox3.Text := '';
-  frmMaskProf.ComboBox3.Items.AddStrings(cmbProfile.Items);
-  if frmMaskProf.ShowModal = mrOk then
+  Application.CreateForm(TfrmMaskProf, frmM);
+  frmM.Caption := btnMaskAdd.Caption;
+  frmM.ComboBox1.Text := '';
+  frmM.ComboBox2.Text := '';
+  frmM.ComboBox3.Text := '';
+  frmM.ComboBox3.Items.AddStrings(cmbProfile.Items);
+  if frmM.ShowModal = mrOk then
   begin
     li := LVmasks.Items.Add;
     li.Checked := True;
-    li.Caption := frmMaskProf.ComboBox1.Text;
-    li.SubItems.Add(frmMaskProf.ComboBox2.Text);
-    li.SubItems.Add(frmMaskProf.ComboBox3.Text);
+    li.Caption := frmM.ComboBox1.Text;
+    li.SubItems.Add(frmM.ComboBox2.Text);
+    li.SubItems.Add(frmM.ComboBox3.Text);
   end;
-  frmMaskProf.Free;
+  frmM.Free;
 end;
 
 procedure TfrmGUIta.btnMaskDelClick(Sender: TObject);
@@ -3241,26 +3251,30 @@ begin
 end;
 
 procedure TfrmGUIta.btnMaskEditClick(Sender: TObject);
+var
+  frmM: TfrmMaskProf;
 begin
   if LVmasks.Selected = nil then
     Exit;
-  Application.CreateForm(TfrmMaskProf, frmMaskProf);
-  frmMaskProf.ComboBox1.Text := LVmasks.Selected.Caption;
-  frmMaskProf.ComboBox2.Text := LVmasks.Selected.SubItems[0];
-  frmMaskProf.ComboBox3.Text := LVmasks.Selected.SubItems[1];
-  frmMaskProf.ComboBox3.Items.AddStrings(cmbProfile.Items);
-  if frmMaskProf.ShowModal = mrOk then
+  Application.CreateForm(TfrmMaskProf, frmM);
+  frmM.Caption := btnMaskEdit.Caption;
+  frmM.ComboBox1.Text := LVmasks.Selected.Caption;
+  frmM.ComboBox2.Text := LVmasks.Selected.SubItems[0];
+  frmM.ComboBox3.Text := LVmasks.Selected.SubItems[1];
+  frmM.ComboBox3.Items.AddStrings(cmbProfile.Items);
+  if frmM.ShowModal = mrOk then
   begin
-    LVmasks.Selected.Caption := frmMaskProf.ComboBox1.Text;
-    LVmasks.Selected.SubItems[0] := frmMaskProf.ComboBox2.Text;
-    LVmasks.Selected.SubItems[1] := frmMaskProf.ComboBox3.Text;
+    LVmasks.Selected.Caption := frmM.ComboBox1.Text;
+    LVmasks.Selected.SubItems[0] := frmM.ComboBox2.Text;
+    LVmasks.Selected.SubItems[1] := frmM.ComboBox3.Text;
   end;
-  frmMaskProf.Free;
+  frmM.Free;
 end;
 
 procedure TfrmGUIta.btnMediaInfo1Click(Sender: TObject);
 var
   s, fn: string;
+  l: integer;
   {$IFDEF MSWINDOWS}
   se: string;
   sl: TStringList;
@@ -3269,6 +3283,18 @@ var
 begin
   if myCantUpd(0) then
     Exit;
+  if Sender = btnMediaInfo2 then
+  begin
+    fn := edtOfn.Text;
+  end
+  else
+  begin
+    if LVfiles.Selected <> nil then
+      l := LVfiles.Selected.Index
+    else
+      l := 0;
+    fn := TJob(LVjobs.Selected.Data).f[l].getval('filename');
+  end;
   {$IFDEF MSWINDOWS}
   s := myGetAnsiFN(myExpandFN(edtMediaInfo.Text));
   if not FileExistsUTF8(s) then
@@ -3276,7 +3302,6 @@ begin
   s := myGetAnsiFN(myExpandFN(edtMediaInfo.Text));
   if not FileExistsUTF8(s) then
     Exit;
-  fn := IfThen(Sender = btnMediaInfo2, edtOfn.Text, LVjobs.Selected.SubItems[0]);
   se := LowerCase(ExtractFileExt(s));
   if se = '.exe' then
     myExecProc(s, [fn])
@@ -3305,7 +3330,6 @@ begin
   end;
   {$ELSE}
   s := myExpandFN(edtMediaInfo.Text);
-  fn := IfThen(Sender = btnMediaInfo2, edtOfn.Text, LVjobs.Selected.SubItems[0]);
   myExecProc(s, [fn]);
   {$ENDIF}
 end;
@@ -3660,22 +3684,23 @@ begin
   if chkSynColor.Checked then  //if dark theme
   begin
     SynUNIXShellScriptSyn1.CommentAttri.Foreground := clLime;  //Green
-    SynUNIXShellScriptSyn1.NumberAttri.Foreground := clAqua;  //Blue
+    SynUNIXShellScriptSyn1.NumberAttri.Foreground := clBlue;  //Blue
     SynUNIXShellScriptSyn1.SecondKeyAttri.Foreground := clRed; //Maroon
     SynUNIXShellScriptSyn1.StringAttri.Foreground := clYellow; //Olive
-    //SynUNIXShellScriptSyn1.SymbolAttri.Foreground := clAqua;  //Teal
+    SynUNIXShellScriptSyn1.SymbolAttri.Foreground := clAqua;  //Teal
     SynUNIXShellScriptSyn1.VarAttri.Foreground := clFuchsia;   //Purple
   end
   else //if light theme
   begin
     SynUNIXShellScriptSyn1.CommentAttri.Foreground := clGreen;
-    SynUNIXShellScriptSyn1.NumberAttri.Foreground := clBlue;
+    SynUNIXShellScriptSyn1.NumberAttri.Foreground := clNavy;
     SynUNIXShellScriptSyn1.SecondKeyAttri.Foreground := clMaroon;
     SynUNIXShellScriptSyn1.StringAttri.Foreground := clOlive;
-    //SynUNIXShellScriptSyn1.SymbolAttri.Foreground := clTeal;
+    SynUNIXShellScriptSyn1.SymbolAttri.Foreground := clTeal;
     SynUNIXShellScriptSyn1.VarAttri.Foreground := clPurple;
   end;
-  StatusBar1.SimpleText := IntToStr(myGetColor);
+  if chkDebug.Checked then
+    StatusBar1.SimpleText := 'myGetColor: background color r+g+b=' + IntToStr(myGetColor);
 end;
 
 procedure TfrmGUIta.chkUseMasksChange(Sender: TObject);
@@ -4044,6 +4069,11 @@ begin
       cmbLangA.Text := t;
     end;
     chkSynColor.Checked := myGetColor < 70000;
+    //r + g + b, 65535 + 65535 + 65535 = 196605 = white, 0 + 0 + 0 = black
+    //if r + g + b < 70000 then maybe used dark theme
+    //need to verify all themes for background colors
+    //if the following occurs: r = 65535, g = 0, b = 0.
+    //It needs to do another color theme for synmemo
   end;
   frmGUIta.Font.Name := cmbFont.Text;
   //messages
@@ -4724,16 +4754,20 @@ procedure TfrmGUIta.LVstreamsSelectItem(Sender: TObject; Item: TListItem;
 var
   c: TCont;
   s: string;
-  k, l: integer;
+  i, k, l: integer;
   t: TTabSheet;
 begin
   if myCantUpd(2) then
     Exit;
   bUpdFromCode := True;
   myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
-  //for i := 0 to LVfiles.Items.Count - 1 do
-  //  LVfiles.Items[i].Selected := False;
-  LVfiles.Items[l].Selected := True;
+  if (LVfiles.Selected = nil)
+  or ((LVfiles.Selected <> nil) and (LVfiles.Selected.Index <> l)) then
+  begin
+    for i := 0 to LVfiles.Items.Count - 1 do
+      LVfiles.Items[i].Selected := False;
+    LVfiles.Items[l].Selected := True;
+  end;
   c := TJob(LVjobs.Selected.Data).f[l].s[k];
   s := c.getval('codec_type');
   if s = 'video' then
@@ -5210,4 +5244,4 @@ begin
   od.Free;
 end;
 
-end.
+end.

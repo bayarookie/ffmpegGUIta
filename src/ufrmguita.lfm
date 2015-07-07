@@ -29,9 +29,9 @@ object frmGUIta: TfrmGUIta
     Height = 525
     Top = 0
     Width = 800
-    ActivePage = TabDefSets
+    ActivePage = TabConvJob
     Align = alClient
-    TabIndex = 1
+    TabIndex = 0
     TabOrder = 0
     object TabConvJob: TTabSheet
       Caption = 'Parameters of converting'
@@ -164,7 +164,7 @@ object frmGUIta: TfrmGUIta
                 '-fflags +genpts -palette "000000, 000000, 000000, ffff00, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000, 000000"'
               )
               OnChange = xmyChange1i
-              TabOrder = 0
+              TabOrder = 2
             end
             object lblDurationss1: TLabel
               Left = 8
@@ -201,7 +201,7 @@ object frmGUIta: TfrmGUIta
               OnChange = xmyChange1i
               ParentShowHint = False
               ShowHint = True
-              TabOrder = 1
+              TabOrder = 3
             end
             object lblDurationt1: TLabel
               Left = 422
@@ -230,11 +230,11 @@ object frmGUIta: TfrmGUIta
               OnChange = xmyChange1i
               ParentShowHint = False
               ShowHint = True
-              TabOrder = 2
+              TabOrder = 4
             end
             object LVfiles: TListView
               Left = 0
-              Height = 112
+              Height = 136
               Top = 0
               Width = 530
               Align = alTop
@@ -250,10 +250,20 @@ object frmGUIta: TfrmGUIta
               PopupMenu = PopupMenu3
               ReadOnly = True
               RowSelect = True
-              TabOrder = 3
+              TabOrder = 0
               ViewStyle = vsReport
               OnCustomDrawItem = LVjobsCustomDrawItem
               OnSelectItem = LVfilesSelectItem
+            end
+            object btnMediaInfo1: TButton
+              Left = 454
+              Height = 24
+              Top = 140
+              Width = 68
+              Anchors = [akTop, akRight]
+              Caption = 'MediaInfo'
+              OnClick = btnMediaInfo1Click
+              TabOrder = 1
             end
           end
           object TabOutput: TTabSheet
@@ -1851,7 +1861,7 @@ object frmGUIta: TfrmGUIta
           OnClick = btnPlayInClick
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 5
+          TabOrder = 4
         end
         object btnAddFilesAsAvs2: TButton
           Left = 177
@@ -1872,18 +1882,7 @@ object frmGUIta: TfrmGUIta
           Anchors = [akTop, akRight]
           Caption = 'Test'
           OnClick = btnTestClick
-          TabOrder = 6
-        end
-        object btnMediaInfo1: TButton
-          Left = 483
-          Height = 24
-          Top = 1
-          Width = 68
-          Align = alRight
-          Anchors = [akTop, akRight]
-          Caption = 'MediaInfo'
-          OnClick = btnMediaInfo1Click
-          TabOrder = 4
+          TabOrder = 5
         end
         object btnSuspend: TButton
           Left = 695
@@ -1894,7 +1893,7 @@ object frmGUIta: TfrmGUIta
           Anchors = [akTop, akRight]
           Caption = 'Pause'
           OnClick = btnSuspendClick
-          TabOrder = 8
+          TabOrder = 7
         end
         object btnStop: TButton
           Left = 743
@@ -1905,7 +1904,7 @@ object frmGUIta: TfrmGUIta
           Anchors = [akTop, akRight]
           Caption = 'Stop'
           OnClick = btnStopClick
-          TabOrder = 9
+          TabOrder = 8
         end
         object btnStart: TButton
           Left = 647
@@ -1916,7 +1915,7 @@ object frmGUIta: TfrmGUIta
           Anchors = [akTop, akRight]
           Caption = 'Start'
           OnClick = btnStartClick
-          TabOrder = 7
+          TabOrder = 6
         end
         object btnAddFileSplit: TButton
           Left = 265
@@ -1942,7 +1941,7 @@ object frmGUIta: TfrmGUIta
           OnClick = btnAddScreenGrabClick
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 10
+          TabOrder = 9
         end
       end
     end
@@ -2070,7 +2069,7 @@ object frmGUIta: TfrmGUIta
         Left = 8
         Height = 26
         Top = 130
-        Width = 202
+        Width = 151
         Caption = 'play output with default player'
         OnChange = chkPlayer2Change
         TabOrder = 12
@@ -2079,7 +2078,7 @@ object frmGUIta: TfrmGUIta
         Left = 8
         Height = 26
         Top = 154
-        Width = 210
+        Width = 156
         Caption = 'play output with external player'
         OnChange = chkPlayer3Change
         TabOrder = 14
@@ -2444,7 +2443,7 @@ object frmGUIta: TfrmGUIta
         Left = 8
         Height = 26
         Top = 454
-        Width = 147
+        Width = 111
         Caption = 'Debug info to journal'
         TabOrder = 33
       end
@@ -2771,7 +2770,7 @@ object frmGUIta: TfrmGUIta
         Left = 8
         Height = 26
         Top = 328
-        Width = 139
+        Width = 107
         Caption = 'Add external tracks'
         TabOrder = 23
       end
@@ -2779,7 +2778,7 @@ object frmGUIta: TfrmGUIta
         Left = 8
         Height = 26
         Top = 427
-        Width = 86
+        Width = 69
         Caption = '1 instance'
         OnChange = chk1instanceChange
         TabOrder = 29
@@ -2788,7 +2787,7 @@ object frmGUIta: TfrmGUIta
         Left = 8
         Height = 26
         Top = 400
-        Width = 147
+        Width = 110
         Caption = 'Save forms positions'
         TabOrder = 28
       end
@@ -2858,7 +2857,7 @@ object frmGUIta: TfrmGUIta
         Left = 8
         Height = 26
         Top = 184
-        Width = 89
+        Width = 71
         Caption = 'Use masks'
         OnChange = chkUseMasksChange
         TabOrder = 17
@@ -2896,7 +2895,7 @@ object frmGUIta: TfrmGUIta
         Height = 26
         Hint = 'this option for play input video with option -filter_complex'#10'or with external audio file.'#10'stream view, didnt work hotkeys - forward, rewind'
         Top = 130
-        Width = 348
+        Width = 252
         Caption = 'play input in terminal, ffmpeg pipe ffplay (experimental)'
         ParentShowHint = False
         ShowHint = True
@@ -2906,7 +2905,7 @@ object frmGUIta: TfrmGUIta
         Left = 547
         Height = 26
         Top = 379
-        Width = 177
+        Width = 132
         Caption = 'Synmemo light font colors'
         OnChange = chkSynColorChange
         TabOrder = 37
@@ -5858,10 +5857,6 @@ object frmGUIta: TfrmGUIta
       Caption = 'Open with ffplay'
       OnClick = btnPlayInClick
     end
-    object mnuMediaInfo: TMenuItem
-      Caption = 'MediaInfo'
-      OnClick = btnMediaInfo1Click
-    end
     object mnuPaste: TMenuItem
       Caption = 'Add from clipboard'
       OnClick = mnuPasteClick
@@ -5908,6 +5903,10 @@ object frmGUIta: TfrmGUIta
     object mnuPasteFiles: TMenuItem
       Caption = 'Add files from clipboard'
       OnClick = mnuPasteClick
+    end
+    object mnuMediainfo1: TMenuItem
+      Caption = 'MediaInfo'
+      OnClick = btnMediaInfo1Click
     end
     object mnuDeleteFile: TMenuItem
       Caption = 'Delete file from job'

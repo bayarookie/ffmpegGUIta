@@ -3,6 +3,7 @@ object frmGrab: TfrmGrab
   Height = 240
   Top = 191
   Width = 320
+  BorderStyle = bsDialog
   Caption = 'frmGrab'
   ClientHeight = 240
   ClientWidth = 320
@@ -12,11 +13,12 @@ object frmGrab: TfrmGrab
   Position = poMainFormCenter
   LCLVersion = '1.2.6.0'
   object ComboBox1: TComboBox
-    Left = 40
+    Left = 50
     Height = 20
     Hint = '-i'
     Top = 21
     Width = 96
+    DropDownCount = 20
     ItemHeight = 0
     ItemIndex = 0
     Items.Strings = (
@@ -26,10 +28,12 @@ object frmGrab: TfrmGrab
     Text = ':0.0'
   end
   object ComboBox2: TComboBox
-    Left = 40
+    Left = 50
     Height = 20
     Top = 48
     Width = 248
+    Anchors = [akTop, akLeft, akRight]
+    DropDownCount = 20
     ItemHeight = 0
     ItemIndex = 0
     Items.Strings = (
@@ -39,11 +43,12 @@ object frmGrab: TfrmGrab
     Text = '-f x11grab -video_size 1280x720 -framerate 25'
   end
   object ComboBox3: TComboBox
-    Left = 40
+    Left = 50
     Height = 20
     Hint = '-i'
     Top = 77
     Width = 96
+    DropDownCount = 20
     ItemHeight = 0
     ItemIndex = 0
     Items.Strings = (
@@ -54,10 +59,12 @@ object frmGrab: TfrmGrab
     Text = 'default'
   end
   object ComboBox4: TComboBox
-    Left = 40
+    Left = 50
     Height = 20
     Top = 104
     Width = 248
+    Anchors = [akTop, akLeft, akRight]
+    DropDownCount = 20
     ItemHeight = 0
     ItemIndex = 0
     Items.Strings = (
@@ -72,6 +79,7 @@ object frmGrab: TfrmGrab
     Height = 30
     Top = 185
     Width = 75
+    Anchors = [akLeft, akBottom]
     Default = True
     DefaultCaption = True
     Kind = bkOK
@@ -83,10 +91,27 @@ object frmGrab: TfrmGrab
     Height = 30
     Top = 185
     Width = 75
+    Anchors = [akRight, akBottom]
     Cancel = True
     DefaultCaption = True
     Kind = bkCancel
     ModalResult = 2
     TabOrder = 5
+  end
+  object Label1: TLabel
+    Left = 8
+    Height = 11
+    Top = 23
+    Width = 28
+    Caption = 'video -i'
+    ParentColor = False
+  end
+  object Label2: TLabel
+    Left = 8
+    Height = 11
+    Top = 79
+    Width = 29
+    Caption = 'audio -i'
+    ParentColor = False
   end
 end
