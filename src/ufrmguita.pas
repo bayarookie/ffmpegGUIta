@@ -5,6 +5,7 @@ component's property Tag
 1 = readonly, doesnt need to save to profile
 2 = filters, depends from chkFilterComplex.Checked
 3 = output filename, dont save to profile
+4 = x264 x265
 }
 
 {$mode objfpc}{$H+}
@@ -3748,16 +3749,14 @@ begin
   end;
   s := TComboBox(Sender).Text;
   b := (s <> 'copy');
-  b1 := not chkFilterComplex.Checked;
-  b2 := b and ((s = 'libx264') or (s = 'libx264rgb') or (s = 'libx265'));
+  b1 := b and not chkFilterComplex.Checked;
+  b2 := (Pos('x264', s) > 0) or (Pos('x265', s) > 0);
   c := TControl(Sender).Parent;
   for i := 0 to c.ControlCount - 1 do
     if c.Controls[i].Name <> TControl(Sender).Name then
-      if Pos('x264', c.Controls[i].Name) > 0 then
-        c.Controls[i].Enabled := b2
-      else
-        c.Controls[i].Enabled := (b and (c.Controls[i].Tag = 0))
-        or (b and b1 and (c.Controls[i].Tag = 2));
+      c.Controls[i].Enabled := (b and (c.Controls[i].Tag = 0))
+      or (b1 and (c.Controls[i].Tag = 2))
+      or (b2 and (c.Controls[i].Tag = 4));
   xmyChange2(Sender);
 end;
 
@@ -3995,6 +3994,7 @@ begin
   fs.ThousandSeparator := ' ';
   DuraAll := 0;
   {$IFDEF MSWINDOWS}
+  btnAddScreenGrab.Visible := False; //not tested
   {$ELSE}
   btnAddFilesAsAvs1.Visible := False;
   btnAddFilesAsAvs2.Visible := False;
@@ -4035,6 +4035,8 @@ begin
     cmbExtPlayer.Items.Add('%ProgramFiles%\Windows Media Player\wmplayer.exe');
     edtxterm.Text := 'cmd.exe';
     edtxtermopts.Text := '/c';
+    edtxtermopts.Items.Add('/c');
+    edtxtermopts.Items.Add('/k');
     {$ELSE}
     edtffmpeg.Text := 'ffmpeg';
     edtffplay.Text := 'ffplay';
@@ -4048,6 +4050,11 @@ begin
     cmbFont.Text := 'Ubuntu';
     edtxterm.Text := '/bin/sh';
     edtxtermopts.Text := '-c';
+    edtxtermopts.Items.Add('-c');
+    edtxtermopts.Items.Add('-k');
+    edtxtermopts.Items.Add('-e');
+    edtxtermopts.Items.Add('-x');
+    edtxtermopts.Items.Add('--hold -e');
     chkRunMode.Checked := True;
     {$ENDIF}
     s := myGetLocaleLanguage;
@@ -4146,20 +4153,12 @@ begin
     li.Checked := True;
     li.Caption := 'anim*';
     li.SubItems.Add('.avi;.mkv;.vob;.mp*g;.mp4;.mov;.flv;.3gp;.3g2;.asf;.wmv;.m2ts;.ts;.ogv;.webm;.rm;.qt');
-    {$IFDEF MSWINDOWS}
     li.SubItems.Add('libx264 slow animation-libvo_aacenc-matroska.ini');
-    {$ELSE}
-    li.SubItems.Add('libx264 slow animation-libfdk_aac-matroska.ini');
-    {$ENDIF}
     li := LVmasks.Items.Add;
     li.Checked := True;
     li.Caption := '*';
     li.SubItems.Add('.avi;.mkv;.vob;.mp*g;.mp4;.mov;.flv;.3gp;.3g2;.asf;.wmv;.m2ts;.ts;.ogv;.webm;.rm;.qt');
-    {$IFDEF MSWINDOWS}
     li.SubItems.Add('libx264 slow film-libvo_aacenc-matroska.ini');
-    {$ELSE}
-    li.SubItems.Add('libx264 slow film-libfdk_aac-matroska.ini');
-    {$ENDIF}
   end;
   if not b then //inifile doesnt exists
   begin
@@ -4770,28 +4769,30 @@ begin
   end;
   c := TJob(LVjobs.Selected.Data).f[l].s[k];
   s := c.getval('codec_type');
-  if s = 'video' then
-  begin
-    t := TabVideo;
-    cmbBitrateVChange(cmbBitrateV);
-    cmbEncoderVChange(cmbEncoderV);
-  end
-  else if s = 'audio' then
-  begin
-    t := TabAudio;
-    cmbBitrateAChange(cmbBitrateA);
-    cmbEncoderVChange(cmbEncoderA);
-  end
-  else if s = 'subtitle' then
-  begin
-    t := TabSubtitle;
-    cmbEncoderVChange(cmbEncoderS);
-  end;
   if (PageControl2.ActivePage = TabVideo)
   or (PageControl2.ActivePage = TabAudio)
   or (PageControl2.ActivePage = TabSubtitle) then
   begin
-    myGetValsFromCont(t, c);
+    if s = 'video' then
+    begin
+      t := TabVideo;
+      myGetValsFromCont(t, c); //fill edit fields from stream
+      cmbBitrateVChange(cmbBitrateV);
+      cmbEncoderVChange(cmbEncoderV);
+    end
+    else if s = 'audio' then
+    begin
+      t := TabAudio;
+      myGetValsFromCont(t, c);
+      cmbBitrateAChange(cmbBitrateA);
+      cmbEncoderVChange(cmbEncoderA);
+    end
+    else if s = 'subtitle' then
+    begin
+      t := TabSubtitle;
+      myGetValsFromCont(t, c);
+      cmbEncoderVChange(cmbEncoderS);
+    end;
     PageControl2.ActivePage := t;
   end
   else if (PageControl2.ActivePage = TabContRows) then

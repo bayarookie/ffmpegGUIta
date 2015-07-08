@@ -94,7 +94,7 @@ var
   li: TListItem;
   b: boolean;
 begin
-  //frmGUIta.SynMemo6.Lines.LoadFromStream(pr.Output); //this code didnt work on windows 8, poUsePipes - infinite wait
+  //frmGUIta.SynMemo6.Lines.LoadFromStream(pr.Output); //this line didnt work on windows 8, poUsePipes - infinite wait
   b := False;
   if filenum > 0 then
   begin

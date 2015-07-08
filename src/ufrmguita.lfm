@@ -513,7 +513,7 @@ object frmGUIta: TfrmGUIta
               Left = 8
               Height = 26
               Top = 115
-              Width = 134
+              Width = 103
               Caption = 'use -filter complex'
               OnChange = chkFilterComplexChange
               TabOrder = 8
@@ -541,7 +541,7 @@ object frmGUIta: TfrmGUIta
               Height = 26
               Hint = 'Concatenate audio and video streams, joining them together one after the other.'#13#10'The filter works on segments of synchronized video and audio streams.'#13#10'All segments must have the same number of streams of each type,'#13#10'and that will also be the number of streams at output.'#13#10'All segments must start at timestamp 0.'#13#10'All corresponding streams must have the same parameters in all segments.'#13#10'http://ffmpeg.org/ffmpeg-filters.html#concat'
               Top = 240
-              Width = 99
+              Width = 81
               HelpType = htKeyword
               HelpKeyword = 'concat'
               Caption = 'Concatenate'
@@ -566,7 +566,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbEncoderV: TComboBox
               Left = 8
-              Height = 21
+              Height = 20
               Top = 20
               Width = 100
               DropDownCount = 50
@@ -603,7 +603,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbPass: TComboBox
               Left = 188
-              Height = 21
+              Height = 20
               Top = 20
               Width = 60
               ItemHeight = 0
@@ -615,6 +615,7 @@ object frmGUIta: TfrmGUIta
               TabOrder = 2
             end
             object chkx264Pass1fast: TCheckBox
+              Tag = 4
               Left = 259
               Height = 26
               Top = 17
@@ -632,7 +633,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbBitrateV: TComboBox
               Left = 8
-              Height = 21
+              Height = 20
               Top = 60
               Width = 242
               DropDownCount = 20
@@ -662,8 +663,9 @@ object frmGUIta: TfrmGUIta
               ParentColor = False
             end
             object cmbx264preset: TComboBox
+              Tag = 4
               Left = 8
-              Height = 21
+              Height = 20
               Top = 100
               Width = 80
               DropDownCount = 20
@@ -693,8 +695,9 @@ object frmGUIta: TfrmGUIta
               ParentColor = False
             end
             object cmbx264tune: TComboBox
+              Tag = 4
               Left = 96
-              Height = 21
+              Height = 20
               Top = 100
               Width = 80
               ItemHeight = 0
@@ -717,7 +720,7 @@ object frmGUIta: TfrmGUIta
             object cmbScale: TComboBox
               Tag = 2
               Left = 8
-              Height = 21
+              Height = 20
               Top = 140
               Width = 225
               DropDownCount = 20
@@ -750,7 +753,7 @@ object frmGUIta: TfrmGUIta
             object cmbRotate: TComboBox
               Tag = 2
               Left = 242
-              Height = 21
+              Height = 22
               Top = 180
               Width = 200
               DropDownCount = 20
@@ -780,7 +783,7 @@ object frmGUIta: TfrmGUIta
             object cmbPad: TComboBox
               Tag = 2
               Left = 242
-              Height = 21
+              Height = 20
               Top = 140
               Width = 200
               DropDownCount = 20
@@ -820,7 +823,7 @@ object frmGUIta: TfrmGUIta
             object cmbhqdn3d: TComboBox
               Tag = 2
               Left = 8
-              Height = 21
+              Height = 20
               Top = 180
               Width = 100
               DropDownCount = 20
@@ -845,7 +848,7 @@ object frmGUIta: TfrmGUIta
             object cmbFiltersV: TComboBox
               Tag = 2
               Left = 8
-              Height = 21
+              Height = 20
               Hint = 'Additional filters or instead of.'#10'Can be used some vars:'#10'$input or $inpu0 - main input filename,'#10'$inpu1, $inpu2 - second, third and etc track filenames'
               Top = 220
               Width = 510
@@ -892,7 +895,7 @@ object frmGUIta: TfrmGUIta
             object cmbCrop: TComboBox
               Tag = 2
               Left = 180
-              Height = 21
+              Height = 20
               Top = 100
               Width = 200
               DropDownCount = 20
@@ -947,7 +950,7 @@ object frmGUIta: TfrmGUIta
             object cmbSetDAR: TComboBox
               Tag = 2
               Left = 120
-              Height = 21
+              Height = 20
               Top = 180
               Width = 95
               DropDownCount = 20
@@ -973,7 +976,7 @@ object frmGUIta: TfrmGUIta
             end
             object cmbAddOptsV: TComboBox
               Left = 8
-              Height = 21
+              Height = 20
               Hint = 'Additional video options'
               Top = 245
               Width = 510
@@ -3951,7 +3954,7 @@ object frmGUIta: TfrmGUIta
               Height = 20
               Hint = 'list of variables:'#13#10'$ffmpeg'#13#10'$ffplay'#13#10'$ffprobe'#13#10'$input'#13#10'$output'#13#10'$dirinp'#13#10'$dirout'#13#10'$dirtmp'
               Top = 4
-              Width = 786
+              Width = 790
               Anchors = [akTop, akLeft, akRight]
               DropDownCount = 20
               ItemHeight = 0
@@ -3980,7 +3983,7 @@ object frmGUIta: TfrmGUIta
               Text = '"$ffprobe" -show_streams -i "$input"'
             end
             object btnCmdRun: TButton
-              Left = 478
+              Left = 482
               Height = 25
               Top = 27
               Width = 75
@@ -3990,7 +3993,7 @@ object frmGUIta: TfrmGUIta
               TabOrder = 4
             end
             object btnLogSave: TButton
-              Left = 636
+              Left = 640
               Height = 25
               Top = 27
               Width = 75
@@ -4000,7 +4003,7 @@ object frmGUIta: TfrmGUIta
               TabOrder = 6
             end
             object btnLogClear: TButton
-              Left = 716
+              Left = 720
               Height = 25
               Top = 27
               Width = 75
@@ -4013,12 +4016,12 @@ object frmGUIta: TfrmGUIta
               Left = 8
               Height = 26
               Top = 27
-              Width = 112
+              Width = 89
               Caption = 'OEM codepage'
               TabOrder = 1
             end
             object btnCmdStop: TButton
-              Left = 558
+              Left = 562
               Height = 25
               Top = 27
               Width = 75
@@ -4032,7 +4035,7 @@ object frmGUIta: TfrmGUIta
               Left = 157
               Height = 26
               Top = 27
-              Width = 115
+              Width = 89
               Caption = 'Run in terminal'
               TabOrder = 2
             end
@@ -4040,7 +4043,7 @@ object frmGUIta: TfrmGUIta
               Left = 314
               Height = 26
               Top = 27
-              Width = 97
+              Width = 76
               Caption = 'Run in mem'
               TabOrder = 3
             end
@@ -4084,14 +4087,6 @@ object frmGUIta: TfrmGUIta
               Top = 83
               Width = 164
               ItemHeight = 0
-              ItemIndex = 0
-              Items.Strings = (
-                '-c'
-                '-k'
-                '-e'
-                '-x'
-                '--hold -e'
-              )
               TabOrder = 9
               Text = '-c'
             end
@@ -4099,7 +4094,7 @@ object frmGUIta: TfrmGUIta
               Left = 313
               Height = 26
               Top = 81
-              Width = 125
+              Width = 94
               Caption = 'run as one string'
               TabOrder = 10
             end
