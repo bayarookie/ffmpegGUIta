@@ -513,7 +513,7 @@ object frmGUIta: TfrmGUIta
               Left = 8
               Height = 26
               Top = 115
-              Width = 103
+              Width = 134
               Caption = 'use -filter complex'
               OnChange = chkFilterComplexChange
               TabOrder = 8
@@ -541,7 +541,7 @@ object frmGUIta: TfrmGUIta
               Height = 26
               Hint = 'Concatenate audio and video streams, joining them together one after the other.'#13#10'The filter works on segments of synchronized video and audio streams.'#13#10'All segments must have the same number of streams of each type,'#13#10'and that will also be the number of streams at output.'#13#10'All segments must start at timestamp 0.'#13#10'All corresponding streams must have the same parameters in all segments.'#13#10'http://ffmpeg.org/ffmpeg-filters.html#concat'
               Top = 240
-              Width = 81
+              Width = 99
               HelpType = htKeyword
               HelpKeyword = 'concat'
               Caption = 'Concatenate'
@@ -638,8 +638,9 @@ object frmGUIta: TfrmGUIta
               Width = 242
               DropDownCount = 20
               ItemHeight = 0
-              ItemIndex = 0
+              ItemIndex = 1
               Items.Strings = (
+                ''
                 'round(w*h*fps*$koefv/sqrt(w*h)/4500)'
                 'round(w*h*fps*$koefv/2500000)'
                 '800'
@@ -683,7 +684,7 @@ object frmGUIta: TfrmGUIta
                 'veryslow'
                 'placebo'
               )
-              OnChange = xmyChange2
+              OnChange = xmyChange2c
               TabOrder = 6
             end
             object lblx264tune: TLabel
@@ -705,8 +706,14 @@ object frmGUIta: TfrmGUIta
                 ''
                 'animation'
                 'film'
+                'grain'
+                'stillimage'
+                'psnr'
+                'ssim'
+                'fastdecode'
+                'zerolatency'
               )
-              OnChange = xmyChange2
+              OnChange = xmyChange2c
               TabOrder = 7
             end
             object lblScale: TLabel
@@ -1972,7 +1979,7 @@ object frmGUIta: TfrmGUIta
         LabelPosition = lpLeft
         TabOrder = 0
         Text = 'ffmpeg.exe'
-        OnChange = xmyCheckFile
+        OnChange = edtffmpegChange
         OnDblClick = xmySelFile
       end
       object edtffplay: TLabeledEdit

@@ -282,6 +282,7 @@ type
     procedure cmbFormatSelect(Sender: TObject);
     procedure cmbLanguageChange(Sender: TObject);
     procedure cmbProfileChange(Sender: TObject);
+    procedure edtffmpegChange(Sender: TObject);
     procedure edtOfnChange(Sender: TObject);
     procedure edtxtermSelect(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -338,6 +339,7 @@ type
     procedure xmyChange0o(Sender: TObject);
     procedure xmyChange1i(Sender: TObject);
     procedure xmyChange2(Sender: TObject);
+    procedure xmyChange2c(Sender: TObject); //if not in combobox.items then red
     procedure xmyChange2v(Sender: TObject);
     procedure xmyChange2a(Sender: TObject);
     procedure xmyChange2o(Sender: TObject);
@@ -377,6 +379,7 @@ type
     function myError(i: integer; w: string): integer;
     procedure myFillEnc;
     procedure myFillFmt;
+    //procedure myFillx264Tune;
     function myCantUpd(i: integer = 0): boolean;
     function myAutoCrop(jo: TJob; l, k: integer): string;
     procedure myGetClipboardFileNames(files: TStrings; test: boolean = False);
@@ -3734,7 +3737,7 @@ end;
 
 procedure TfrmGUIta.cmbEncoderVChange(Sender: TObject);
 var
-  b, b1, b2: boolean;
+  b, b1, b2, b3: boolean;
   i: integer;
   s: string;
   c: TWinControl;
@@ -3750,13 +3753,23 @@ begin
   s := TComboBox(Sender).Text;
   b := (s <> 'copy');
   b1 := b and not chkFilterComplex.Checked;
-  b2 := (Pos('x264', s) > 0) or (Pos('x265', s) > 0);
+  b2 := (Pos('x264', s) > 0);
+  b3 := (Pos('x265', s) > 0);
   c := TControl(Sender).Parent;
   for i := 0 to c.ControlCount - 1 do
     if c.Controls[i].Name <> TControl(Sender).Name then
       c.Controls[i].Enabled := (b and (c.Controls[i].Tag = 0))
       or (b1 and (c.Controls[i].Tag = 2))
-      or (b2 and (c.Controls[i].Tag = 4));
+      or ((b2 or b3) and (c.Controls[i].Tag = 4));
+  cmbx264tune.Items.Clear;
+  if b2 then //x264
+    cmbx264tune.Items.AddStrings(['', 'film', 'animation', 'grain', 'stillimage', 'psnr', 'ssim', 'fastdecode', 'zerolatency']);
+  if b3 then //x265
+    cmbx264tune.Items.AddStrings(['', 'psnr', 'ssim', 'grain', 'zerolatency', 'fastdecode']);
+  //to do: parse output: ffmpeg -f lavfi -i nullsrc -c:v libx264 -preset help -f mp4 -
+  //[libx264 @ 0xb02de60] Possible presets: ultrafast superfast veryfast faster fast medium slow slower veryslow placebo
+  //[libx264 @ 0xb02de60] Possible tunes: film animation grain stillimage psnr ssim fastdecode zerolatency
+  //edtffmpegChange
   xmyChange2(Sender);
 end;
 
@@ -3897,6 +3910,20 @@ begin
   Ini.Free;
   LVjobs.Selected.SubItems[2] := myCalcOutSize(jo);
   LVjobsSelectItem(Sender, LVjobs.Selected, True);
+end;
+
+procedure TfrmGUIta.edtffmpegChange(Sender: TObject);
+var
+  s: string;
+begin
+  //if bUpdFromCode then Exit;
+  s := myExpandFN(myGet2(Sender));
+  if FileExistsUTF8(s) then
+  begin
+    myFillEnc;
+    myFillFmt;
+  end;
+  xmyCheckFile(Sender);
 end;
 
 procedure TfrmGUIta.edtOfnChange(Sender: TObject);
@@ -4232,16 +4259,16 @@ begin
       chkPlayer3.Checked := True;
     {$ENDIF}
   end;
-  {$IFDEF MSWINDOWS}
-  xmyCheckFile(edtffmpeg);
-  xmyCheckFile(edtffprobe);
-  xmyCheckFile(edtffplay);
-  xmyCheckFile(edtMediaInfo);
-  xmyCheckFile(cmbExtPlayer);
-  cmbProfileChange(cmbProfile);
-  {$ENDIF}
-  myFillEnc;
-  myFillFmt;
+  //{$IFDEF MSWINDOWS}
+  //edtffmpegChange(edtffmpeg);
+  //xmyCheckFile(edtffprobe);
+  //xmyCheckFile(edtffplay);
+  //xmyCheckFile(edtMediaInfo);
+  //xmyCheckFile(cmbExtPlayer);
+  //cmbProfileChange(cmbProfile);
+  //{$ENDIF}
+  //myFillEnc;
+  //myFillFmt;
 end;
 
 procedure TfrmGUIta.FormDestroy(Sender: TObject);
@@ -5127,6 +5154,17 @@ begin
   s2 := myGet2(Sender);
   myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
   TJob(LVjobs.Selected.Data).f[l].s[k].setval(s1, s2);
+end;
+
+procedure TfrmGUIta.xmyChange2c(Sender: TObject);
+begin
+  if (Sender is TComboBox) then
+    with (Sender as TComboBox) do
+    if Items.IndexOf(Text) < 0 then
+      Font.Color := clRed
+    else
+      Font.Color := clWindowText;
+  xmyChange2(Sender);
 end;
 
 procedure TfrmGUIta.xmyChange2v(Sender: TObject);
