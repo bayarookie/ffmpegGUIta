@@ -44,7 +44,7 @@ var
 begin
   Result := '';
   for i := 0 to High(sk) do
-  if key = sk[i] then
+  if LowerCase(key) = LowerCase(sk[i]) then
   begin
     Result := sv[i];
     Exit;
@@ -56,7 +56,7 @@ var
   i: integer;
 begin
   for i := 0 to High(sk) do
-  if key = sk[i] then
+  if LowerCase(key) = LowerCase(sk[i]) then
   begin
     sv[i] := Value;
     Exit;
@@ -69,4 +69,4 @@ begin
 end;
 
 end.
-
+

@@ -34,14 +34,17 @@ type
     btnAddFilesAsAvs1: TButton;
     btnAddFilesAsAvs2: TButton;
     btnFindDirOut: TBitBtn;
+    btnFindDirTmp: TBitBtn;
     btnFindExtPlayer: TBitBtn;
     btnFindffmpeg: TBitBtn;
-    btnFindOfn: TBitBtn;
     btnFindffplay: TBitBtn;
     btnFindffprobe: TBitBtn;
     btnFindMediaInfo: TBitBtn;
-    btnFindDirTmp: TBitBtn;
+    btnFindOfn: TBitBtn;
     btnLanguage: TButton;
+    btnMaskAdd: TButton;
+    btnMaskDel: TButton;
+    btnMaskEdit: TButton;
     btnMediaInfo1: TButton;
     btnMediaInfo2: TButton;
     btnPlayOut: TButton;
@@ -63,39 +66,46 @@ type
     btnCrop: TButton;
     btnAddFileSplit: TButton;
     btnAddScreenGrab: TButton;
-    btnMaskAdd: TButton;
-    btnMaskEdit: TButton;
-    btnMaskDel: TButton;
-    chkSynColor: TCheckBox;
-    chkUseEditedCmd: TCheckBox;
-    chkRunMode: TCheckBox;
-    chkPlayerIn: TCheckBox;
-    chkConcat: TCheckBox;
-    chkFilterComplex: TCheckBox;
-    chkUseMasks: TCheckBox;
-    chkSaveFormPos: TCheckBox;
+    chkLangA1: TCheckBox;
+    chkLangA2: TCheckBox;
+    chkLangS1: TCheckBox;
+    chkLangS2: TCheckBox;
     chk1instance: TCheckBox;
     chkAddTracks: TCheckBox;
-    chkRunInMem: TCheckBox;
-    chkRunInWindow: TCheckBox;
     chkDebug: TCheckBox;
-    chkOEM: TCheckBox;
-    chkx264Pass1fast: TCheckBox;
     chkPlayer2: TCheckBox;
     chkPlayer3: TCheckBox;
+    chkPlayerIn: TCheckBox;
+    chkRunMode: TCheckBox;
+    chkSaveFormPos: TCheckBox;
+    chkSynColor: TCheckBox;
+    chkUseEditedCmd: TCheckBox;
+    chkConcat: TCheckBox;
+    chkFilterComplex: TCheckBox;
+    chkRunInMem: TCheckBox;
+    chkRunInWindow: TCheckBox;
+    chkOEM: TCheckBox;
+    chkUseMasks: TCheckBox;
+    chkx264Pass1fast: TCheckBox;
     cmbAddOptsS: TComboBox;
     cmbAddOptsI: TComboBox;
     cmbAddOptsO: TComboBox;
     cmbAddOptsA: TComboBox;
+    cmbAddTracks: TComboBox;
     cmbBitrateA: TComboBox;
     cmbBitrateV: TComboBox;
     cmbChannels: TComboBox;
+    cmbDirLast: TComboBox;
     cmbDurationss1: TComboBox;
     cmbDurationss2: TComboBox;
     cmbDurationt1: TComboBox;
+    cmbExtPlayer: TComboBox;
+    cmbFont: TComboBox;
     cmbhqdn3d: TComboBox;
     cmbLangA: TComboBox;
     cmbLangS: TComboBox;
+    cmbLangsList: TComboBox;
+    cmbLanguage: TComboBox;
     cmbSetDAR: TComboBox;
     cmbEncoderA: TComboBox;
     cmbEncoderS: TComboBox;
@@ -104,7 +114,6 @@ type
     cmbFiltersA: TComboBox;
     cmbFiltersV: TComboBox;
     cmbFormat: TComboBox;
-    cmbLanguage: TComboBox;
     cmbProfile: TComboBox;
     cmbCrop: TComboBox;
     cmbPad: TComboBox;
@@ -113,45 +122,34 @@ type
     cmbRunCmd: TComboBox;
     cmbScale: TComboBox;
     cmbSRate: TComboBox;
-    cmbx264preset: TComboBox;
-    cmbx264tune: TComboBox;
-    cmbExtPlayer: TComboBox;
-    cmbFont: TComboBox;
-    cmbDirLast: TComboBox;
-    cmbDurationt2: TComboBox;
     cmbTestDurationss: TComboBox;
     cmbTestDurationt: TComboBox;
-    cmbLangsList: TComboBox;
+    cmbx264preset: TComboBox;
+    cmbx264tune: TComboBox;
+    cmbDurationt2: TComboBox;
     cmbAddOptsV: TComboBox;
-    cmbAddTracks: TComboBox;
     cmbFilterComplex: TComboBox;
-    edtxtermopts2: TComboBox;
-    edtxtermopts: TComboBox;
-    edtxterm: TComboBox;
-    edtFileExts: TComboBox;
-    edtBitrateA: TLabeledEdit;
+    edtDirOut: TLabeledEdit;
     edtDirTmp: TLabeledEdit;
     edtffmpeg: TLabeledEdit;
     edtffplay: TLabeledEdit;
     edtffprobe: TLabeledEdit;
+    edtFileExts: TComboBox;
     edtMediaInfo: TLabeledEdit;
+    edtBitrateA: TLabeledEdit;
     edtOfn: TLabeledEdit;
+    edtxterm: TComboBox;
+    edtxtermopts: TComboBox;
     ImageList1: TImageList;
     edtBitrateV: TLabeledEdit;
     edtOfna: TLabeledEdit;
-    edtDirOut: TLabeledEdit;
-    lblxtermopts2: TLabel;
-    lblxtermopts: TLabel;
-    lblxterm: TLabel;
+    lblDirLast: TLabel;
+    lblTestStartDurationTime: TLabel;
     lblAddOptsI: TLabel;
     lblDurationss1: TLabel;
     lblDurationss2: TLabel;
     lblDurationt1: TLabel;
-    lblLangA: TLabel;
-    lblLangS: TLabel;
-    lblTestStartDurationTime: TLabel;
     lblDurationt2: TLabel;
-    lblDirLast: TLabel;
     lblAddOptsO: TLabel;
     lblBitrateA: TLabel;
     lblBitrateV: TLabel;
@@ -176,9 +174,11 @@ type
     lblSRate: TLabel;
     lblx264preset: TLabel;
     lblx264tune: TLabel;
-    LVmasks: TListView;
+    lblxterm: TLabel;
+    lblxtermopts: TLabel;
     LVfiles: TListView;
     LVjobs: TListView;
+    LVmasks: TListView;
     LVstreams: TListView;
     memCmdlines: TMemo;
     mnuMediainfo1: TMenuItem;
@@ -207,6 +207,7 @@ type
     PopupMenu1: TPopupMenu;
     PopupMenu2: TPopupMenu;
     PopupMenu3: TPopupMenu;
+    ScrollBox1: TScrollBox;
     spnKoefA: TSpinEdit;
     spnKoefV: TSpinEdit;
     StatusBar1: TStatusBar;
@@ -265,7 +266,12 @@ type
     procedure btnTestPauseClick(Sender: TObject);
     procedure btnTestStopClick(Sender: TObject);
     procedure chk1instanceChange(Sender: TObject);
+    procedure chkAddTracksChange(Sender: TObject);
     procedure chkFilterComplexChange(Sender: TObject);
+    procedure chkLangA1Change(Sender: TObject);
+    procedure chkLangA2Change(Sender: TObject);
+    procedure chkLangS1Change(Sender: TObject);
+    procedure chkLangS2Change(Sender: TObject);
     procedure chkPlayer2Change(Sender: TObject);
     procedure chkPlayer3Change(Sender: TObject);
     procedure chkSynColorChange(Sender: TObject);
@@ -306,8 +312,6 @@ type
     procedure LVmasksCustomDrawSubItem(Sender: TCustomListView;
       Item: TListItem; SubItem: Integer; State: TCustomDrawState;
       var DefaultDraw: Boolean);
-    procedure LVmasksDrawItem(Sender: TCustomListView; AItem: TListItem;
-      ARect: TRect; AState: TOwnerDrawState);
     procedure LVstreamsClick(Sender: TObject);
     procedure LVstreamsDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure LVstreamsDragOver(Sender, Source: TObject; X, Y: Integer;
@@ -411,6 +415,7 @@ type
     function myCalcBRa(a: TCont): string;
     procedure myGetFileStreamNums(s: string; var l, k: integer);
     function myGetProfile(fn: string): string;
+    function myGetLngFromFNs(jo: TJob; l: integer): string;
   end;
 
 var
@@ -503,16 +508,13 @@ begin
             myToIni(Ini, s, Name, IfThen(Checked, '1', ''))
       else if c[k] is TPanel then
         for i := 0 to TPanel(c[k]).ControlCount - 1 do
-          mySets1(Ini, s, [TPanel(c[k]).Controls[i]], bRead);
-end;
-
-procedure mySets2(Ini: TIniFile; s: string; ts: array of TTabSheet; bRead: boolean);
-var
-  i, j: integer;
-begin
-  for j := Low(ts) to High(ts) do
-    for i := 0 to TTabSheet(ts[j]).ControlCount - 1 do
-      mySets1(Ini, s, [TTabSheet(ts[j]).Controls[i]], bRead);
+          mySets1(Ini, s, [TPanel(c[k]).Controls[i]], bRead)
+      else if c[k] is TTabSheet then
+        for i := 0 to TTabSheet(c[k]).ControlCount - 1 do
+          mySets1(Ini, s, [TTabSheet(c[k]).Controls[i]], bRead)
+      else if c[k] is TScrollBox then
+        for i := 0 to TScrollBox(c[k]).ControlCount - 1 do
+          mySets1(Ini, s, [TScrollBox(c[k]).Controls[i]], bRead);
 end;
 
 procedure mySets3(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean);
@@ -533,12 +535,14 @@ begin
               frmGUIta.myAdd2cmb(TComboBox(c[k]), w);
             Inc(i);
           until w = '';
+          frmGUIta.myAdd2cmb(TComboBox(c[k]), Text);
         end
         else
         begin
           myToIni(Ini, s, Name, Text);
-          for i := 0 to Items.Count - 1 do
-            myToIni(Ini, Name, IntToStr(i), Items[i]);
+          if (Items.Count > 1) or ((Items.Count = 1) and (Items[0] <> Text)) then
+            for i := 0 to Items.Count - 1 do
+              myToIni(Ini, Name, IntToStr(i), Items[i]);
         end;
 end;
 
@@ -1337,8 +1341,6 @@ begin
       p.Parameters.Add(sl[i]);
     sl.Free;
   end;
-  if edtxtermopts2.Text <> '' then
-    p.Parameters.Add(edtxtermopts2.Text);
   p.Execute;
   p.Free;
 end;
@@ -1664,12 +1666,6 @@ var
             my2(s1, Name, Caption);
             my2(s2, Name, Hint);
           end
-      else if c[k] is TTabSheet then
-        with TTabSheet(c[k]) do
-          if bRead then
-            Caption := my1(s1, Name, Caption)
-          else
-            my2(s1, Name, Caption)
       else if c[k] is TComboBox then
         with TComboBox(c[k]) do
           if bRead then
@@ -1702,30 +1698,23 @@ var
             if bRead then
               Column[i].Caption := Ini.ReadString(Name, IntToStr(i), Column[i].Caption)
             else
-              Ini.WriteString(Name, IntToStr(i), Column[i].Caption);
-  end;
-
-  procedure myLng2(a: array of TTabSheet);
-  var
-    i, j: integer;
-  begin
-    for j := Low(a) to High(a) do
-    begin
-      myLng1([a[j]]);
-      for i := 0 to TTabSheet(a[j]).ControlCount - 1 do
-        myLng1([TTabSheet(a[j]).Controls[i]]);
-    end;
-  end;
-
-  procedure myLng3(a: array of TPanel);
-  var
-    i, j: integer;
-  begin
-    for j := Low(a) to High(a) do
-    begin
-      for i := 0 to TPanel(a[j]).ControlCount - 1 do
-        myLng1([TPanel(a[j]).Controls[i]]);
-    end;
+              Ini.WriteString(Name, IntToStr(i), Column[i].Caption)
+      else if c[k] is TPanel then
+        for i := 0 to TPanel(c[k]).ControlCount - 1 do
+          myLng1([TPanel(c[k]).Controls[i]])
+      else if c[k] is TScrollBox then
+        for i := 0 to TScrollBox(c[k]).ControlCount - 1 do
+          myLng1([TScrollBox(c[k]).Controls[i]])
+      else if c[k] is TTabSheet then
+      begin
+        with TTabSheet(c[k]) do
+          if bRead then
+            Caption := my1(s1, Name, Caption)
+          else
+            my2(s1, Name, Caption);
+        for i := 0 to TTabSheet(c[k]).ControlCount - 1 do
+          myLng1([TTabSheet(c[k]).Controls[i]]);
+      end;
   end;
 
   procedure myLng4(a: array of TPopupMenu);
@@ -1746,7 +1735,7 @@ var
     for j := Low(a) to High(a) do
     begin
       for i := 0 to TPageControl(a[j]).PageCount - 1 do
-        myLng2([TPageControl(a[j]).Pages[i]]);
+        myLng1([TPageControl(a[j]).Pages[i]]);
     end;
   end;
 
@@ -1768,8 +1757,6 @@ begin
   s2 := 'Hints';
   s3 := 'Messages';
   myLng5([PageControl1, PageControl2, PageControl3]);
-  myLng3([Panel1, Panel2, Panel3, Panel7]);
-  myLng1([LVjobs]);
   myLng4([PopupMenu1, PopupMenu2, PopupMenu3]);
   for i := Low(mes) to High(mes) do
     if bRead then
@@ -1796,7 +1783,7 @@ begin
     Exit;
   Ini := TIniFile.Create(UTF8ToSys(sInifile));
   s := 'Main';
-  mySets2(Ini, s, [TabDefSets, TabConsole1], bRead);
+  mySets1(Ini, s, [TabDefSets], bRead);
   if not chkUseMasks.Checked then
     mySets1(Ini, s, [cmbProfile], bRead);
   mySets3(Ini, s, [cmbRunCmd, cmbExtPlayer], bRead);
@@ -2749,6 +2736,7 @@ var
   SL: TStringList;
 begin
   Result := '';
+  if chkUseMasks.Checked then
   for i := 0 to LVmasks.Items.Count - 1 do
   begin
     if LVmasks.Items[i].Checked then
@@ -2764,7 +2752,9 @@ begin
       end;
       SL.Free;
     end;
-  end;
+  end
+  else
+    Result := edtFileExts.Text;
 end;
 
 function TfrmGUIta.myGetProfile(fn: string): string;
@@ -2804,6 +2794,17 @@ begin
   begin
     Result := cmbProfile.Text;
   end;
+end;
+
+function TfrmGUIta.myGetLngFromFNs(jo: TJob; l: integer): string;
+var
+  v, a: string;
+begin
+  Result := '';
+  v := ExtractFileNameOnly(jo.f[0].getval('filename'));
+  a := ExtractFileNameOnly(jo.f[l].getval('filename'));
+  if Pos(v, a) = 1 then
+    Result := Trim(Copy(a, Length(v) + 2, Length(a)));
 end;
 
 //------------------------------------------------------------------------------
@@ -3373,9 +3374,9 @@ begin
   jo := TJob(LVjobs.Selected.Data);
   if chkPlayerIn.Checked then
   begin
-    s := myGetCmdFromJo(jo, 2) + myStrReplace(' | "$ffplay" -i -');
+    s := myGetCmdFromJo(jo, 2) + myStrReplace(' | "$ffplay" -');
     if chkDebug.Checked then
-      memJournal.Lines.Add(edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + s + ' ' + edtxtermopts2.Text);
+      memJournal.Lines.Add(edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + s);
     myRunCmd(s);
   end
   else
@@ -3440,7 +3441,7 @@ begin
     if LowerCase(ExtractFileExt(s)) = '.jpg' then
       s := ExtractShortPathNameUTF8(s);
     {$ENDIF}
-    si := si + ' -i "' + s + '"'; // -autoexit
+    si := si + ' "' + s + '"'; // -autoexit
     s := myStrReplace(si + vf + af + vn + an + sn);
     if chkDebug.Checked then
       memJournal.Lines.Add(s);
@@ -3476,10 +3477,7 @@ begin
       memJournal.Lines.Add(mes[12] + ' ' + sx);
   end
   else
-  begin
-    s := myStrReplace('"$ffplay"') + ' -i "' + s + '"'; // -autoexit
-    myExecProc1(s);
-  end;
+    myExecProc1(myStrReplace('"$ffplay"') + ' "' + s + '"');
 end;
 
 procedure TfrmGUIta.btnProfileSaveAsClick(Sender: TObject);
@@ -3514,11 +3512,11 @@ begin
           ExtractFileName(sd.FileName);
     end;
     Ini := TIniFile.Create(UTF8ToSys(s));
-    mySets2(Ini, '1', [TabOutput], False);
-    mySets2(Ini, 'input', [TabInput], False);
-    mySets2(Ini, 'video', [TabVideo], False);
-    mySets2(Ini, 'audio', [TabAudio], False);
-    mySets2(Ini, 'subtitle', [TabSubtitle], False);
+    mySets1(Ini, '1', [TabOutput], False);
+    mySets1(Ini, 'input', [TabInput], False);
+    mySets1(Ini, 'video', [TabVideo], False);
+    mySets1(Ini, 'audio', [TabAudio], False);
+    mySets1(Ini, 'subtitle', [TabSubtitle], False);
     Ini.Free;
     cmbProfile.Items.Clear;
     if not FileExistsUTF8(sd.FileName) then
@@ -3655,6 +3653,11 @@ begin
   mySets(False);
 end;
 
+procedure TfrmGUIta.chkAddTracksChange(Sender: TObject);
+begin
+  cmbAddTracks.Enabled := chkAddTracks.Checked;
+end;
+
 procedure TfrmGUIta.chkFilterComplexChange(Sender: TObject);
 begin
   xmyChange0(Sender);
@@ -3668,6 +3671,30 @@ begin
   cmbRotate.Enabled := not chkFilterComplex.Checked;
   cmbFiltersV.Enabled := not chkFilterComplex.Checked;
   cmbFiltersA.Enabled := not chkFilterComplex.Checked;
+end;
+
+procedure TfrmGUIta.chkLangA1Change(Sender: TObject);
+begin
+  if chkLangA1.Checked then
+    chkLangA2.Checked := False;
+end;
+
+procedure TfrmGUIta.chkLangA2Change(Sender: TObject);
+begin
+  if chkLangA2.Checked then
+    chkLangA1.Checked := False;
+end;
+
+procedure TfrmGUIta.chkLangS1Change(Sender: TObject);
+begin
+  if chkLangS1.Checked then
+    chkLangS2.Checked := False;
+end;
+
+procedure TfrmGUIta.chkLangS2Change(Sender: TObject);
+begin
+  if chkLangS2.Checked then
+    chkLangS1.Checked := False;
 end;
 
 procedure TfrmGUIta.chkPlayer2Change(Sender: TObject);
@@ -4069,7 +4096,7 @@ begin
     edtffplay.Text := 'ffplay';
     edtffprobe.Text:= 'ffprobe';
     edtDirTmp.Text := '/tmp';
-    edtDirOut.Text := '$HOME';
+    edtDirOut.Text := '';
     edtMediaInfo.Text:= 'mediainfo-gui';
     cmbExtPlayer.Text:= 'mplayer';
     my1(['vlc', 'dragon', 'avplay', 'ffplay', 'mplayer', 'totem', 'xine']);
@@ -4170,12 +4197,12 @@ begin
     li.Checked := True;
     li.Caption := '*';
     li.SubItems.Add('.jp*g;.png');
-    li.SubItems.Add('resize to image2 png w200.ini');
+    li.SubItems.Add('resize to png w160.ini');
     li := LVmasks.Items.Add;
     li.Checked := False;
     li.Caption := '*';
     li.SubItems.Add('.mp3;.ac3;.wav');
-    li.SubItems.Add('audio to ogg.ini');
+    li.SubItems.Add('sound to mp3 128k.ini');
     li := LVmasks.Items.Add;
     li.Checked := True;
     li.Caption := 'anim*';
@@ -4185,7 +4212,7 @@ begin
     li.Checked := True;
     li.Caption := '*';
     li.SubItems.Add('.avi;.mkv;.vob;.mp*g;.mp4;.mov;.flv;.3gp;.3g2;.asf;.wmv;.m2ts;.ts;.ogv;.webm;.rm;.qt');
-    li.SubItems.Add('libx264 slow film-libvo_aacenc-matroska.ini');
+    li.SubItems.Add('libx264 slow film w720-libvo_aacenc-matroska.ini');
   end;
   if not b then //inifile doesnt exists
   begin
@@ -4259,16 +4286,6 @@ begin
       chkPlayer3.Checked := True;
     {$ENDIF}
   end;
-  //{$IFDEF MSWINDOWS}
-  //edtffmpegChange(edtffmpeg);
-  //xmyCheckFile(edtffprobe);
-  //xmyCheckFile(edtffplay);
-  //xmyCheckFile(edtMediaInfo);
-  //xmyCheckFile(cmbExtPlayer);
-  //cmbProfileChange(cmbProfile);
-  //{$ENDIF}
-  //myFillEnc;
-  //myFillFmt;
 end;
 
 procedure TfrmGUIta.FormDestroy(Sender: TObject);
@@ -4653,12 +4670,12 @@ begin
   Sender.Canvas.Font.Color := c;
   if SubItem = 2 then
   begin
-    mRect := Item.DisplayRect(drLabel);
+    mRect := Item.DisplayRect(drBounds);
     for i := SubItem - 1 downto 0 do
       mRect.Left := mRect.Left + Sender.Column[i].Width;
-    {$IFDEF MSWINDOWS}
-    mRect.Left := mRect.Left - 17;
-    {$ENDIF}
+    //{$IFDEF MSWINDOWS}
+    //mRect.Left := mRect.Left - 17;
+    //{$ENDIF}
     mRect.Right := mRect.Left + Sender.Column[SubItem].Width;
     s := AppendPathDelim(sInidir) + Item.SubItems[1];
     if not FileExists(s) then
@@ -4668,42 +4685,6 @@ begin
       Sender.Canvas.FillRect(mRect);
       Sender.Canvas.TextRect(mRect, mRect.Left + 2, mRect.Top + 2, Item.SubItems[SubItem - 1]);
     end;
-  end;
-end;
-
-procedure TfrmGUIta.LVmasksDrawItem(Sender: TCustomListView; AItem: TListItem;
-  ARect: TRect; AState: TOwnerDrawState);
-var
-  b, c: TColor;
-  s: string;
-  i: integer;
-  r: TRect;
-begin
-  if AItem.Selected then
-  begin
-    b := clHighlight;
-    c := clHighlightText;
-  end
-  else
-  begin
-    b := clWindow;
-    c := clWindowText;
-  end;
-  r := AItem.DisplayRect(drBounds);
-  Sender.Canvas.FillRect(r);
-  Sender.Canvas.Brush.Color := b;
-  Sender.Canvas.Font.Color := c;
-  Sender.Canvas.TextOut(r.Left, r.Top, AItem.Caption);
-  s := AppendPathDelim(sInidir) + AItem.SubItems[1];
-  if not FileExists(s) then
-    c := clRed;
-  for i := 1 to TListView(Sender).Columns.Count - 1 do
-  begin
-    r.Left := r.Right;
-    r.Right := r.Left + TListView(Sender).Columns.Items[i].Width - 1;
-    if i = 2 then
-      Sender.Canvas.Font.Color := c;
-    Sender.Canvas.TextRect(r, r.Left, r.Top, AItem.SubItems[i - 1]);
   end;
 end;
 
@@ -5283,4 +5264,4 @@ begin
   od.Free;
 end;
 
-end.
+end.
