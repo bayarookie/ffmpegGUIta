@@ -66,13 +66,15 @@ type
     btnCrop: TButton;
     btnAddFileSplit: TButton;
     btnAddScreenGrab: TButton;
+    btnSaveSets: TButton;
+    chkSaveOnExit: TCheckBox;
+    chk1instance: TCheckBox;
+    chkAddTracks: TCheckBox;
+    chkDebug: TCheckBox;
     chkLangA1: TCheckBox;
     chkLangA2: TCheckBox;
     chkLangS1: TCheckBox;
     chkLangS2: TCheckBox;
-    chk1instance: TCheckBox;
-    chkAddTracks: TCheckBox;
-    chkDebug: TCheckBox;
     chkPlayer2: TCheckBox;
     chkPlayer3: TCheckBox;
     chkPlayerIn: TCheckBox;
@@ -129,14 +131,14 @@ type
     cmbDurationt2: TComboBox;
     cmbAddOptsV: TComboBox;
     cmbFilterComplex: TComboBox;
-    edtDirOut: TLabeledEdit;
-    edtDirTmp: TLabeledEdit;
-    edtffmpeg: TLabeledEdit;
-    edtffplay: TLabeledEdit;
-    edtffprobe: TLabeledEdit;
-    edtFileExts: TComboBox;
-    edtMediaInfo: TLabeledEdit;
+    edtDirOut: TComboBox;
+    edtDirTmp: TComboBox;
+    edtffmpeg: TComboBox;
+    edtffplay: TComboBox;
+    edtffprobe: TComboBox;
     edtBitrateA: TLabeledEdit;
+    edtFileExts: TComboBox;
+    edtMediaInfo: TComboBox;
     edtOfn: TLabeledEdit;
     edtxterm: TComboBox;
     edtxtermopts: TComboBox;
@@ -144,7 +146,12 @@ type
     edtBitrateV: TLabeledEdit;
     edtOfna: TLabeledEdit;
     lblDirLast: TLabel;
-    lblTestStartDurationTime: TLabel;
+    lblDirOut: TLabel;
+    lblDirTmp: TLabel;
+    lblffmpeg: TLabel;
+    lblffplay: TLabel;
+    lblffprobe: TLabel;
+    lblMediaInfo: TLabel;
     lblAddOptsI: TLabel;
     lblDurationss1: TLabel;
     lblDurationss2: TLabel;
@@ -172,6 +179,7 @@ type
     lblRotate: TLabel;
     lblScale: TLabel;
     lblSRate: TLabel;
+    lblTestStartDurationTime: TLabel;
     lblx264preset: TLabel;
     lblx264tune: TLabel;
     lblxterm: TLabel;
@@ -198,16 +206,25 @@ type
     PageControl3: TPageControl;
     PageControl2: TPageControl;
     Panel1: TPanel;
+    Panel10: TPanel;
+    Panel11: TPanel;
+    Panel12: TPanel;
+    Panel13: TPanel;
+    Panel14: TPanel;
+    Panel15: TPanel;
+    Panel16: TPanel;
     Panel2: TPanel;
     Panel3: TPanel;
     Panel4: TPanel;
     Panel5: TPanel;
     Panel6: TPanel;
     Panel7: TPanel;
+    Panel8: TPanel;
+    Panel9: TPanel;
     PopupMenu1: TPopupMenu;
     PopupMenu2: TPopupMenu;
     PopupMenu3: TPopupMenu;
-    ScrollBox1: TScrollBox;
+    Splitter1: TSplitter;
     spnKoefA: TSpinEdit;
     spnKoefV: TSpinEdit;
     StatusBar1: TStatusBar;
@@ -218,7 +235,6 @@ type
     SynMemo5: TSynMemo;
     SynMemo6: TSynMemo;
     SynUNIXShellScriptSyn1: TSynUNIXShellScriptSyn;
-    TabDefSets: TTabSheet;
     TabJournal: TTabSheet;
     TabConsole: TTabSheet;
     TabConsole1: TTabSheet;
@@ -230,6 +246,7 @@ type
     TabConsole4: TTabSheet;
     TabCmdline: TTabSheet;
     TabInput: TTabSheet;
+    TabDefSets: TTabSheet;
     TabVideo: TTabSheet;
     TabAudio: TTabSheet;
     TabSubtitle: TTabSheet;
@@ -259,6 +276,7 @@ type
     procedure btnPlayInClick(Sender: TObject);
     procedure btnPlayOutClick(Sender: TObject);
     procedure btnProfileSaveAsClick(Sender: TObject);
+    procedure btnSaveSetsClick(Sender: TObject);
     procedure btnStartClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
     procedure btnSuspendClick(Sender: TObject);
@@ -334,6 +352,8 @@ type
     procedure PopupMenu1Popup(Sender: TObject);
     procedure PopupMenu2Popup(Sender: TObject);
     procedure PopupMenu3Popup(Sender: TObject);
+    procedure Splitter1CanResize(Sender: TObject; var NewSize: Integer;
+      var Accept: Boolean);
     procedure TabCmdlineShow(Sender: TObject);
     procedure TabContRowsShow(Sender: TObject);
     procedure TabVideoShow(Sender: TObject);
@@ -527,7 +547,7 @@ begin
       with TComboBox(c[k]) do
         if bRead then
         begin
-          Text := Ini.ReadString(s, Name, Text);
+          //Text := Ini.ReadString(s, Name, Text);
           i := 0;
           repeat
             w := Ini.ReadString(Name, IntToStr(i), '');
@@ -539,7 +559,7 @@ begin
         end
         else
         begin
-          myToIni(Ini, s, Name, Text);
+          //myToIni(Ini, s, Name, Text);
           if (Items.Count > 1) or ((Items.Count = 1) and (Items[0] <> Text)) then
             for i := 0 to Items.Count - 1 do
               myToIni(Ini, Name, IntToStr(i), Items[i]);
@@ -1348,40 +1368,38 @@ end;
 procedure TfrmGUIta.myFindFiles(dir: string; c: array of TObject);
 var
   SL: TStringList;
-  i, j: integer;
+  i: integer;
   s, t: string;
 begin
   SL := TStringList.Create;
   {$IFDEF MSWINDOWS}
   s := '*.exe';
-  {$ELSE}
-  s := '*';
-  {$ENDIF}
   if myGetFileList(dir, s, SL, True) then
-    for i := 0 to High(c) do
+  for i := 0 to High(c) do
+  begin
+    s := myExpandFN(myGet2(c[i]));
+    for j := 0 to SL.Count - 1 do
     begin
-      {$IFDEF MSWINDOWS}
-      s := LowerCase(myExpandFN(myGet2(c[i])));
-      {$ELSE}
-      s := myExpandFN(myGet2(c[i]));
-      {$ENDIF}
-      for j := 0 to SL.Count - 1 do
+      t := SL[j];
+      if LowerCase(ExtractFileName(s)) = LowerCase(ExtractFileName(t)) then
       begin
-        {$IFDEF MSWINDOWS}
-        t := LowerCase(SL[j]);
-        {$ELSE}
-        t := SL[j];
-        {$ENDIF}
-        if s = t then
-          Break
-        else
-        if ExtractFileName(s) = ExtractFileName(t) then
-        begin
-          mySet2(c[i], myUnExpandFN(SL[j]));
-          Break;
-        end;
+        t := myUnExpandFN(t);
+        mySet2(c[i], t);
+        if (c[i] is TComboBox) then
+          TComboBox(c[i]).Items.Add(t);
       end;
     end;
+  end;
+  {$ELSE}
+  for i := 0 to High(c) do
+  begin
+    s := myGet2(c[i]);
+    t := FindDefaultExecutablePath(s);
+    if FileExists(t) then
+      if (c[i] is TComboBox) then
+        TComboBox(c[i]).Items.Add(s);
+  end;
+  {$ENDIF}
   SL.Free;
 end;
 
@@ -1789,9 +1807,9 @@ begin
   mySets3(Ini, s, [cmbRunCmd, cmbExtPlayer], bRead);
   if bRead then
   begin
-    for i := 0 to LVjobs.Columns.Count - 1 do
-      LVjobs.Column[i].Width :=
-        Ini.ReadInteger(LVjobs.Name, IntToStr(i), LVjobs.Column[i].Width);
+    //for i := 0 to LVjobs.Columns.Count - 1 do
+    //  LVjobs.Column[i].Width :=
+    //    Ini.ReadInteger(LVjobs.Name, IntToStr(i), LVjobs.Column[i].Width);
     myFormPosLoad(frmGUIta, Ini);
     i := 0;
     while Ini.ReadString('Masks', IntToStr(i) + 'Checked', '') <> '' do
@@ -1806,8 +1824,8 @@ begin
   end
   else
   begin
-    for i := 0 to LVjobs.Columns.Count - 1 do
-      myToIni(Ini, LVjobs.Name, IntToStr(i), IntToStr(LVjobs.Column[i].Width));
+    //for i := 0 to LVjobs.Columns.Count - 1 do
+    //  myToIni(Ini, LVjobs.Name, IntToStr(i), IntToStr(LVjobs.Column[i].Width));
     myFormPosSave(frmGUIta, Ini);
     for i := 0 to 15 do
     begin
@@ -3527,6 +3545,11 @@ begin
   end;
 end;
 
+procedure TfrmGUIta.btnSaveSetsClick(Sender: TObject);
+begin
+  mySets(False);
+end;
+
 procedure TfrmGUIta.btnStartClick(Sender: TObject);
 begin
   if (ThreadConv <> nil) then
@@ -3650,7 +3673,7 @@ begin
       myUnik.Enabled := False;
     end;
   end;
-  mySets(False);
+  //mySets(False);
 end;
 
 procedure TfrmGUIta.chkAddTracksChange(Sender: TObject);
@@ -3943,7 +3966,6 @@ procedure TfrmGUIta.edtffmpegChange(Sender: TObject);
 var
   s: string;
 begin
-  //if bUpdFromCode then Exit;
   s := myExpandFN(myGet2(Sender));
   if FileExistsUTF8(s) then
   begin
@@ -4015,7 +4037,7 @@ var
   p: PChar;
   {$ENDIF}
   li: TListItem;
-  procedure my1(a: array of string);
+  procedure myFindPlayers(a: array of string);
   var
     i: integer;
     s: string;
@@ -4023,8 +4045,41 @@ var
     for i := Low(a) to High(a) do
     begin
       s := a[i];
+      {$IFDEF MSWINDOWS}
+      reg := TRegistry.Create;
+      try
+        //Reg.RootKey := HKEY_CLASSES_ROOT;
+        //if Reg.OpenKeyReadOnly('\Applications\' + s + '\shell\open\command') then
+        Reg.RootKey := HKEY_LOCAL_MACHINE;
+        if Reg.OpenKeyReadOnly('\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\' + s) then
+        begin
+          s := Reg.ReadString('');
+          if (s <> '') and (s[1] = '"') then
+          begin
+            j := PosEx('"', s, 2);
+            if j > 0 then
+              s := Copy(s, 2, j - 2);
+          end;
+          t := myExpandEnv(s);
+          if FileExistsUTF8(t) then
+          begin
+            s := myUnExpandFN(s);
+            //mySet2(cmbExtPlayer, s);
+            myAdd2cmb(cmbExtPlayer, s);
+          end
+          else
+            s := '';
+        end;
+        Reg.CloseKey;
+      except
+        on E: Exception do
+          ShowMessage(E.Message);
+      end;
+      reg.Free;
+      {$ELSE}
       if FileExists(FindDefaultExecutablePath(s)) then
         cmbExtPlayer.Items.Add(s);
+      {$ENDIF}
     end;
     if cmbExtPlayer.Items.Count > 0 then
       cmbExtPlayer.Text := cmbExtPlayer.Items[0];
@@ -4085,8 +4140,13 @@ begin
   begin
     cmbDirLast.Text := GetCurrentDir;
     {$IFDEF MSWINDOWS}
+    edtffmpeg.Text := 'ffmpeg.exe';
+    edtffplay.Text := 'ffplay.exe';
+    edtffprobe.Text:= 'ffprobe.exe';
+    edtDirTmp.Text := '%TEMP%';
     edtDirOut.Text := 'C:\TEMP';
-    cmbExtPlayer.Items.Add('%ProgramFiles%\Windows Media Player\wmplayer.exe');
+    edtMediaInfo.Text:= 'MediaInfo.exe';
+    myFindPlayers(['mpc-hc.exe', 'KMPlayer.exe', 'PotPlayerMini.exe', 'wmplayer.exe']);
     edtxterm.Text := 'cmd.exe';
     edtxtermopts.Text := '/c';
     edtxtermopts.Items.Add('/c');
@@ -4096,10 +4156,9 @@ begin
     edtffplay.Text := 'ffplay';
     edtffprobe.Text:= 'ffprobe';
     edtDirTmp.Text := '/tmp';
-    edtDirOut.Text := '';
+    edtDirOut.Text := '$HOME';
     edtMediaInfo.Text:= 'mediainfo-gui';
-    cmbExtPlayer.Text:= 'mplayer';
-    my1(['vlc', 'dragon', 'avplay', 'ffplay', 'mplayer', 'totem', 'xine']);
+    myFindPlayers(['mplayer', 'vlc', 'dragon', 'avplay', 'ffplay', 'totem', 'xine']);
     cmbDirLast.Text := '$HOME';
     cmbFont.Text := 'Ubuntu';
     edtxterm.Text := '/bin/sh';
@@ -4135,6 +4194,11 @@ begin
     //need to verify all themes for background colors
     //if the following occurs: r = 65535, g = 0, b = 0.
     //It needs to do another color theme for synmemo
+    myFindFiles(sDirApp, [edtffmpeg, edtffprobe, edtffplay, edtMediaInfo, cmbExtPlayer]);
+    chkAddTracks.Checked := True;
+    chkSaveFormPos.Checked := True;
+    chk1instance.Checked := True;
+    chkSaveOnExit.Checked := True;
   end;
   frmGUIta.Font.Name := cmbFont.Text;
   //messages
@@ -4204,7 +4268,7 @@ begin
     li.SubItems.Add('.mp3;.ac3;.wav');
     li.SubItems.Add('sound to mp3 128k.ini');
     li := LVmasks.Items.Add;
-    li.Checked := True;
+    li.Checked := False;
     li.Caption := 'anim*';
     li.SubItems.Add('.avi;.mkv;.vob;.mp*g;.mp4;.mov;.flv;.3gp;.3g2;.asf;.wmv;.m2ts;.ts;.ogv;.webm;.rm;.qt');
     li.SubItems.Add('libx264 slow animation-libvo_aacenc-matroska.ini');
@@ -4216,7 +4280,6 @@ begin
   end;
   if not b then //inifile doesnt exists
   begin
-    myFindFiles(sDirApp, [edtffmpeg, edtffprobe, edtffplay, edtMediaInfo, cmbExtPlayer]);
     {$IFDEF MSWINDOWS}
     if not FileExistsUTF8(myExpandFN(edtMediaInfo.Text)) then
     begin
@@ -4256,42 +4319,15 @@ begin
       reg.Free;
     end;
     {$ENDIF}
-    {$IFDEF MSWINDOWS}
-    if not FileExistsUTF8(myExpandFN(cmbExtPlayer.Text)) then
-    begin
-      reg := TRegistry.Create;
-      try
-        Reg.RootKey := HKEY_CLASSES_ROOT;
-        if Reg.OpenKeyReadOnly('\Applications\mpc-hc.exe\shell\open\command') then
-        begin
-          s := Reg.ReadString('');
-          s := Copy(s, 2, Length(s) - 7);
-          if FileExistsUTF8(s) then
-          begin
-            s := myUnExpandFN(s);
-            mySet2(cmbExtPlayer, s);
-            myAdd2cmb(cmbExtPlayer, s);
-          end
-          else
-            s := '';
-        end;
-        Reg.CloseKey;
-      except
-        on E: Exception do
-          ShowMessage(E.Message);
-      end;
-      reg.Free;
-    end;
-    if FileExistsUTF8(myExpandFN(cmbExtPlayer.Text)) then
-      chkPlayer3.Checked := True;
-    {$ENDIF}
   end;
+  edtffmpegChange(edtffmpeg);
 end;
 
 procedure TfrmGUIta.FormDestroy(Sender: TObject);
 begin
-  mySets(False);
   Files2Add.Free;
+  if chkSaveOnExit.Checked then
+    mySets(False);
 end;
 
 procedure TfrmGUIta.FormDropFiles(Sender: TObject; const FileNames: array of string);
@@ -4540,12 +4576,14 @@ procedure TfrmGUIta.LVjobsDragDrop(Sender, Source: TObject; X, Y: integer);
 var
   currentItem, nextItem, dragItem, dropItem: TListItem;
   i: integer;
+  b: boolean;
 begin
   if Sender <> Source then Exit;
   with TListView(Sender) do
   begin
     dropItem := GetItemAt(X, Y);
     currentItem := Selected;
+    b := Selected.Checked;
     while currentItem <> nil do
     begin
       nextItem := nil;
@@ -4556,7 +4594,10 @@ begin
           break;
         end;
       if Assigned(dropItem) then
-        dragItem := Items.Insert(dropItem.Index)
+      begin
+        dragItem := Items.Insert(dropItem.Index);
+        dragItem.Checked := b;
+      end
       else
         dragItem := Items.Add;
       dragItem.Assign(currentItem);
@@ -4673,9 +4714,7 @@ begin
     mRect := Item.DisplayRect(drBounds);
     for i := SubItem - 1 downto 0 do
       mRect.Left := mRect.Left + Sender.Column[i].Width;
-    //{$IFDEF MSWINDOWS}
-    //mRect.Left := mRect.Left - 17;
-    //{$ENDIF}
+    mRect.Left := mRect.Left + 2;
     mRect.Right := mRect.Left + Sender.Column[SubItem].Width;
     s := AppendPathDelim(sInidir) + Item.SubItems[1];
     if not FileExists(s) then
@@ -4989,6 +5028,12 @@ begin
   mnuPasteFiles.Enabled := b3;
   b := (LVfiles.Selected <> nil) and (LVfiles.Items.Count > 1);
   mnuDeleteFile.Enabled := b;
+end;
+
+procedure TfrmGUIta.Splitter1CanResize(Sender: TObject; var NewSize: Integer;
+  var Accept: Boolean);
+begin
+  Accept := NewSize > 200
 end;
 
 procedure TfrmGUIta.TabCmdlineShow(Sender: TObject);

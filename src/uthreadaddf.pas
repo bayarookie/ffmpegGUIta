@@ -300,8 +300,10 @@ var
   NumBytes, BytesRead: integer;
   sl: TStringList;
   i: integer;
+  b: boolean;
 begin
-  while (not Terminated) and True do //?
+  b := True;
+  while (not Terminated) and b do //?
   begin
     BytesRead := 0;
     sl := Nil;
@@ -345,7 +347,9 @@ begin
           Synchronize(@ShowSynMemo);
         end;
         Synchronize(@DataOut);
-      end;
+      end
+      else
+        b := False;
     finally
       sl.Free;
       pr.Free;
@@ -360,4 +364,4 @@ begin
   inherited Create(CreateSuspended);
 end;
 
-end.
+end.
