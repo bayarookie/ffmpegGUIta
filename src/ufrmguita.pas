@@ -307,6 +307,7 @@ type
     procedure cmbLanguageChange(Sender: TObject);
     procedure cmbProfileChange(Sender: TObject);
     procedure edtffmpegChange(Sender: TObject);
+    procedure edtffmpegGetItems(Sender: TObject);
     procedure edtOfnChange(Sender: TObject);
     procedure edtxtermSelect(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -381,7 +382,7 @@ type
     procedure myAddFileSplit(files: TStrings);
     procedure myAddFilesPlus(li: TListItem; files: TStrings);
     procedure myAddFileStart;
-    procedure myFindFiles(dir: string; c: array of TObject);
+    procedure myFindFiles(dir: string; c: array of TObject; bSet2: boolean = True);
     function myGetFileList(const Path, Mask: string; List: TStrings;
       subdir: boolean = False; fullpath: boolean = True): boolean;
     function myGetSimilarFiles(fn: string; List: TStrings): boolean;
@@ -442,7 +443,7 @@ var
   frmGUIta: TfrmGUIta;
   sCap, sDirApp, sInidir, sInifile, sLngfile: string;
   fs: TFormatSettings;
-  mes: array [0..27] of string;
+  mes: array [0..28] of string;
   tAutoStart: TTimer;
   bUpdFromCode: boolean;
   ThreadConv: TThreadConv;
@@ -1365,40 +1366,41 @@ begin
   p.Free;
 end;
 
-procedure TfrmGUIta.myFindFiles(dir: string; c: array of TObject);
+procedure TfrmGUIta.myFindFiles(dir: string; c: array of TObject; bSet2: boolean = True);
 var
   SL: TStringList;
-  i: integer;
-  s, t: string;
+  i, j: integer;
+  s: string;
 begin
   SL := TStringList.Create;
   {$IFDEF MSWINDOWS}
-  s := '*.exe';
-  if myGetFileList(dir, s, SL, True) then
+  if (c[i] is TComboBox) then
+  if myGetFileList(dir, '*.exe', SL, True) then
   for i := 0 to High(c) do
   begin
-    s := myExpandFN(myGet2(c[i]));
+    //s := myGet2(c[i]);
+    s := LowerCase(Copy(TComboBox(c[i]).Name, 4, 100)) + '.exe';
     for j := 0 to SL.Count - 1 do
-    begin
-      t := SL[j];
-      if LowerCase(ExtractFileName(s)) = LowerCase(ExtractFileName(t)) then
-      begin
-        t := myUnExpandFN(t);
-        mySet2(c[i], t);
-        if (c[i] is TComboBox) then
-          TComboBox(c[i]).Items.Add(t);
-      end;
-    end;
+      if s = LowerCase(ExtractFileName(SL[j])) then
+        TComboBox(c[i]).Items.Add(myUnExpandFN(SL[j]));
+    if bSet2 and (TComboBox(c[i]).Items.Count > 0) then
+      TComboBox(c[i]).ItemIndex := TComboBox(c[i]).Items.Count - 1;
   end;
   {$ELSE}
   for i := 0 to High(c) do
-  begin
-    s := myGet2(c[i]);
-    t := FindDefaultExecutablePath(s);
-    if FileExists(t) then
-      if (c[i] is TComboBox) then
-        TComboBox(c[i]).Items.Add(s);
-  end;
+    if (c[i] is TComboBox) then
+    begin
+      s := myGet2(c[i]);
+      if FileExists(myExpandFN(ExtractFileName(s))) then
+        TComboBox(c[i]).Items.Add(ExtractFileName(s));
+      if myGetFileList(dir, ExtractFileName(s), SL, True) then
+        for j := 0 to SL.Count - 1 do
+          myAdd2cmb(TComboBox(c[i]), myUnExpandFN(SL[j]));
+      if FileExists(myExpandFN(s)) then
+        myAdd2cmb(TComboBox(c[i]), s);
+      if bSet2 and (TComboBox(c[i]).Items.Count > 0) then
+        TComboBox(c[i]).ItemIndex := 0;
+    end;
   {$ENDIF}
   SL.Free;
 end;
@@ -1431,8 +1433,13 @@ begin
     else
     begin
       Result := sDirApp + fn;
+      //{$IFDEF MSWINDOWS}
+      //{$ELSE}
       if not (DirectoryExistsUTF8(Result) or FileExistsUTF8(Result)) then
-        Result := FindDefaultExecutablePath(ExtractFileName(fn), sDirApp);
+        s := FindDefaultExecutablePath(ExtractFileName(fn), sDirApp);
+      if s <> '' then
+        Result := s;
+      //{$ENDIF}
     end;
   end;
 end;
@@ -3975,6 +3982,20 @@ begin
   xmyCheckFile(Sender);
 end;
 
+procedure TfrmGUIta.edtffmpegGetItems(Sender: TObject);
+var
+  s, t: string;
+begin
+  if TComboBox(Sender).Items.Count = 0 then
+  begin
+    s := sDirApp;
+    t := Copy(TComboBox(Sender).Name, 4, 100);
+    if not InputQuery(mes[20] + ' ' + t, mes[28], s) then
+      Exit;
+    myFindFiles(s, [Sender], False);
+  end;
+end;
+
 procedure TfrmGUIta.edtOfnChange(Sender: TObject);
 var
   sd, se: string;
@@ -4041,6 +4062,10 @@ var
   var
     i: integer;
     s: string;
+    {$IFDEF MSWINDOWS}
+    j: integer;
+    t: string;
+    {$ENDIF}
   begin
     for i := Low(a) to High(a) do
     begin
@@ -4190,11 +4215,7 @@ begin
     end;
     chkSynColor.Checked := myGetColor < 70000;
     //r + g + b, 65535 + 65535 + 65535 = 196605 = white, 0 + 0 + 0 = black
-    //if r + g + b < 70000 then maybe used dark theme
-    //need to verify all themes for background colors
-    //if the following occurs: r = 65535, g = 0, b = 0.
-    //It needs to do another color theme for synmemo
-    myFindFiles(sDirApp, [edtffmpeg, edtffprobe, edtffplay, edtMediaInfo, cmbExtPlayer]);
+    myFindFiles(sDirApp, [edtffmpeg, edtffprobe, edtffplay, edtMediaInfo]);
     chkAddTracks.Checked := True;
     chkSaveFormPos.Checked := True;
     chk1instance.Checked := True;
@@ -4230,6 +4251,7 @@ begin
   mes[25] := 'Split file';
   mes[26] := 'length of cuts in seconds:';
   mes[27] := 'Files';
+  mes[28] := 'Search in folder:';
   s := UpperCase(mes[6]);
   if SynUNIXShellScriptSyn1.SecondKeyWords.IndexOf(s) < 0 then
     SynUNIXShellScriptSyn1.SecondKeyWords.Add(s);
@@ -4320,7 +4342,15 @@ begin
     end;
     {$ENDIF}
   end;
+  //TComboBox - did not work onChange
   edtffmpegChange(edtffmpeg);
+  xmyCheckFile(edtffplay);
+  xmyCheckFile(edtffprobe);
+  xmyCheckFile(edtMediaInfo);
+  xmyCheckFile(cmbExtPlayer);
+  xmyCheckDir(edtDirTmp);
+  xmyCheckDir(edtDirOut);
+  xmyCheckDir(cmbDirLast);
 end;
 
 procedure TfrmGUIta.FormDestroy(Sender: TObject);
