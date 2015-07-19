@@ -44,6 +44,7 @@ type
     btnLanguage: TButton;
     btnMaskAdd: TButton;
     btnMaskDel: TButton;
+    btnMaskReset: TButton;
     btnMaskEdit: TButton;
     btnMediaInfo1: TButton;
     btnMediaInfo2: TButton;
@@ -67,6 +68,7 @@ type
     btnAddFileSplit: TButton;
     btnAddScreenGrab: TButton;
     btnSaveSets: TButton;
+    btnReset: TButton;
     chkSaveOnExit: TCheckBox;
     chk1instance: TCheckBox;
     chkAddTracks: TCheckBox;
@@ -271,11 +273,13 @@ type
     procedure btnMaskAddClick(Sender: TObject);
     procedure btnMaskDelClick(Sender: TObject);
     procedure btnMaskEditClick(Sender: TObject);
+    procedure btnMaskResetClick(Sender: TObject);
     procedure btnMediaInfo1Click(Sender: TObject);
     procedure btnFindOfnClick(Sender: TObject);
     procedure btnPlayInClick(Sender: TObject);
     procedure btnPlayOutClick(Sender: TObject);
     procedure btnProfileSaveAsClick(Sender: TObject);
+    procedure btnResetClick(Sender: TObject);
     procedure btnSaveSetsClick(Sender: TObject);
     procedure btnStartClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
@@ -299,13 +303,17 @@ type
     procedure cmbEncoderVChange(Sender: TObject);
     procedure cmbExtChange(Sender: TObject);
     procedure cmbExtPlayerChange(Sender: TObject);
+    procedure cmbExtPlayerGetItems(Sender: TObject);
     procedure cmbExtSelect(Sender: TObject);
     procedure cmbFontGetItems(Sender: TObject);
     procedure cmbFontSelect(Sender: TObject);
     procedure cmbFormatChange(Sender: TObject);
     procedure cmbFormatSelect(Sender: TObject);
     procedure cmbLanguageChange(Sender: TObject);
+    procedure cmbLanguageGetItems(Sender: TObject);
     procedure cmbProfileChange(Sender: TObject);
+    procedure cmbProfileGetItems(Sender: TObject);
+    procedure cmbRunCmdGetItems(Sender: TObject);
     procedure edtffmpegChange(Sender: TObject);
     procedure edtffmpegGetItems(Sender: TObject);
     procedure edtOfnChange(Sender: TObject);
@@ -383,13 +391,12 @@ type
     procedure myAddFilesPlus(li: TListItem; files: TStrings);
     procedure myAddFileStart;
     procedure myFindFiles(dir: string; c: array of TObject; bSet2: boolean = True);
+    procedure myFindPlayers(bSet2: boolean);
     function myGetFileList(const Path, Mask: string; List: TStrings;
       subdir: boolean = False; fullpath: boolean = True): boolean;
     function myGetSimilarFiles(fn: string; List: TStrings): boolean;
     procedure myFormPosLoad(Form: TForm; Ini: TIniFile);
     procedure myFormPosSave(Form: TForm; Ini: TIniFile);
-    procedure myLanguage(bRead: boolean);
-    procedure mySets(bRead: boolean);
     procedure myDisComp;
     function myGetCaptionCont(p: TCont): string;
     procedure myGetWH(v: TCont; var w, h: integer);
@@ -410,6 +417,13 @@ type
     procedure myGetClipboardFileNames(files: TStrings; test: boolean = False);
     function myGetColor: integer;
     function myGetExts: string;
+    procedure myDefaultSets;
+    procedure myToIni(Ini: TIniFile; s1, s2, s3: string; t: Integer = 0);
+    procedure mySets1(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean);
+    procedure mySets3(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean);
+    procedure mySets(bRead: boolean);
+    procedure myDefaultLang;
+    procedure myLanguage(bRead: boolean);
   public
     { public declarations }
     function myExpandFN(fn: string): string;
@@ -450,13 +464,13 @@ var
   ThreadTest: TThreadTest;
   ThreadAddF: TThreadAddF;
   ThreadCmdr: TThreadExec;
-  sdiv: string =
-  '--------------------------------------------------------------------------------';
+  sdiv: string = '--------------------------------------------------------------------------------';
   DuraAll: double;
   DuraAl2: integer;
   Files2Add: TList;
   Counter: integer;
   myUnik: TUniqueInstance;
+  cDefaultSets: TCont;
 
 implementation
 
@@ -464,19 +478,19 @@ uses ubyUtils, ufrmsplash, ufrmcrop, ufrmgrab;
 
 {$R *.lfm}
 
-procedure myToIni(Ini: TIniFile; s1, s2, s3: string; tag: Integer = 0);
+procedure TfrmGUIta.myToIni(Ini: TIniFile; s1, s2, s3: string; t: Integer = 0);
 begin
-  if (tag <> 1) and (s3 = '') then
+  if (t <> 1) and ((cDefaultSets.getval(s2) = s3) or (s3 = '')) then
     Ini.DeleteKey(s1, s2)
   else if Ini.ReadString(s1, s2, '') <> s3 then
   begin
-    if (s3[1] = '"') and (s3[Length(s3)] = '"') then
+    if (s3 <> '') and (s3[1] = '"') and (s3[Length(s3)] = '"') then
       s3 := '''' + s3 + '''';
     Ini.WriteString(s1, s2, s3);
   end;
 end;
 
-procedure mySets1(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean);
+procedure TfrmGUIta.mySets1(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean);
 var
   k, i: integer;
 begin
@@ -520,25 +534,26 @@ begin
           if bRead then
             Value := Ini.ReadInteger(s, Name, Value)
           else
-            myToIni(Ini, s, Name, IntToStr(Value))
+          //myToIni(Ini, s, Name, IntToStr(Value))
+            myToIni(Ini, s, Name, Text)
       else if c[k] is TCheckBox then
         with TCheckBox(c[k]) do
           if bRead then
             Checked := Ini.ReadBool(s, Name, Checked)
           else
-            myToIni(Ini, s, Name, IfThen(Checked, '1', ''))
+            myToIni(Ini, s, Name, IfThen(Checked, '1', '0'))
       else if c[k] is TPanel then
         for i := 0 to TPanel(c[k]).ControlCount - 1 do
           mySets1(Ini, s, [TPanel(c[k]).Controls[i]], bRead)
       else if c[k] is TTabSheet then
         for i := 0 to TTabSheet(c[k]).ControlCount - 1 do
           mySets1(Ini, s, [TTabSheet(c[k]).Controls[i]], bRead)
-      else if c[k] is TScrollBox then
-        for i := 0 to TScrollBox(c[k]).ControlCount - 1 do
-          mySets1(Ini, s, [TScrollBox(c[k]).Controls[i]], bRead);
+      //else if c[k] is TScrollBox then
+      //  for i := 0 to TScrollBox(c[k]).ControlCount - 1 do
+      //    mySets1(Ini, s, [TScrollBox(c[k]).Controls[i]], bRead)
 end;
 
-procedure mySets3(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean);
+procedure TfrmGUIta.mySets3(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean);
 var
   i, k: integer;
   w: string;
@@ -1374,9 +1389,9 @@ var
 begin
   SL := TStringList.Create;
   {$IFDEF MSWINDOWS}
-  if (c[i] is TComboBox) then
   if myGetFileList(dir, '*.exe', SL, True) then
   for i := 0 to High(c) do
+  if (c[i] is TComboBox) then
   begin
     //s := myGet2(c[i]);
     s := LowerCase(Copy(TComboBox(c[i]).Name, 4, 100)) + '.exe';
@@ -1403,6 +1418,94 @@ begin
     end;
   {$ENDIF}
   SL.Free;
+end;
+
+procedure TfrmGUIta.myFindPlayers(bSet2: boolean);
+var
+  i: integer;
+  s: string;
+  {$IFDEF MSWINDOWS}
+  j: integer;
+  Reg, Re2: TRegistry;
+  SL: TStringList;
+  procedure my1;
+  begin
+    if Re2.OpenKeyReadOnly(s) then
+    begin
+      s := Re2.ReadString('');
+      if (s <> '') and (s[1] = '"') then
+      begin
+        j := PosEx('"', s, 2);
+        if j > 0 then
+          s := Copy(s, 2, j - 2);
+      end
+      else
+      begin
+        j := PosEx(' ', s, 2);
+        if j > 0 then
+          s := Copy(s, 1, j - 1);
+      end;
+      if FileExistsUTF8(myExpandEnv(s)) then
+        myAdd2cmb(cmbExtPlayer, myUnExpandFN(s))
+      else
+        s := '';
+    end;
+  end;
+
+  {$ELSE}
+  a: array [0..9] of string = ('mplayer', 'vlc', 'dragon', 'avplay', 'ffplay',
+                               'totem', 'xine', 'mpv', 'smplayer', 'miro');
+  {$ENDIF}
+begin
+  {$IFDEF MSWINDOWS}
+  Reg := TRegistry.Create;
+  Re2 := TRegistry.Create;
+  try
+    Reg.RootKey := HKEY_CURRENT_USER;
+    Re2.RootKey := HKEY_CLASSES_ROOT;
+    if Reg.OpenKeyReadOnly('\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.avi\OpenWithProgids') then
+    begin
+      SL := TStringList.Create;
+      Reg.GetValueNames(SL);
+      for i := 0 to SL.Count - 1 do
+      begin
+        s := '\' + SL[i] + '\shell\open\command'; //KMPlayer.avi
+        my1;
+      end;
+      SL.Free;
+    end;
+    //HKEY_CURRENT_USER
+    if Reg.OpenKeyReadOnly('\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.avi\OpenWithList') then
+    begin
+      SL := TStringList.Create;
+      Reg.GetValueNames(SL);
+      for i := 0 to SL.Count - 1 do
+      begin
+        s := Reg.ReadString(SL[i]);
+        //HKEY_CLASSES_ROOT\Applications\ffplay.exe\shell\open\command
+        s := '\Applications\' + s + '\shell\open\command'; //ffplay.exe
+        my1;
+      end;
+      SL.Free;
+    end;
+    Reg.CloseKey;
+    Re2.CloseKey;
+  except
+    on E: Exception do
+      ShowMessage(E.Message);
+  end;
+  Reg.Free;
+  Re2.Free;
+  {$ELSE}
+  for i := Low(a) to High(a) do
+  begin
+    s := a[i];
+    if FileExists(FindDefaultExecutablePath(s)) then
+      myAdd2cmb(cmbExtPlayer, s);
+  end;
+  {$ENDIF}
+  if bSet2 and (cmbExtPlayer.Items.Count > 0) then
+    cmbExtPlayer.ItemIndex := 0;
 end;
 
 function TfrmGUIta.myExpandFN(fn: string): string;
@@ -1612,6 +1715,11 @@ begin
     end;
 end;
 
+procedure TfrmGUIta.myDefaultLang;
+begin
+
+end;
+
 procedure TfrmGUIta.myLanguage(bRead: boolean);
 var
   Ini: TIniFile;
@@ -1765,18 +1873,40 @@ var
   end;
 
 begin
-  s1 := AppendPathDelim(sDirApp) + cmbLanguage.Text;
+  s1 := AppendPathDelim(sInidir) + cmbLanguage.Text;
   if bRead and not FileExistsUTF8(s1) then
   begin
-    if sInidir = sDirApp then
-      Exit;
-    s1 := AppendPathDelim(sInidir) + cmbLanguage.Text;
-    if not FileExistsUTF8(s1) then
-      Exit;
-  end
-  else
-  if not DirectoryIsWritable(sDirApp) then
-    s1 := AppendPathDelim(sInidir) + cmbLanguage.Text;
+    mes[0] := 'Video files';
+    mes[1] := 'All files (*)|*';
+    mes[2] := 'Usage: ffmpegGUIta [-start] [<video files>...]\n-start: start converting';
+    mes[3] := 'Creating file list';
+    mes[4] := 'process completed, error code:';
+    mes[5] := 'job completed for';
+    mes[6] := 'Error';
+    mes[7] := 'Select job to change convert parameters';
+    mes[8] := 'Cancel';
+    mes[9] := 'temporary';
+    mes[10] := 'folder not exists';
+    mes[11] := 'cmdline is empty';
+    mes[12] := 'file not exists';
+    mes[13] := 'create new?';
+    mes[14] := 'Source';
+    mes[15] := 'Destination';
+    mes[16] := 'Difference';
+    mes[17] := 'Executable';
+    mes[18] := 'Find folder';
+    mes[19] := 'Expected time of converting this file is:';
+    mes[20] := 'Find file';
+    mes[21] := 'Overall duration is';
+    mes[22] := 'width';
+    mes[23] := 'height';
+    mes[24] := 'is not divisable by 16';
+    mes[25] := 'Split file';
+    mes[26] := 'length of cuts in seconds:';
+    mes[27] := 'Files';
+    mes[28] := 'Search in folder:';
+    Exit;
+  end;
   Ini := TIniFile.Create(UTF8ToSys(s1));
   s1 := 'Captions';
   s2 := 'Hints';
@@ -1806,17 +1936,15 @@ var
 begin
   if not FileExistsUTF8(sInifile) and bRead then
     Exit;
+  bUpdFromCode := True;
   Ini := TIniFile.Create(UTF8ToSys(sInifile));
   s := 'Main';
   mySets1(Ini, s, [TabDefSets], bRead);
   if not chkUseMasks.Checked then
     mySets1(Ini, s, [cmbProfile], bRead);
-  mySets3(Ini, s, [cmbRunCmd, cmbExtPlayer], bRead);
+  //mySets3(Ini, s, [cmbRunCmd, cmbExtPlayer], bRead);
   if bRead then
   begin
-    //for i := 0 to LVjobs.Columns.Count - 1 do
-    //  LVjobs.Column[i].Width :=
-    //    Ini.ReadInteger(LVjobs.Name, IntToStr(i), LVjobs.Column[i].Width);
     myFormPosLoad(frmGUIta, Ini);
     i := 0;
     while Ini.ReadString('Masks', IntToStr(i) + 'Checked', '') <> '' do
@@ -1831,8 +1959,6 @@ begin
   end
   else
   begin
-    //for i := 0 to LVjobs.Columns.Count - 1 do
-    //  myToIni(Ini, LVjobs.Name, IntToStr(i), IntToStr(LVjobs.Column[i].Width));
     myFormPosSave(frmGUIta, Ini);
     for i := 0 to 15 do
     begin
@@ -1853,6 +1979,7 @@ begin
     end;
   end;
   Ini.Free;
+  bUpdFromCode := False;
 end;
 
 procedure TfrmGUIta.myDisComp;
@@ -3208,10 +3335,10 @@ begin
   end;
   s := myGetAnsiFN(d + cmbLanguage.Text);
   myOpenDoc(s);
-  cmbLanguage.Items.Clear;
-  myGetFileList(sDirApp, '*.lng', cmbLanguage.Items, False, False);
-  if sInidir <> sDirApp then
-    myGetFileList(sInidir, '*.lng', cmbLanguage.Items, False, False);
+  //cmbLanguage.Items.Clear;
+  //myGetFileList(sDirApp, '*.lng', cmbLanguage.Items, False, False);
+  //if sInidir <> sDirApp then
+  //  myGetFileList(sInidir, '*.lng', cmbLanguage.Items, False, False);
 end;
 
 procedure TfrmGUIta.btnLogClearClick(Sender: TObject);
@@ -3299,6 +3426,33 @@ begin
     LVmasks.Selected.SubItems[1] := frmM.ComboBox3.Text;
   end;
   frmM.Free;
+end;
+
+procedure TfrmGUIta.btnMaskResetClick(Sender: TObject);
+var
+  li: TListItem;
+begin
+  LVmasks.Clear;
+  li := LVmasks.Items.Add;
+  li.Checked := True;
+  li.Caption := '*';
+  li.SubItems.Add('.jp*g;.png');
+  li.SubItems.Add('resize to png w160.ini');
+  li := LVmasks.Items.Add;
+  li.Checked := False;
+  li.Caption := '*';
+  li.SubItems.Add('.mp3;.ac3;.wav');
+  li.SubItems.Add('sound to mp3 128k.ini');
+  li := LVmasks.Items.Add;
+  li.Checked := False;
+  li.Caption := 'anim*';
+  li.SubItems.Add('.avi;.mkv;.vob;.mp*g;.mp4;.mov;.flv;.3gp;.3g2;.asf;.wmv;.m2ts;.ts;.ogv;.webm;.rm;.qt');
+  li.SubItems.Add('libx264 slow animation-libvo_aacenc-matroska.ini');
+  li := LVmasks.Items.Add;
+  li.Checked := True;
+  li.Caption := '*';
+  li.SubItems.Add('.avi;.mkv;.vob;.mp*g;.mp4;.mov;.flv;.3gp;.3g2;.asf;.wmv;.m2ts;.ts;.ogv;.webm;.rm;.qt');
+  li.SubItems.Add('libx264 slow film w720-libvo_aacenc-matroska.ini');
 end;
 
 procedure TfrmGUIta.btnMediaInfo1Click(Sender: TObject);
@@ -3550,6 +3704,30 @@ begin
     myGetFileList(sInidir, '*.ini', cmbProfile.Items, False, False);
     cmbProfile.Sorted := True;
   end;
+end;
+
+procedure TfrmGUIta.myDefaultSets;
+var
+  i: integer;
+begin
+  for i := 0 to Panel13.ControlCount - 1 do
+    cDefaultSets.setval(Panel13.Controls[i].Name, myGet2(Panel13.Controls[i]));
+  for i := 0 to Panel15.ControlCount - 1 do
+    cDefaultSets.setval(Panel15.Controls[i].Name, myGet2(Panel15.Controls[i]));
+  for i := 0 to TabDefSets.ControlCount - 1 do
+    cDefaultSets.setval(TabDefSets.Controls[i].Name, myGet2(TabDefSets.Controls[i]));
+end;
+
+procedure TfrmGUIta.btnResetClick(Sender: TObject);
+var
+  i: integer;
+begin
+  for i := 0 to Panel13.ControlCount - 1 do
+    mySet2(Panel13.Controls[i], cDefaultSets.getval(Panel13.Controls[i].Name));
+  for i := 0 to Panel15.ControlCount - 1 do
+    mySet2(Panel15.Controls[i], cDefaultSets.getval(Panel15.Controls[i].Name));
+  for i := 0 to TabDefSets.ControlCount - 1 do
+    mySet2(TabDefSets.Controls[i], cDefaultSets.getval(TabDefSets.Controls[i].Name));
 end;
 
 procedure TfrmGUIta.btnSaveSetsClick(Sender: TObject);
@@ -3864,6 +4042,12 @@ begin
     myAdd2cmb(cmbExtPlayer, cmbExtPlayer.Text);
 end;
 
+procedure TfrmGUIta.cmbExtPlayerGetItems(Sender: TObject);
+begin
+  if cmbExtPlayer.Items.Count = 0 then
+    myFindPlayers(False);
+end;
+
 procedure TfrmGUIta.cmbExtSelect(Sender: TObject);
 begin
   cmbFormat.ItemIndex := cmbExt.ItemIndex;
@@ -3899,6 +4083,15 @@ end;
 procedure TfrmGUIta.cmbLanguageChange(Sender: TObject);
 begin
   myLanguage(True);
+end;
+
+procedure TfrmGUIta.cmbLanguageGetItems(Sender: TObject);
+begin
+  cmbLanguage.Items.Clear;
+  myGetFileList(sDirApp, '*.lng', cmbLanguage.Items, False, False);
+  if sInidir <> sDirApp then
+    myGetFileList(sInidir, '*.lng', cmbLanguage.Items, False, False);
+  cmbLanguage.Sorted := True;
 end;
 
 procedure TfrmGUIta.cmbProfileChange(Sender: TObject);
@@ -3967,6 +4160,46 @@ begin
   Ini.Free;
   LVjobs.Selected.SubItems[2] := myCalcOutSize(jo);
   LVjobsSelectItem(Sender, LVjobs.Selected, True);
+end;
+
+procedure TfrmGUIta.cmbProfileGetItems(Sender: TObject);
+begin
+  cmbProfile.Items.Clear;
+  myGetFileList(sInidir, '*.ini', cmbProfile.Items, False, False);
+  cmbProfile.Sorted := True;
+end;
+
+procedure TfrmGUIta.cmbRunCmdGetItems(Sender: TObject);
+var
+  Ini: TIniFile;
+begin
+  if cmbRunCmd.Items.Count = 0 then
+  begin
+    if FileExistsUTF8(sInifile) then
+    begin
+      Ini := TIniFile.Create(UTF8ToSys(sInifile));
+      mySets3(Ini, 'Main', [cmbRunCmd], True);
+      Ini.Free;
+    end;
+    myAdd2cmb(cmbRunCmd, '"$ffplay" -i "$input"');
+    myAdd2cmb(cmbRunCmd, '"$ffprobe" -show_streams -i "$input"');
+    myAdd2cmb(cmbRunCmd, '"$ffprobe" -show_frames -i "$input"');
+    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -i "$input" -vsync 1 -r 1 -f image2 "$dirtmp/img-%03d.jpg"');
+    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -i "$input" -f image2 -frames:v 1 "$dirtmp/img.bmp"');
+    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -f image2 -i img%d.jpg "$dirtmp/a.mpg"');
+    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -i "$input" -vf "[in] split [T1], [T2] overlay=0:H/2 [out]; [T1] crop=iw:ih/2:0:ih/2, vflip [T2]" "$output"');
+    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -i "$dirinp/VTS_01_1.VOB" -i "$dirinp/VTS_01_2.VOB" -filter_complex "[0:0] [0:1] [1:0] [1:1] concat=n=2:v=1:a=1 [v] [a]" -map "[v]" -map "[a]" "$output"');
+    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -i "$input" -dump_attachment:t:0 "$dirout/attach-0"');
+    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -encoders');
+    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -formats');
+    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -decoders');
+    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -devices');
+    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -sample_fmts');
+    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -filters');
+    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -protocols');
+    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -codecs');
+    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -bsfs');
+  end;
 end;
 
 procedure TfrmGUIta.edtffmpegChange(Sender: TObject);
@@ -4054,29 +4287,18 @@ var
   i: integer;
   sl: TStringList;
   {$IFDEF MSWINDOWS}
-  reg: TRegistry;
-  p: PChar;
-  {$ENDIF}
-  li: TListItem;
-  procedure myFindPlayers(a: array of string);
+  procedure myFindMediaInfo;
   var
-    i: integer;
-    s: string;
-    {$IFDEF MSWINDOWS}
     j: integer;
-    t: string;
-    {$ENDIF}
+    s: string;
+    reg: TRegistry;
   begin
-    for i := Low(a) to High(a) do
+    if not FileExistsUTF8(myExpandFN(edtMediaInfo.Text)) then
     begin
-      s := a[i];
-      {$IFDEF MSWINDOWS}
       reg := TRegistry.Create;
       try
-        //Reg.RootKey := HKEY_CLASSES_ROOT;
-        //if Reg.OpenKeyReadOnly('\Applications\' + s + '\shell\open\command') then
-        Reg.RootKey := HKEY_LOCAL_MACHINE;
-        if Reg.OpenKeyReadOnly('\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\' + s) then
+        Reg.RootKey := HKEY_CLASSES_ROOT;
+        if Reg.OpenKeyReadOnly('\SystemFileAssociations\.avi\Shell\MediaInfo\Command') then
         begin
           s := Reg.ReadString('');
           if (s <> '') and (s[1] = '"') then
@@ -4085,15 +4307,8 @@ var
             if j > 0 then
               s := Copy(s, 2, j - 2);
           end;
-          t := myExpandEnv(s);
-          if FileExistsUTF8(t) then
-          begin
-            s := myUnExpandFN(s);
-            //mySet2(cmbExtPlayer, s);
-            myAdd2cmb(cmbExtPlayer, s);
-          end
-          else
-            s := '';
+          if FileExistsUTF8(s) then
+            mySet2(edtMediaInfo, myUnExpandFN(s));
         end;
         Reg.CloseKey;
       except
@@ -4101,14 +4316,9 @@ var
           ShowMessage(E.Message);
       end;
       reg.Free;
-      {$ELSE}
-      if FileExists(FindDefaultExecutablePath(s)) then
-        cmbExtPlayer.Items.Add(s);
-      {$ENDIF}
     end;
-    if cmbExtPlayer.Items.Count > 0 then
-      cmbExtPlayer.Text := cmbExtPlayer.Items[0];
   end;
+  {$ENDIF}
 
 begin
   memJournal.Clear;
@@ -4117,16 +4327,20 @@ begin
   memJournal.Lines.Add(sCap + ' - ' + taBuildDate + ' - Free Pascal ' +
     fpcVersion + ' - Lazarus ' + lazVersion + '-' + lazRevision +
     ' - ' + TargetCPU + ' ' + TargetOS);
-  SynMemo2.Clear;
-  SynMemo3.Clear;
-  SynMemo4.Clear;
-  SynMemo5.Clear;
-  SynMemo6.Clear;
   Files2Add := TList.Create;
+  cDefaultSets := TCont.Create;
   Counter := 0;
   fs.DecimalSeparator := '.';
   fs.ThousandSeparator := ' ';
   DuraAll := 0;
+  //get inifile location
+  sDirApp := ExtractFilePath(Application.ExeName);
+  if DirectoryIsWritable(sDirApp) then
+    sInidir := sDirApp
+  else
+    sInidir := GetAppConfigDirUTF8(False, True);
+  sInifile := AppendPathDelim(sInidir) + ExtractFileNameOnly(Application.ExeName) + '.cfg';
+  b := FileExistsUTF8(sInifile);
   {$IFDEF MSWINDOWS}
   btnAddScreenGrab.Visible := False; //not tested
   {$ELSE}
@@ -4141,60 +4355,58 @@ begin
   mnuPasteAsAvs2.Visible := False;
   edtOfna.Visible := False;
   {$ENDIF}
-  sDirApp := ExtractFilePath(Application.ExeName);
-  if DirectoryIsWritable(sDirApp) then
-    sInidir := sDirApp
-  else
-    sInidir := GetAppConfigDirUTF8(False, True);
-  sInifile := AppendPathDelim(sInidir) + ExtractFileNameOnly(Application.ExeName) + '.cfg';
-  b := FileExistsUTF8(sInifile);
+  //set some defaults
+  bUpdFromCode := True;
+  cmbDirLast.Text := GetCurrentDir;
+  {$IFDEF MSWINDOWS}
+  edtffmpeg.Text := 'ffmpeg.exe';
+  edtffplay.Text := 'ffplay.exe';
+  edtffprobe.Text:= 'ffprobe.exe';
+  edtDirTmp.Text := '%TEMP%';
+  edtDirOut.Text := 'C:\TEMP';
+  edtMediaInfo.Text:= 'MediaInfo.exe';
+  cmbDirLast.Text := 'C:\';
+  edtxterm.Text := 'cmd.exe';
+  edtxtermopts.Text := '/c';
+  edtxtermopts.Items.Add('/c');
+  edtxtermopts.Items.Add('/k');
+  {$ELSE}
+  edtffmpeg.Text := 'ffmpeg';
+  edtffplay.Text := 'ffplay';
+  edtffprobe.Text:= 'ffprobe';
+  edtDirTmp.Text := '/tmp';
+  edtDirOut.Text := '$HOME';
+  edtMediaInfo.Text:= 'mediainfo-gui';
+  cmbDirLast.Text := '$HOME';
+  cmbFont.Text := 'Ubuntu';
+  edtxterm.Text := '/bin/sh';
+  edtxtermopts.Text := '-c';
+  edtxtermopts.Items.Add('-c');
+  edtxtermopts.Items.Add('-k');
+  edtxtermopts.Items.Add('-e');
+  edtxtermopts.Items.Add('-x');
+  edtxtermopts.Items.Add('--hold -e');
+  chkRunMode.Checked := True;
+  {$ENDIF}
+  bUpdFromCode := False;
+  chkSynColor.Checked := myGetColor < 70000;
+  //r + g + b, 65535 + 65535 + 65535 = 196605 = white, 0 + 0 + 0 = black
+  chkAddTracks.Checked := True;
+  chkSaveFormPos.Checked := True;
+  chk1instance.Checked := True;
+  chkSaveOnExit.Checked := True;
+  //save defaults to containers
+  myDefaultSets;
+  //myDefaultLang;
   if b then
   begin
-    bUpdFromCode := True;
     mySets(True); //load settings from config file
-    bUpdFromCode := False;
-    if chk1instance.Checked then
-    begin
-      myUnik := TUniqueInstance.Create(Self);
-      myUnik.OnOtherInstance := @UniqueInstance1OtherInstance;
-      myUnik.Enabled := True;
-      myUnik.Loaded;
-    end;
+    chk1instanceChange(nil);
   end
   else //if config file doesnt exists then assign some sets
   begin
-    cmbDirLast.Text := GetCurrentDir;
-    {$IFDEF MSWINDOWS}
-    edtffmpeg.Text := 'ffmpeg.exe';
-    edtffplay.Text := 'ffplay.exe';
-    edtffprobe.Text:= 'ffprobe.exe';
-    edtDirTmp.Text := '%TEMP%';
-    edtDirOut.Text := 'C:\TEMP';
-    edtMediaInfo.Text:= 'MediaInfo.exe';
-    myFindPlayers(['mpc-hc.exe', 'KMPlayer.exe', 'PotPlayerMini.exe', 'wmplayer.exe']);
-    edtxterm.Text := 'cmd.exe';
-    edtxtermopts.Text := '/c';
-    edtxtermopts.Items.Add('/c');
-    edtxtermopts.Items.Add('/k');
-    {$ELSE}
-    edtffmpeg.Text := 'ffmpeg';
-    edtffplay.Text := 'ffplay';
-    edtffprobe.Text:= 'ffprobe';
-    edtDirTmp.Text := '/tmp';
-    edtDirOut.Text := '$HOME';
-    edtMediaInfo.Text:= 'mediainfo-gui';
-    myFindPlayers(['mplayer', 'vlc', 'dragon', 'avplay', 'ffplay', 'totem', 'xine']);
-    cmbDirLast.Text := '$HOME';
-    cmbFont.Text := 'Ubuntu';
-    edtxterm.Text := '/bin/sh';
-    edtxtermopts.Text := '-c';
-    edtxtermopts.Items.Add('-c');
-    edtxtermopts.Items.Add('-k');
-    edtxtermopts.Items.Add('-e');
-    edtxtermopts.Items.Add('-x');
-    edtxtermopts.Items.Add('--hold -e');
-    chkRunMode.Checked := True;
-    {$ENDIF}
+    myFindFiles(sDirApp, [edtffmpeg, edtffprobe, edtffplay, edtMediaInfo]);
+    myFindPlayers(True);
     s := myGetLocaleLanguage;
     if s <> '' then
     begin
@@ -4213,137 +4425,22 @@ begin
       cmbLanguage.Text := s + '.lng';
       cmbLangA.Text := t;
     end;
-    chkSynColor.Checked := myGetColor < 70000;
-    //r + g + b, 65535 + 65535 + 65535 = 196605 = white, 0 + 0 + 0 = black
-    myFindFiles(sDirApp, [edtffmpeg, edtffprobe, edtffplay, edtMediaInfo]);
-    chkAddTracks.Checked := True;
-    chkSaveFormPos.Checked := True;
-    chk1instance.Checked := True;
-    chkSaveOnExit.Checked := True;
+    {$IFDEF MSWINDOWS}
+    myFindMediaInfo;
+    {$ENDIF}
   end;
   frmGUIta.Font.Name := cmbFont.Text;
   //messages
-  mes[0] := 'Video files';
-  mes[1] := 'All files (*)|*';
-  mes[2] := 'Usage: ffmpegGUIta [-start] [<video files>...]\n-start: start converting';
-  mes[3] := 'Creating file list';
-  mes[4] := 'process completed, error code:';
-  mes[5] := 'job completed for';
-  mes[6] := 'Error';
-  mes[7] := 'Select job to change convert parameters';
-  mes[8] := 'Cancel';
-  mes[9] := 'temporary';
-  mes[10] := 'folder not exists';
-  mes[11] := 'cmdline is empty';
-  mes[12] := 'file not exists';
-  mes[13] := 'create new?';
-  mes[14] := 'Source';
-  mes[15] := 'Destination';
-  mes[16] := 'Difference';
-  mes[17] := 'Executable';
-  mes[18] := 'Find folder';
-  mes[19] := 'Expected time of converting this file is:';
-  mes[20] := 'Find file';
-  mes[21] := 'Overall duration is';
-  mes[22] := 'width';
-  mes[23] := 'height';
-  mes[24] := 'is not divisable by 16';
-  mes[25] := 'Split file';
-  mes[26] := 'length of cuts in seconds:';
-  mes[27] := 'Files';
-  mes[28] := 'Search in folder:';
-  s := UpperCase(mes[6]);
-  if SynUNIXShellScriptSyn1.SecondKeyWords.IndexOf(s) < 0 then
-    SynUNIXShellScriptSyn1.SecondKeyWords.Add(s);
+  //s := UpperCase(mes[6]);
+  //if SynUNIXShellScriptSyn1.SecondKeyWords.IndexOf(s) < 0 then
+  //  SynUNIXShellScriptSyn1.SecondKeyWords.Add(s);
   //load language
-  myGetFileList(sDirApp, '*.lng', cmbLanguage.Items, False, False);
-  if sInidir <> sDirApp then
-    myGetFileList(sInidir, '*.lng', cmbLanguage.Items, False, False);
-  cmbLanguage.Sorted := True;
-  if cmbLanguage.Text <> '' then
-    if cmbLanguage.Items.IndexOf(cmbLanguage.Text) >= 0 then
-      myLanguage(True);
-  //load profiles
-  myGetFileList(sInidir, '*.ini', cmbProfile.Items, False, False);
-  cmbProfile.Sorted := True;
-  if cmbProfile.Text <> '' then
-  begin
-    if cmbProfile.Items.IndexOf(cmbProfile.Text) >= 0 then
-      cmbProfileChange(cmbProfile);
-  end
-  else
-  begin
-    if cmbProfile.Items.Count > 0 then
-      cmbProfile.ItemIndex := 0;
-  end;
+  myLanguage(True);
   //if masks empty then set defaults
   if LVmasks.Items.Count = 0 then
-  begin
-    li := LVmasks.Items.Add;
-    li.Checked := True;
-    li.Caption := '*';
-    li.SubItems.Add('.jp*g;.png');
-    li.SubItems.Add('resize to png w160.ini');
-    li := LVmasks.Items.Add;
-    li.Checked := False;
-    li.Caption := '*';
-    li.SubItems.Add('.mp3;.ac3;.wav');
-    li.SubItems.Add('sound to mp3 128k.ini');
-    li := LVmasks.Items.Add;
-    li.Checked := False;
-    li.Caption := 'anim*';
-    li.SubItems.Add('.avi;.mkv;.vob;.mp*g;.mp4;.mov;.flv;.3gp;.3g2;.asf;.wmv;.m2ts;.ts;.ogv;.webm;.rm;.qt');
-    li.SubItems.Add('libx264 slow animation-libvo_aacenc-matroska.ini');
-    li := LVmasks.Items.Add;
-    li.Checked := True;
-    li.Caption := '*';
-    li.SubItems.Add('.avi;.mkv;.vob;.mp*g;.mp4;.mov;.flv;.3gp;.3g2;.asf;.wmv;.m2ts;.ts;.ogv;.webm;.rm;.qt');
-    li.SubItems.Add('libx264 slow film w720-libvo_aacenc-matroska.ini');
-  end;
-  if not b then //inifile doesnt exists
-  begin
-    {$IFDEF MSWINDOWS}
-    if not FileExistsUTF8(myExpandFN(edtMediaInfo.Text)) then
-    begin
-      reg := TRegistry.Create;
-      try
-        Reg.RootKey := HKEY_CLASSES_ROOT;
-        if Reg.OpenKeyReadOnly('\SystemFileAssociations\.avi\Shell\MediaInfo') then
-        begin
-          s := Reg.ReadString('Icon');
-          p := PChar(s);
-          s := AnsiExtractQuotedStr(p, '"');
-          if FileExistsUTF8(s) then
-            mySet2(edtMediaInfo, myUnExpandFN(s))
-          else
-            s := '';
-        end;
-        if (s = '') and Reg.OpenKeyReadOnly(
-          '\Local Settings\Software\Microsoft\Windows\Shell\MuiCache') then
-        begin
-          sl := TStringList.Create;
-          Reg.GetValueNames(sl);
-          for i := 0 to sl.Count - 1 do
-          begin
-            s := sl[i];
-            if (Pos('mediainfo.exe', LowerCase(s)) > 0) and FileExistsUTF8(s) then
-            begin
-              mySet2(edtMediaInfo, myUnExpandFN(s));
-              Break;
-            end;
-          end;
-        end;
-        Reg.CloseKey;
-      except
-        on E: Exception do
-          ShowMessage(E.Message);
-      end;
-      reg.Free;
-    end;
-    {$ENDIF}
-  end;
-  //TComboBox - did not work onChange
-  edtffmpegChange(edtffmpeg);
+    btnMaskResetClick(nil);
+  //TComboBox - did not work onChange, red color for not existed files
+  edtffmpegChange(edtffmpeg); //and fill some comboboxes with codecs and formats
   xmyCheckFile(edtffplay);
   xmyCheckFile(edtffprobe);
   xmyCheckFile(edtMediaInfo);
@@ -4351,13 +4448,15 @@ begin
   xmyCheckDir(edtDirTmp);
   xmyCheckDir(edtDirOut);
   xmyCheckDir(cmbDirLast);
+  cmbProfileChange(cmbProfile);
 end;
 
 procedure TfrmGUIta.FormDestroy(Sender: TObject);
 begin
-  Files2Add.Free;
   if chkSaveOnExit.Checked then
     mySets(False);
+  Files2Add.Free;
+  cDefaultSets.Free;
 end;
 
 procedure TfrmGUIta.FormDropFiles(Sender: TObject; const FileNames: array of string);

@@ -235,7 +235,8 @@ begin
     {$ENDIF}
   end;
   frmGUIta.myGetss4Compare(jo);
-  s := DateTimeToStr(Now) + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
+  DateTimeToString(s, 'yyyy-mm-dd hh:nn:ss', Now);
+  s := s + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
   if pr.ExitStatus <> 0 then
     s := s + ' - ' + mes[6] + ': ' + IntToStr(pr.ExitStatus);
   frmGUIta.StatusBar1.SimpleText := s;
