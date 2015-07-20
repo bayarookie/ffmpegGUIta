@@ -415,7 +415,7 @@ type
     function myCantUpd(i: integer = 0): boolean;
     function myAutoCrop(jo: TJob; l, k: integer): string;
     procedure myGetClipboardFileNames(files: TStrings; test: boolean = False);
-    function myGetColor: integer;
+    function myWindowColorIsDark: boolean;
     function myGetExts: string;
     procedure myDefaultSets;
     procedure myToIni(Ini: TIniFile; s1, s2, s3: string; t: Integer = 0);
@@ -1593,22 +1593,28 @@ var
   var
     i, nStatus: integer;
     SR: TSearchRec;
+    b: boolean;
   begin
-    for i := 0 to SL.Count - 1 do
+    nStatus := FindFirstUTF8(AppendPathDelim(Path2) + '*', 0, SR);
+    while nStatus = 0 do
     begin
-      nStatus := FindFirstUTF8(AppendPathDelim(Path2) + SL.Strings[i], 0, SR);
-      while nStatus = 0 do
+      b := False;
+      for i := 0 to SL.Count - 1 do
+      if MatchesMask(SR.Name, SL.Strings[i]) then
       begin
-        List.Add(IfThen(fullpath, AppendPathDelim(Path2)) + SR.Name);
-        if frm.bCancel then
-          Break;
-        nStatus := FindNextUTF8(SR);
+        b := True;
+        Break;
       end;
-      FindCloseUTF8(SR);
-      Result := not frm.bCancel;
+      if b then
+        List.Add(IfThen(fullpath, AppendPathDelim(Path2)) + SR.Name);
       if frm.bCancel then
-        Exit;
+        Break;
+      nStatus := FindNextUTF8(SR);
     end;
+    FindCloseUTF8(SR);
+    Result := not frm.bCancel;
+    if frm.bCancel then
+      Exit;
     if subdir then
     begin
       nStatus := FindFirstUTF8(AppendPathDelim(Path2) + '*', faDirectory, SR);
@@ -1835,9 +1841,9 @@ var
       else if c[k] is TPanel then
         for i := 0 to TPanel(c[k]).ControlCount - 1 do
           myLng1([TPanel(c[k]).Controls[i]])
-      else if c[k] is TScrollBox then
-        for i := 0 to TScrollBox(c[k]).ControlCount - 1 do
-          myLng1([TScrollBox(c[k]).Controls[i]])
+      //else if c[k] is TScrollBox then
+      //  for i := 0 to TScrollBox(c[k]).ControlCount - 1 do
+      //    myLng1([TScrollBox(c[k]).Controls[i]])
       else if c[k] is TTabSheet then
       begin
         with TTabSheet(c[k]) do
@@ -2862,7 +2868,7 @@ begin
   end;
 end;
 {$ENDIF}
-function TfrmGUIta.myGetColor: integer;
+function TfrmGUIta.myWindowColorIsDark: boolean;
 var
   m: Graphics.TBitmap;
   t: TLazIntfImage;
@@ -2870,15 +2876,20 @@ var
 begin
   m := Graphics.TBitmap.Create;
   m.SetSize(1, 1);
-  m.Canvas.Brush.Color := memJournal.Color;
+  //m.Canvas.Brush.Color := memJournal.Color;
+  m.Canvas.Brush.Color := clWindow;
   m.Canvas.FillRect(0, 0, 1, 1);
   t := m.CreateIntfImage;
   r := t.Colors[0, 0].red;
   g := t.Colors[0, 0].green;
   b := t.Colors[0, 0].blue;
-  Result := r + g + b;
+  Result := (r + g + b) < 70000;
+  //r + g + b, 65535 + 65535 + 65535 = 196605 = white, 0 + 0 + 0 = black
   t.Free;
   m.Free;
+  if chkDebug.Checked then
+    memJournal.Lines.Add('myWindowColorIsDark: r,g,b='
+    + IntToStr(r) + ','+ IntToStr(g) + ','+ IntToStr(b));
 end;
 
 function TfrmGUIta.myGetExts: string;
@@ -3335,10 +3346,6 @@ begin
   end;
   s := myGetAnsiFN(d + cmbLanguage.Text);
   myOpenDoc(s);
-  //cmbLanguage.Items.Clear;
-  //myGetFileList(sDirApp, '*.lng', cmbLanguage.Items, False, False);
-  //if sInidir <> sDirApp then
-  //  myGetFileList(sInidir, '*.lng', cmbLanguage.Items, False, False);
 end;
 
 procedure TfrmGUIta.btnLogClearClick(Sender: TObject);
@@ -3388,6 +3395,7 @@ begin
   frmM.ComboBox1.Text := '';
   frmM.ComboBox2.Text := '';
   frmM.ComboBox3.Text := '';
+  cmbProfileGetItems(nil);
   frmM.ComboBox3.Items.AddStrings(cmbProfile.Items);
   if frmM.ShowModal = mrOk then
   begin
@@ -3418,6 +3426,7 @@ begin
   frmM.ComboBox1.Text := LVmasks.Selected.Caption;
   frmM.ComboBox2.Text := LVmasks.Selected.SubItems[0];
   frmM.ComboBox3.Text := LVmasks.Selected.SubItems[1];
+  cmbProfileGetItems(nil);
   frmM.ComboBox3.Items.AddStrings(cmbProfile.Items);
   if frmM.ShowModal = mrOk then
   begin
@@ -3716,6 +3725,9 @@ begin
     cDefaultSets.setval(Panel15.Controls[i].Name, myGet2(Panel15.Controls[i]));
   for i := 0 to TabDefSets.ControlCount - 1 do
     cDefaultSets.setval(TabDefSets.Controls[i].Name, myGet2(TabDefSets.Controls[i]));
+  cDefaultSets.setval(chkConcat.Name, myGet2(chkConcat));
+  cDefaultSets.setval(chkFilterComplex.Name, myGet2(chkFilterComplex));
+  cDefaultSets.setval(chkx264Pass1fast.Name, myGet2(chkx264Pass1fast));
 end;
 
 procedure TfrmGUIta.btnResetClick(Sender: TObject);
@@ -3728,6 +3740,9 @@ begin
     mySet2(Panel15.Controls[i], cDefaultSets.getval(Panel15.Controls[i].Name));
   for i := 0 to TabDefSets.ControlCount - 1 do
     mySet2(TabDefSets.Controls[i], cDefaultSets.getval(TabDefSets.Controls[i].Name));
+  //mySet2(chkConcat, cDefaultSets.getval(chkConcat.Name));
+  //mySet2(chkFilterComplex, cDefaultSets.getval(chkFilterComplex.Name));
+  //mySet2(chkx264Pass1fast, cDefaultSets.getval(chkx264Pass1fast.Name));
 end;
 
 procedure TfrmGUIta.btnSaveSetsClick(Sender: TObject);
@@ -3939,7 +3954,7 @@ begin
     SynUNIXShellScriptSyn1.VarAttri.Foreground := clPurple;
   end;
   if chkDebug.Checked then
-    StatusBar1.SimpleText := 'myGetColor: background color r+g+b=' + IntToStr(myGetColor);
+    myWindowColorIsDark;
 end;
 
 procedure TfrmGUIta.chkUseMasksChange(Sender: TObject);
@@ -4082,15 +4097,14 @@ end;
 
 procedure TfrmGUIta.cmbLanguageChange(Sender: TObject);
 begin
-  myLanguage(True);
+  if FileExistsUTF8(AppendPathDelim(sInidir) + cmbLanguage.Text) then
+    myLanguage(True);
 end;
 
 procedure TfrmGUIta.cmbLanguageGetItems(Sender: TObject);
 begin
   cmbLanguage.Items.Clear;
-  myGetFileList(sDirApp, '*.lng', cmbLanguage.Items, False, False);
-  if sInidir <> sDirApp then
-    myGetFileList(sInidir, '*.lng', cmbLanguage.Items, False, False);
+  myGetFileList(sInidir, '*.lng', cmbLanguage.Items, False, False);
   cmbLanguage.Sorted := True;
 end;
 
@@ -4389,15 +4403,27 @@ begin
   chkRunMode.Checked := True;
   {$ENDIF}
   bUpdFromCode := False;
-  chkSynColor.Checked := myGetColor < 70000;
-  //r + g + b, 65535 + 65535 + 65535 = 196605 = white, 0 + 0 + 0 = black
-  chkAddTracks.Checked := True;
-  chkSaveFormPos.Checked := True;
-  chk1instance.Checked := True;
-  chkSaveOnExit.Checked := True;
+  chkSynColor.Checked := myWindowColorIsDark;
+  s := myGetLocaleLanguage;
+  if s <> '' then
+  begin
+    sl := TStringList.Create;
+    for i := 0 to cmbLangsList.Items.Count - 1 do
+    begin
+      myGetListFromStr(cmbLangsList.Items[i], '|', sl);
+      if (sl.Count > 2) and (s = sl[2]) then
+      begin
+        s := sl[3];
+        t := sl[0];
+        Break;
+      end;
+    end;
+    sl.Free;
+    cmbLanguage.Text := s + '.lng';
+    cmbLangA.Text := t;
+  end;
   //save defaults to containers
   myDefaultSets;
-  //myDefaultLang;
   if b then
   begin
     mySets(True); //load settings from config file
@@ -4405,35 +4431,17 @@ begin
   end
   else //if config file doesnt exists then assign some sets
   begin
-    myFindFiles(sDirApp, [edtffmpeg, edtffprobe, edtffplay, edtMediaInfo]);
-    myFindPlayers(True);
-    s := myGetLocaleLanguage;
-    if s <> '' then
-    begin
-      sl := TStringList.Create;
-      for i := 0 to cmbLangsList.Items.Count - 1 do
-      begin
-        myGetListFromStr(cmbLangsList.Items[i], '|', sl);
-        if (sl.Count > 2) and (s = sl[2]) then
-        begin
-          s := sl[3];
-          t := sl[0];
-          Break;
-        end;
-      end;
-      sl.Free;
-      cmbLanguage.Text := s + '.lng';
-      cmbLangA.Text := t;
-    end;
+    chk1instanceChange(nil);
     {$IFDEF MSWINDOWS}
     myFindMediaInfo;
     {$ENDIF}
+    myFindFiles(sDirApp, [edtffmpeg, edtffprobe, edtffplay, edtMediaInfo]);
+    myFindPlayers(True);
+    cmbProfileGetItems(nil);
+    if cmbProfile.Items.Count > 0 then
+      cmbProfile.ItemIndex := 0;
   end;
   frmGUIta.Font.Name := cmbFont.Text;
-  //messages
-  //s := UpperCase(mes[6]);
-  //if SynUNIXShellScriptSyn1.SecondKeyWords.IndexOf(s) < 0 then
-  //  SynUNIXShellScriptSyn1.SecondKeyWords.Add(s);
   //load language
   myLanguage(True);
   //if masks empty then set defaults
@@ -5250,14 +5258,33 @@ procedure TfrmGUIta.UniqueInstance1OtherInstance(Sender: TObject;
   ParamCount: Integer; Parameters: array of String);
 var
   i:Integer;
-  sl: TStringList;
+  SL, ST: TStringList;
+  s: string;
 begin
-  sl := TStringList.Create;
+  ST := TStringList.Create;
   for i := Low(Parameters) to High(Parameters) do
-    sl.Add(Parameters[i]);
-  if sl.Count > 0 then
-    myAddFiles(sl);
-  sl.Free;
+  begin
+    {$IFDEF MSWINDOWS}
+    s := SysToUTF8(Parameters[i]);
+    {$ELSE}
+    s := Parameters[i];
+    {$ENDIF}
+    if DirectoryExistsUTF8(s) then
+    begin
+      SL := TStringList.Create;
+      if myGetFileList(s, myGetExts, SL, True) then
+      begin
+        SL.Sort;
+        ST.AddStrings(SL);
+      end;
+      SL.Free;
+    end
+    else
+      ST.Add(s);
+  end;
+  if ST.Count > 0 then
+    myAddFiles(ST);
+  ST.Free;
   BringToFront;
 end;
 
