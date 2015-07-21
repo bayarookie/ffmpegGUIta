@@ -453,6 +453,9 @@ type
     function myGetLngFromFNs(jo: TJob; l: integer): string;
   end;
 
+const
+  iMaxMask: integer = 31;
+
 var
   frmGUIta: TfrmGUIta;
   sCap, sDirApp, sInidir, sInifile, sLngfile: string;
@@ -750,7 +753,7 @@ begin
     d := myBetween(d, 'Duration: ', ',');
     j := myTimeStrToReal(d);
     {$IFDEF MSWINDOWS}
-    if (j = 0) and FileExistsUTF8(myExpandFN(frmGUIta.edtMediaInfo.Text)) then
+    if (j = 0) and FileExistsUTF8(myExpandFN(edtMediaInfo.Text)) then
     begin
       d := myGetMediaInfo(s, 'Duration', Stream_General);
       j := StrToFloatDef(d, 1) / 1000;
@@ -1406,12 +1409,12 @@ begin
     if (c[i] is TComboBox) then
     begin
       s := myGet2(c[i]);
-      if FileExists(myExpandFN(ExtractFileName(s))) then
+      if FileExistsUTF8(myExpandFN(ExtractFileName(s))) then
         TComboBox(c[i]).Items.Add(ExtractFileName(s));
       if myGetFileList(dir, ExtractFileName(s), SL, True) then
         for j := 0 to SL.Count - 1 do
           myAdd2cmb(TComboBox(c[i]), myUnExpandFN(SL[j]));
-      if FileExists(myExpandFN(s)) then
+      if FileExistsUTF8(myExpandFN(s)) then
         myAdd2cmb(TComboBox(c[i]), s);
       if bSet2 and (TComboBox(c[i]).Items.Count > 0) then
         TComboBox(c[i]).ItemIndex := 0;
@@ -1500,7 +1503,7 @@ begin
   for i := Low(a) to High(a) do
   begin
     s := a[i];
-    if FileExists(FindDefaultExecutablePath(s)) then
+    if FileExistsUTF8(FindDefaultExecutablePath(s)) then
       myAdd2cmb(cmbExtPlayer, s);
   end;
   {$ENDIF}
@@ -1586,15 +1589,17 @@ end;
 function TfrmGUIta.myGetFileList(const Path, Mask: string; List: TStrings;
   subdir: boolean = False; fullpath: boolean = True): boolean;
 var
-  SL: TStringList;
   frm: TfrmSplash;
 
   function myGetList(const Path2: string): boolean;
   var
     i, nStatus: integer;
-    SR: TSearchRec;
     b: boolean;
+    SR: TSearchRec;
+    SL: TStringList;
   begin
+    SL := TStringList.Create;
+    myGetListFromStr(Mask, ';', SL);
     nStatus := FindFirstUTF8(AppendPathDelim(Path2) + '*', 0, SR);
     while nStatus = 0 do
     begin
@@ -1631,6 +1636,7 @@ var
       end;
       FindCloseUTF8(SR);
     end;
+    SL.Free;
     Result := not frm.bCancel;
   end;
 
@@ -1641,10 +1647,7 @@ begin
     frm.btnCancel.Caption := mes[8];
     frm.Label1.Caption := mes[3];
     frm.Show;
-    SL := TStringList.Create;
-    myGetListFromStr(Mask, ';', SL);
     Result := myGetList(Path);
-    SL.Free;
   except
     on E: Exception do
       ShowMessage(E.Message)
@@ -1655,23 +1658,28 @@ end;
 function TfrmGUIta.myGetSimilarFiles(fn: string; List: TStrings): boolean;
 var
   i: integer;
-  j: Longint;
+  nStatus: Longint;
+  b: boolean;
   SL: TStringList;
   SR: TSearchRec;
 begin
   SL := TStringList.Create;
   myGetListFromStr(cmbAddTracks.Text, ';', SL);
-  for i := 0 to SL.Count - 1 do
+  nStatus := FindFirstUTF8(ChangeFileExt(fn, '*'), 0, SR);
+  while nStatus = 0 do
   begin
-    j := FindFirstUTF8(ChangeFileExt(fn, '') + SL[i], 0, SR);
-    while j = 0 do
+    b := False;
+    for i := 0 to SL.Count - 1 do
+    if MatchesMask(SR.Name, SL[i]) then
     begin
       if ExtractFileName(fn) <> SR.Name then
-        List.Add(ExtractFilePath(fn) + SR.Name);
-      j := FindNextUTF8(SR);
+        b := True;
     end;
-    FindCloseUTF8(SR);
+    if b then
+      List.Add(ExtractFilePath(fn) + SR.Name);
+    nStatus := FindNextUTF8(SR);
   end;
+  FindCloseUTF8(SR);
   SL.Free;
   Result := (List.Count > 0);
 end;
@@ -1966,7 +1974,7 @@ begin
   else
   begin
     myFormPosSave(frmGUIta, Ini);
-    for i := 0 to 15 do
+    for i := 0 to iMaxMask do
     begin
       if i < LVmasks.Items.Count then
       begin
@@ -2856,7 +2864,7 @@ begin
         sl2.Free;
       end
       else
-      if FileExists(s) then
+      if FileExistsUTF8(s) then
         files.Add(s)
       else
         Break;
@@ -3177,7 +3185,7 @@ begin
   else
     frmCompare.LabeledEdit1Change(frmCompare.LabeledEdit2);
   frmCompare.Image1.Visible := True;
-  Ini := TIniFile.Create(sInifile);
+  Ini := TIniFile.Create(UTF8ToSys(sInifile));
   myFormPosLoad(frmCompare, Ini);
   frmCompare.ShowModal;
   myFormPosSave(frmCompare, Ini);
@@ -3280,7 +3288,7 @@ begin
   frmCrop.btnY.Left := (frmCrop.Image1.Width - frmCrop.btnY.Width) div 2;
   frmCrop.btnY.Top := y;
   frmCrop.btnY.Caption := IntToStr(y);
-  Ini := TIniFile.Create(sInifile);
+  Ini := TIniFile.Create(UTF8ToSys(sInifile));
   myFormPosLoad(frmCrop, Ini);
   if frmCrop.ShowModal = mrOk then
   begin
@@ -3385,9 +3393,9 @@ var
   li: TListItem;
   frmM: TfrmMaskProf;
 begin
-  if LVmasks.Items.Count > 99 then
+  if LVmasks.Items.Count > iMaxMask then
   begin
-    ShowMessage('Too many masks');
+    ShowMessage('Too many masks +' + IntToStr(iMaxMask + 1));
     Exit;
   end;
   Application.CreateForm(TfrmMaskProf, frmM);
@@ -4378,7 +4386,8 @@ begin
   edtffprobe.Text:= 'ffprobe.exe';
   edtDirTmp.Text := '%TEMP%';
   edtDirOut.Text := 'C:\TEMP';
-  edtMediaInfo.Text:= 'MediaInfo.exe';
+  edtMediaInfo.Text := 'MediaInfo.exe';
+  cmbExtPlayer.Text := 'wmplayer.exe';
   cmbDirLast.Text := 'C:\';
   edtxterm.Text := 'cmd.exe';
   edtxtermopts.Text := '/c';
@@ -4391,6 +4400,7 @@ begin
   edtDirTmp.Text := '/tmp';
   edtDirOut.Text := '$HOME';
   edtMediaInfo.Text:= 'mediainfo-gui';
+  cmbExtPlayer.Text := 'mplayer';
   cmbDirLast.Text := '$HOME';
   cmbFont.Text := 'Ubuntu';
   edtxterm.Text := '/bin/sh';
@@ -4432,10 +4442,10 @@ begin
   else //if config file doesnt exists then assign some sets
   begin
     chk1instanceChange(nil);
+    myFindFiles(sDirApp, [edtffmpeg, edtffprobe, edtffplay, edtMediaInfo]);
     {$IFDEF MSWINDOWS}
     myFindMediaInfo;
     {$ENDIF}
-    myFindFiles(sDirApp, [edtffmpeg, edtffprobe, edtffplay, edtMediaInfo]);
     myFindPlayers(True);
     cmbProfileGetItems(nil);
     if cmbProfile.Items.Count > 0 then
@@ -4811,7 +4821,10 @@ begin
     li.SubItems.Add(myGetCaptionCont(jo.f[l].s[k]));
   end;
   if chkUseMasks.Checked then
+  begin
     cmbProfile.Text := jo.getval(cmbProfile.Name);
+    cmbProfileChange(cmbProfile);
+  end;
   bUpdFromCode := False;
   myDisComp;
   if (PageControl2.ActivePage = TabVideo)
@@ -4854,7 +4867,7 @@ begin
     mRect.Left := mRect.Left + 2;
     mRect.Right := mRect.Left + Sender.Column[SubItem].Width;
     s := AppendPathDelim(sInidir) + Item.SubItems[1];
-    if not FileExists(s) then
+    if not FileExistsUTF8(s) then
     begin
       DefaultDraw := False;
       Sender.Canvas.Font.Color := clRed;
