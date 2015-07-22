@@ -11,7 +11,7 @@ unit utaVersion;
 interface
 
 uses
-  Classes, SysUtils, LCLVersion;
+  LCLVersion;
 
 {$I tarevision.inc} // ffmpegGUIta revision number
 {$I revision.inc} // Lazarus revision number

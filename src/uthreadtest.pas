@@ -5,7 +5,10 @@ unit uthreadtest;
 interface
 
 uses
-  Classes, SysUtils, utf8process, Process, LConvEncoding, fileutil, ComCtrls,
+  Classes, SysUtils, utf8process, Process, ComCtrls,
+  {$IFDEF MSWINDOWS}
+  Fileutil,
+  {$ENDIF}
   Math, ujobinfo, ubyutils, dateutils;
 
 type
@@ -220,4 +223,4 @@ begin
 end;
 
 end.
-
+

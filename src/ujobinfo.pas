@@ -5,7 +5,7 @@ unit ujobinfo;
 interface
 
 uses
-  Classes, SysUtils;
+  SysUtils;
 
 type
 
@@ -69,4 +69,4 @@ begin
 end;
 
 end.
-
+

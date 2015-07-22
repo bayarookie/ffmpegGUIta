@@ -5,8 +5,8 @@ unit uthreadexec;
 interface
 
 uses
-  Classes, SysUtils, utf8process, Process, LConvEncoding, fileutil,
-  Math, dateutils, synmemo;
+  Classes, SysUtils, utf8process, Process, LConvEncoding,
+  Math, synmemo;
 
 type
 
@@ -127,4 +127,4 @@ begin
 end;
 
 end.
-
+

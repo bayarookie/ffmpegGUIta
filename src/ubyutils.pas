@@ -5,12 +5,12 @@ unit ubyUtils;
 interface
 
 uses
-  Classes, SysUtils, strutils, Math, LConvEncoding,
+  Classes, SysUtils, strutils, Math,
   {$IFDEF MSWINDOWS}
-  Windows,
+  Windows, LConvEncoding, Dialogs,
   {$ENDIF}
   Fileutil,
-  LCLIntf, Process, UTF8Process, Dialogs;
+  LCLIntf, Process, UTF8Process;
 
 function myGetFileSize(fn: string; short: boolean = False): string;
 function myExpandFileNameCaseW(const wfn: string; out MatchFound: boolean): string;

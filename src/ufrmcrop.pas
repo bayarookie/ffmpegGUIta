@@ -6,8 +6,8 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, SynMemo,
-  {$IFNDEF LCL} Windows, Messages, {$ELSE} LclIntf, LMessages, LclType, {$ENDIF}
-  Forms, Controls, Graphics, Dialogs,
+  {$IFNDEF LCL} Windows, Messages, {$ELSE} LMessages, LclType, {$ENDIF}
+  Forms, Controls,
   ExtCtrls, Buttons, StdCtrls, ComCtrls;
 
 type
@@ -243,4 +243,4 @@ end.
 
 
 
-
+

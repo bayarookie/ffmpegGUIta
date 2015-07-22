@@ -15,11 +15,13 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ComCtrls,
   ExtCtrls, StdCtrls, IniFiles, LclIntf, Process, UTF8Process, LConvEncoding,
-  SynMemo, synhighlighterunixshellscript, StrUtils, LCLVersion, types, Math,
-  Spin, Buttons, IntfGraphics, LCLType, Menus, fpImage, dateutils, clipbrd,
+  SynMemo, synhighlighterunixshellscript, StrUtils, types, Math,
+  Spin, Buttons, IntfGraphics, LCLType, Menus, fpImage,
   Masks,
   {$IFDEF MSWINDOWS}
   Windows, Registry, mediainfodll,
+  {$ELSE}
+  clipbrd,
   {$ENDIF}
   ucalcul, ufrmcompare, ujobinfo, utaversion, UniqueInstance2,
   uthreadconv, uthreadtest, uthreadaddf, uthreadexec, ufrmmaskprof;
@@ -395,8 +397,6 @@ type
     function myGetFileList(const Path, Mask: string; List: TStrings;
       subdir: boolean = False; fullpath: boolean = True): boolean;
     function myGetSimilarFiles(fn: string; List: TStrings): boolean;
-    procedure myFormPosLoad(Form: TForm; Ini: TIniFile);
-    procedure myFormPosSave(Form: TForm; Ini: TIniFile);
     procedure myDisComp;
     function myGetCaptionCont(p: TCont): string;
     procedure myGetWH(v: TCont; var w, h: integer);
@@ -421,12 +421,14 @@ type
     procedure myToIni(Ini: TIniFile; s1, s2, s3: string; t: Integer = 0);
     procedure mySets1(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean);
     procedure mySets3(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean);
+    procedure mySets4(Ini: TIniFile; bRead: boolean);
     procedure mySets(bRead: boolean);
-    procedure myDefaultLang;
+    procedure myFormPosLoad(Form: TForm; Ini: TIniFile);
+    procedure myFormPosSave(Form: TForm; Ini: TIniFile);
     procedure myLanguage(bRead: boolean);
   public
     { public declarations }
-    function myExpandFN(fn: string): string;
+    function myExpandFN(fn: string; dir: boolean = False): string;
     function myUnExpandFN(fn: string): string;
     function myGetDosOut(cmd, beg, fin: string; mem: TSynMemo;
       stb: TStatusBar; OEM: boolean = True): integer;
@@ -474,6 +476,7 @@ var
   Counter: integer;
   myUnik: TUniqueInstance;
   cDefaultSets: TCont;
+  cCmdIni: TCont;
 
 implementation
 
@@ -571,10 +574,10 @@ begin
           repeat
             w := Ini.ReadString(Name, IntToStr(i), '');
             if w <> '' then
-              frmGUIta.myAdd2cmb(TComboBox(c[k]), w);
+              myAdd2cmb(TComboBox(c[k]), w);
             Inc(i);
           until w = '';
-          frmGUIta.myAdd2cmb(TComboBox(c[k]), Text);
+          myAdd2cmb(TComboBox(c[k]), Text);
         end
         else
         begin
@@ -583,6 +586,79 @@ begin
             for i := 0 to Items.Count - 1 do
               myToIni(Ini, Name, IntToStr(i), Items[i]);
         end;
+end;
+
+procedure TfrmGUIta.mySets4(Ini: TIniFile; bRead: boolean);
+var
+  i: integer;
+  SL: TStringList;
+begin
+  if bRead then
+  begin
+    SL := TStringList.Create;
+    Ini.ReadSection(cmbRunCmd.Name, SL);
+    for i := 0 to SL.Count - 1 do
+      cCmdIni.setval(Ini.ReadString(cmbRunCmd.Name, SL[i], ''), '0');
+    SL.Free;
+  end
+  else for i := 0 to High(cCmdIni.sk) do
+    myToIni(Ini, cmbRunCmd.Name, IntToStr(i), cCmdIni.sk[i]);
+end;
+
+procedure TfrmGUIta.mySets(bRead: boolean);
+var
+  Ini: TIniFile;
+  s: string;
+  i: integer;
+  li: TListItem;
+begin
+  if not FileExistsUTF8(sInifile) and bRead then
+    Exit;
+  bUpdFromCode := True;
+  Ini := TIniFile.Create(UTF8ToSys(sInifile));
+  s := 'Main';
+  mySets1(Ini, s, [TabDefSets], bRead);
+  if not chkUseMasks.Checked then
+    mySets1(Ini, s, [cmbProfile], bRead);
+  //mySets3(Ini, s, [cmbRunCmd, cmbExtPlayer], bRead);
+  mySets4(Ini, bRead);
+  if bRead then
+  begin
+    myFormPosLoad(frmGUIta, Ini);
+    i := 0;
+    while Ini.ReadString('Masks', IntToStr(i) + 'Checked', '') <> '' do
+    begin
+      li := LVmasks.Items.Add;
+      li.Checked := Ini.ReadString('Masks', IntToStr(i) + 'Checked', '') = '1';
+      li.Caption := Ini.ReadString('Masks', IntToStr(i) + 'Prefix', '');
+      li.SubItems.Add(Ini.ReadString('Masks', IntToStr(i) + 'Extens', ''));
+      li.SubItems.Add(Ini.ReadString('Masks', IntToStr(i) + 'Profile', ''));
+      inc(i);
+    end;
+  end
+  else
+  begin
+    myFormPosSave(frmGUIta, Ini);
+    for i := 0 to iMaxMask do
+    begin
+      if i < LVmasks.Items.Count then
+      begin
+        myToIni(Ini, 'Masks', IntToStr(i) + 'Checked', IfThen(LVmasks.Items[i].Checked, '1', '0'));
+        myToIni(Ini, 'Masks', IntToStr(i) + 'Prefix', LVmasks.Items[i].Caption);
+        myToIni(Ini, 'Masks', IntToStr(i) + 'Extens', LVmasks.Items[i].SubItems[0]);
+        myToIni(Ini, 'Masks', IntToStr(i) + 'Profile', LVmasks.Items[i].SubItems[1]);
+      end
+      else
+      begin
+        myToIni(Ini, 'Masks', IntToStr(i) + 'Checked', '');
+        myToIni(Ini, 'Masks', IntToStr(i) + 'Prefix', '');
+        myToIni(Ini, 'Masks', IntToStr(i) + 'Extens', '');
+        myToIni(Ini, 'Masks', IntToStr(i) + 'Profile', '');
+      end;
+    end;
+  end;
+  Ini.Free;
+  bUpdFromCode := False;
 end;
 
 procedure mySet2(Sender: TObject; s: string);
@@ -1094,8 +1170,8 @@ begin
       si := si + ' -analyzeduration 100M -probesize 100M -i "' + s + '"'
     else
     {$IFDEF MSWINDOWS}
-    if LowerCase(ExtractFileExt(s)) = '.jpg' then
-      si := si + ' -i "' + ExtractShortPathNameUTF8(s) + '"'
+    if LowerCase(ExtractFileExt(s)) = '.jpg' then //ffmpeg ticket #4697 https://trac.ffmpeg.org/ticket/4697
+      si := si + ' -i "' + ExtractShortPathNameUTF8(s) + '"' //and #819 https://trac.ffmpeg.org/ticket/819
     else
     {$ENDIF}
       si := si + ' -i "' + s + '"';
@@ -1511,7 +1587,7 @@ begin
     cmbExtPlayer.ItemIndex := 0;
 end;
 
-function TfrmGUIta.myExpandFN(fn: string): string;
+function TfrmGUIta.myExpandFN(fn: string; dir: boolean = False): string;
 var
   s: string;
 begin
@@ -1539,13 +1615,10 @@ begin
     else
     begin
       Result := sDirApp + fn;
-      //{$IFDEF MSWINDOWS}
-      //{$ELSE}
-      if not (DirectoryExistsUTF8(Result) or FileExistsUTF8(Result)) then
+      if not dir and not FileExistsUTF8(Result) or DirectoryExistsUTF8(Result) then
         s := FindDefaultExecutablePath(ExtractFileName(fn), sDirApp);
       if s <> '' then
         Result := s;
-      //{$ENDIF}
     end;
   end;
 end;
@@ -1563,26 +1636,42 @@ end;
 
 function TfrmGUIta.myStrReplace(s: string): string;
 var
-  p: string;
+  p, q: string;
+  i: integer;
+  jo: TJob;
 begin
   Result := s;
-  Result := StringReplace(Result, '$dirtmp', myExpandFN(edtDirTmp.Text), [rfReplaceAll]);
-  Result := StringReplace(Result, '$dirout', myExpandFN(edtDirOut.Text), [rfReplaceAll]);
+  Result := StringReplace(Result, '$dirtmp', myExpandFN(edtDirTmp.Text, True), [rfReplaceAll]);
+  Result := StringReplace(Result, '$dirout', myExpandFN(edtDirOut.Text, True), [rfReplaceAll]);
   Result := StringReplace(Result, '$ffmpeg', myExpandFN(edtffmpeg.Text), [rfReplaceAll]);
   Result := StringReplace(Result, '$ffplay', myExpandFN(edtffplay.Text), [rfReplaceAll]);
-  Result := StringReplace(Result, '$ffprobe', myExpandFN(edtffprobe.Text),
-    [rfReplaceAll]);
+  Result := StringReplace(Result, '$ffprobe', myExpandFN(edtffprobe.Text), [rfReplaceAll]);
   if LVjobs.Selected = nil then
     Exit;
-  p := myGetAnsiFN(LVjobs.Selected.SubItems[0]);
-  Result := StringReplace(Result, '$input', p, [rfReplaceAll]);
+  jo := TJob(LVjobs.Selected.Data);
+  i := High(jo.f);
+  while i > -2 do
+  begin
+    if i < 0 then
+    begin
+      q := '$input';
+      p := myGetAnsiFN(jo.f[0].getval('filename'));
+    end
+    else
+    begin
+      q := '$inpu' + IntToStr(i);
+      p := myGetAnsiFN(jo.f[i].getval('filename'));
+    end;
+    Result := StringReplace(Result, q, p, [rfReplaceAll]);
+    dec(i);
+  end;
   p := ExtractFileDir(p);
   Result := StringReplace(Result, '$dirinp', p, [rfReplaceAll]);
   Result := StringReplace(Result, '$output',
   {$IFDEF MSWINDOWS}
-    TJob(LVjobs.Selected.Data).getval(edtOfna.Name), [rfReplaceAll]);
+    jo.getval(edtOfna.Name), [rfReplaceAll]);
   {$ELSE}
-    TJob(LVjobs.Selected.Data).getval(edtOfn.Name), [rfReplaceAll]);
+    jo.getval(edtOfn.Name), [rfReplaceAll]);
   {$ENDIF}
 end;
 
@@ -1727,11 +1816,6 @@ begin
       myToIni(Ini, Name, 'Height', IntToStr(Height));
       myToIni(Ini, Name, 'Width', IntToStr(Width));
     end;
-end;
-
-procedure TfrmGUIta.myDefaultLang;
-begin
-
 end;
 
 procedure TfrmGUIta.myLanguage(bRead: boolean);
@@ -1939,61 +2023,6 @@ begin
     if SynUNIXShellScriptSyn1.SecondKeyWords.IndexOf(s1) < 0 then
       SynUNIXShellScriptSyn1.SecondKeyWords.Add(s1);
   end;
-end;
-
-procedure TfrmGUIta.mySets(bRead: boolean);
-var
-  Ini: TIniFile;
-  s: string;
-  i: integer;
-  li: TListItem;
-begin
-  if not FileExistsUTF8(sInifile) and bRead then
-    Exit;
-  bUpdFromCode := True;
-  Ini := TIniFile.Create(UTF8ToSys(sInifile));
-  s := 'Main';
-  mySets1(Ini, s, [TabDefSets], bRead);
-  if not chkUseMasks.Checked then
-    mySets1(Ini, s, [cmbProfile], bRead);
-  //mySets3(Ini, s, [cmbRunCmd, cmbExtPlayer], bRead);
-  if bRead then
-  begin
-    myFormPosLoad(frmGUIta, Ini);
-    i := 0;
-    while Ini.ReadString('Masks', IntToStr(i) + 'Checked', '') <> '' do
-    begin
-      li := LVmasks.Items.Add;
-      li.Checked := Ini.ReadString('Masks', IntToStr(i) + 'Checked', '') = '1';
-      li.Caption := Ini.ReadString('Masks', IntToStr(i) + 'Prefix', '');
-      li.SubItems.Add(Ini.ReadString('Masks', IntToStr(i) + 'Extens', ''));
-      li.SubItems.Add(Ini.ReadString('Masks', IntToStr(i) + 'Profile', ''));
-      inc(i);
-    end;
-  end
-  else
-  begin
-    myFormPosSave(frmGUIta, Ini);
-    for i := 0 to iMaxMask do
-    begin
-      if i < LVmasks.Items.Count then
-      begin
-        myToIni(Ini, 'Masks', IntToStr(i) + 'Checked', IfThen(LVmasks.Items[i].Checked, '1', '0'));
-        myToIni(Ini, 'Masks', IntToStr(i) + 'Prefix', LVmasks.Items[i].Caption);
-        myToIni(Ini, 'Masks', IntToStr(i) + 'Extens', LVmasks.Items[i].SubItems[0]);
-        myToIni(Ini, 'Masks', IntToStr(i) + 'Profile', LVmasks.Items[i].SubItems[1]);
-      end
-      else
-      begin
-        myToIni(Ini, 'Masks', IntToStr(i) + 'Checked', '');
-        myToIni(Ini, 'Masks', IntToStr(i) + 'Prefix', '');
-        myToIni(Ini, 'Masks', IntToStr(i) + 'Extens', '');
-        myToIni(Ini, 'Masks', IntToStr(i) + 'Profile', '');
-      end;
-    end;
-  end;
-  Ini.Free;
-  bUpdFromCode := False;
 end;
 
 procedure TfrmGUIta.myDisComp;
@@ -2985,8 +3014,8 @@ var
   od: TOpenDialog;
 begin
   od := TOpenDialog.Create(frmGUIta);
-  if DirectoryExistsUTF8(myExpandFN(cmbDirLast.Text)) then
-    od.InitialDir := myExpandFN(cmbDirLast.Text);
+  if DirectoryExistsUTF8(myExpandFN(cmbDirLast.Text, True)) then
+    od.InitialDir := myExpandFN(cmbDirLast.Text, True);
   od.Filter := mes[0] + '|' + myGetExts + '|' + mes[1];
   od.Title := mes[20] + ' - ' + mes[0];
   od.Options := [ofEnableSizing, ofViewDetail, ofAllowMultiSelect, ofFileMustExist];
@@ -3237,7 +3266,11 @@ begin
     btnCmdRun.Enabled := False;
     btnCmdStop.Enabled := True;
   end;
-  myAdd2cmb(cmbRunCmd, cmbRunCmd.Text, False);
+  if cmbRunCmd.Items.IndexOf(cmbRunCmd.Text) < 0 then
+  begin
+    cCmdIni.setval(cmbRunCmd.Text, '1');
+    cmbRunCmd.Items.Add(cmbRunCmd.Text);
+  end;
 end;
 
 procedure TfrmGUIta.btnCropClick(Sender: TObject);
@@ -3368,7 +3401,7 @@ var
   s: string;
 begin
   sd := TSaveDialog.Create(Self);
-  sd.InitialDir := myExpandFN(edtDirOut.Text);
+  sd.InitialDir := myExpandFN(edtDirOut.Text, True);
   sd.Filter := '*.log|*.log|' + mes[1];
   i := 0;
   repeat
@@ -4193,35 +4226,11 @@ end;
 
 procedure TfrmGUIta.cmbRunCmdGetItems(Sender: TObject);
 var
-  Ini: TIniFile;
+  i: integer;
 begin
-  if cmbRunCmd.Items.Count = 0 then
-  begin
-    if FileExistsUTF8(sInifile) then
-    begin
-      Ini := TIniFile.Create(UTF8ToSys(sInifile));
-      mySets3(Ini, 'Main', [cmbRunCmd], True);
-      Ini.Free;
-    end;
-    myAdd2cmb(cmbRunCmd, '"$ffplay" -i "$input"');
-    myAdd2cmb(cmbRunCmd, '"$ffprobe" -show_streams -i "$input"');
-    myAdd2cmb(cmbRunCmd, '"$ffprobe" -show_frames -i "$input"');
-    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -i "$input" -vsync 1 -r 1 -f image2 "$dirtmp/img-%03d.jpg"');
-    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -i "$input" -f image2 -frames:v 1 "$dirtmp/img.bmp"');
-    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -f image2 -i img%d.jpg "$dirtmp/a.mpg"');
-    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -i "$input" -vf "[in] split [T1], [T2] overlay=0:H/2 [out]; [T1] crop=iw:ih/2:0:ih/2, vflip [T2]" "$output"');
-    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -i "$dirinp/VTS_01_1.VOB" -i "$dirinp/VTS_01_2.VOB" -filter_complex "[0:0] [0:1] [1:0] [1:1] concat=n=2:v=1:a=1 [v] [a]" -map "[v]" -map "[a]" "$output"');
-    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -i "$input" -dump_attachment:t:0 "$dirout/attach-0"');
-    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -encoders');
-    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -formats');
-    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -decoders');
-    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -devices');
-    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -sample_fmts');
-    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -filters');
-    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -protocols');
-    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -codecs');
-    myAdd2cmb(cmbRunCmd, '"$ffmpeg" -bsfs');
-  end;
+  //if cmbRunCmd.Items.Count = 18 then
+  for i := 0 to High(cCmdIni.sk) do
+    myAdd2cmb(cmbRunCmd, cCmdIni.sk[i]);
 end;
 
 procedure TfrmGUIta.edtffmpegChange(Sender: TObject);
@@ -4351,6 +4360,7 @@ begin
     ' - ' + TargetCPU + ' ' + TargetOS);
   Files2Add := TList.Create;
   cDefaultSets := TCont.Create;
+  cCmdIni := TCont.Create;
   Counter := 0;
   fs.DecimalSeparator := '.';
   fs.ThousandSeparator := ' ';
@@ -4434,7 +4444,7 @@ begin
   end;
   //save defaults to containers
   myDefaultSets;
-  if b then
+  if b then //if config file exists then load settings
   begin
     mySets(True); //load settings from config file
     chk1instanceChange(nil);
@@ -4475,6 +4485,7 @@ begin
     mySets(False);
   Files2Add.Free;
   cDefaultSets.Free;
+  cCmdIni.Free;
 end;
 
 procedure TfrmGUIta.FormDropFiles(Sender: TObject; const FileNames: array of string);
@@ -5396,7 +5407,7 @@ procedure TfrmGUIta.xmyCheckDir(Sender: TObject);
 var
   s: string;
 begin
-  s := myExpandFN(myGet2(Sender));
+  s := myExpandFN(myGet2(Sender), True);
   {$IFDEF MSWINDOWS}
   if Copy(s, 2, 1) <> ':' then
   {$ELSE}
@@ -5424,7 +5435,7 @@ procedure TfrmGUIta.xmySelDir(Sender: TObject);
 var
   s: string;
 begin
-  s := myExpandFN(myGet2(Sender));
+  s := myExpandFN(myGet2(Sender), True);
   if SelectDirectory(mes[18], s, s) then
   begin
     mySet2(Sender, myUnExpandFN(s));

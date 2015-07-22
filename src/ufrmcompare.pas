@@ -5,7 +5,7 @@ unit ufrmcompare;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, SynMemo, Forms, Controls, Graphics, Dialogs,
+  Classes, FileUtil, SynMemo, Forms, Graphics,
   ExtCtrls, StdCtrls, Math, IntfGraphics, LCLType, ComCtrls, Spin, fpImage;
 
 type
@@ -222,4 +222,4 @@ begin
   (Sender as TUpDown).Visible := True;
 end;
 
-end.
+end.

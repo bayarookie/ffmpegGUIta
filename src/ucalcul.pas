@@ -139,7 +139,7 @@ unit uCalcul;
 interface
 
 uses
-  SysUtils, Classes, Graphics, Controls, Math, masks;
+  SysUtils, Classes, Math, masks;
 
 type
   TCalc_vek = array of Pointer;

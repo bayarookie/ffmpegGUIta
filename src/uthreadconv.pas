@@ -5,8 +5,11 @@ unit uthreadconv;
 interface
 
 uses
-  Classes, SysUtils, utf8process, Process, LConvEncoding, fileutil,
-  Math, ujobinfo, ubyutils;
+  Classes, SysUtils, utf8process, Process, LConvEncoding,
+  {$IFDEF MSWINDOWS}
+  Fileutil, ubyutils,
+  {$ENDIF}
+  Math, ujobinfo;
 
 type
 
@@ -232,4 +235,4 @@ begin
 end;
 
 end.
-
+
