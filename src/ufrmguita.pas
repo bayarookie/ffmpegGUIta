@@ -384,7 +384,7 @@ type
     procedure xmySelFile(Sender: TObject);
   private
     { private declarations }
-    procedure myAddFiles(files: TStrings);
+    procedure myAddFiles(params: TStrings);
     {$IFDEF MSWINDOWS}
     procedure myAddFilesAsAVS1(fns: TStrings);
     procedure myAddFilesAsAVS2(fns: TStrings);
@@ -540,7 +540,6 @@ begin
           if bRead then
             Value := Ini.ReadInteger(s, Name, Value)
           else
-          //myToIni(Ini, s, Name, IntToStr(Value))
             myToIni(Ini, s, Name, Text)
       else if c[k] is TCheckBox then
         with TCheckBox(c[k]) do
@@ -620,7 +619,6 @@ begin
   mySets1(Ini, s, [TabDefSets], bRead);
   if not chkUseMasks.Checked then
     mySets1(Ini, s, [cmbProfile], bRead);
-  //mySets3(Ini, s, [cmbRunCmd, cmbExtPlayer], bRead);
   mySets4(Ini, bRead);
   if bRead then
   begin
@@ -720,26 +718,50 @@ end;
 
 { TfrmGUIta }
 
-procedure TfrmGUIta.myAddFiles(files: TStrings);
+procedure TfrmGUIta.myAddFiles(params: TStrings);
 var
   i, j: integer;
+  s, t, e, o: string;
   jo: TJob;
   sl: TStringList;
-begin
-  for i := 0 to files.Count - 1 do
+  Ini: TIniFile;
+  procedure my1(fn: string);
+  var
+    i, j: integer;
   begin
     jo := TJob.Create;
     Inc(Counter);
     jo.setval('index', IntToStr(Counter));
     jo.setval('Completed', '0');
+    s := myGetProfile(ExtractFileName(fn));
+    jo.setval(cmbProfile.Name, s);
+    s := myGetAnsiFN(AppendPathDelim(sInidir) + s);
+    Ini := TIniFile.Create(UTF8ToSys(s));
+    sl := TStringList.Create;
+    Ini.ReadSection('1', sl);
+    for i := 0 to sl.Count - 1 do
+      jo.setval(sl[i], Ini.ReadString('1', sl[i], ''));
+    sl.Free;
+    Ini.Free;
+    if o <> '' then
+      s := o
+    else if Trim(edtDirOut.Text) <> '' then
+      s := Trim(edtDirOut.Text)
+    else
+      s := ExtractFilePath(fn);
+    e := jo.getval(cmbExt.Name);
+    jo.setval(edtOfn.Name, myGetOutFN(s, fn, e));
+    {$IFDEF MSWINDOWS}
+    jo.setval(edtOfna.Name, myGetOutFNa(s, fn, e));
+    {$ENDIF}
     SetLength(jo.f, 1);
     jo.f[0] := TFil.Create;
-    jo.f[0].setval('filename', files[i]);
+    jo.f[0].setval('filename', fn);
     jo.f[0].setval('ffprobe', '0');
     if chkAddTracks.Checked then
     begin
       sl := TStringList.Create;
-      if myGetSimilarFiles(files[i], sl) then
+      if myGetSimilarFiles(fn, sl) then
       for j := 0 to sl.Count - 1 do
       begin
         SetLength(jo.f, 2 + j);
@@ -750,6 +772,48 @@ begin
       sl.Free;
     end;
     Files2Add.Add(Pointer(jo));
+  end;
+
+begin
+  for i := 0 to params.Count - 1 do
+  begin
+    s := params[i];
+    if DirectoryExistsUTF8(s) then
+    begin
+      SL := TStringList.Create;
+      if myGetFileList(s, myGetExts, SL, True) then
+      begin
+        SL.Sort;
+        for j := 0 to SL.Count - 1 do
+          my1(SL[j]);
+      end;
+      SL.Free;
+    end
+    else if FileExistsUTF8(s) then
+      my1(s)
+    else if (s[1] = '-') or (s[1] = '/') then
+    begin
+      t := Copy(LowerCase(s), 2, Length(s));
+      if (t = 'start') then
+      begin
+        if tAutoStart = nil then
+          tAutoStart := TTimer.Create(Self);
+        tAutoStart.Enabled := False;
+        tAutoStart.Interval := 5000;
+        tAutoStart.OnTimer := @ontAutoStart;
+        tAutoStart.Enabled := True;
+      end
+      else if (Copy(t, 1, 2) = 'o:') then
+      begin
+        o := Copy(s, 4, Length(s));
+        if (o <> '') and (o[1] = '"') then
+          o := StringReplace(o, '"', '', [rfReplaceAll]);
+      end
+      else if (t = 'h') then
+        ShowMessage(StringReplace(mes[2], '\n', #13, [rfReplaceAll]))
+      else
+        my1(s);
+    end;
   end;
   myAddFileStart;
 end;
@@ -1383,22 +1447,10 @@ const
 var
   MemStream: TMemoryStream;
   NumBytes, BytesRead: integer;
-  //sl: TStringList;
-  //i: integer;
   pr: TProcessUTF8;
 begin
-  //pr := TProcessUTF8.Create(nil);
-  //pr.CommandLine := cmd;
-  //pr.Options := [poWaitOnExit, poUsePipes, poStderrToOutPut];
-  //pr.ShowWindow := swoHide;
-  //pr.Execute;
-  //mem.Lines.LoadFromStream(pr.Output);
-  //Result := pr.ExitStatus;
-  //pr.Free;
-
   Result := -1;
   BytesRead := 0;
-  //sl := Nil;
   MemStream := TMemoryStream.Create;
   pr := TProcessUTF8.Create(nil);
   try
@@ -1425,13 +1477,8 @@ begin
     until NumBytes <= 0;
     MemStream.SetSize(BytesRead);
     mem.Lines.LoadFromStream(MemStream);
-    //sl := TStringList.Create;
-    //sl.LoadFromStream(MemStream);
-    //for i := 0 to sl.Count - 1 do
-    //  mem.Lines.Add(sl[i]);
     Result := pr.ExitStatus;
   finally
-    //sl.Free;
     pr.Free;
     MemStream.Free;
   end;
@@ -1976,7 +2023,7 @@ begin
   begin
     mes[0] := 'Video files';
     mes[1] := 'All files (*)|*';
-    mes[2] := 'Usage: ffmpegGUIta [-start] [<video files>...]\n-start: start converting';
+    mes[2] := 'Usage: ffmpegGUIta [-start] [-o:"folder"] [<files>...]\n-start   start converting\n-o:"output" set output dir to folder';
     mes[3] := 'Creating file list';
     mes[4] := 'process completed, error code:';
     mes[5] := 'job completed for';
@@ -2036,8 +2083,6 @@ begin
   btnSuspend.Enabled := b;
   btnStop.Enabled := b;
   b := (LVjobs.Selected <> nil);
-  //for i := 0 to PageControl2.ControlCount - 1 do
-  //  TControl(PageControl2.Controls[i]).Enabled := b;
   if b then
     jo := TJob(LVjobs.Selected.Data);
   if LVfiles.Selected <> nil then
@@ -2520,7 +2565,6 @@ begin
   cmbEncoderA.Items.Clear;
   cmbEncoderS.Items.Clear;
   s := myStrReplace('"$ffmpeg"') + ' -encoders';
-  //myGetDosOut(s, '', '', SynMemo2, StatusBar1);
   myGetDosOut2(s, SynMemo2);
   for i := 0 to SynMemo2.Lines.Count - 1 do
   begin
@@ -2558,7 +2602,6 @@ begin
   cmbExt.Items.Clear;
   cmbExt.Items.Add('');
   s := myStrReplace('"$ffmpeg"') + ' -formats';
-  //myGetDosOut(s, '', '', SynMemo2, StatusBar1);
   myGetDosOut2(s, SynMemo2);
   for i := 0 to SynMemo2.Lines.Count - 1 do
   begin
@@ -2693,7 +2736,6 @@ begin
   s := myStrReplace('"$ffmpeg"') + ' -ss ' + ss + ' -i "' + sf + '"' +
     fv + ' -frames 1 -f image2 -y "' + Result + '"';
   myGetDosOut(s, '', '', sm, st);
-  //myGetDosOut2(s, sm);
 end;
 
 function TfrmGUIta.myValFPS(a: array of string): extended;
@@ -2913,7 +2955,6 @@ var
 begin
   m := Graphics.TBitmap.Create;
   m.SetSize(1, 1);
-  //m.Canvas.Brush.Color := memJournal.Color;
   m.Canvas.Brush.Color := clWindow;
   m.Canvas.FillRect(0, 0, 1, 1);
   t := m.CreateIntfImage;
@@ -3149,11 +3190,6 @@ begin
   na := -1;
   map := '';
   bfi := (jo.getval(chkFilterComplex.Name) = '1');
-  //if bfi then //cant get resize only filter from complex
-  //begin
-  //  fv := jo.getval(cmbFilterComplex.Name);
-  //  if fv <> '' then fv := ' -filter_complex "' + fv + '"';
-  //end;
   for l := 0 to High(jo.f) do
   for k := 0 to High(jo.f[l].s) do
     with jo.f[l].s[k] do
@@ -3781,9 +3817,6 @@ begin
     mySet2(Panel15.Controls[i], cDefaultSets.getval(Panel15.Controls[i].Name));
   for i := 0 to TabDefSets.ControlCount - 1 do
     mySet2(TabDefSets.Controls[i], cDefaultSets.getval(TabDefSets.Controls[i].Name));
-  //mySet2(chkConcat, cDefaultSets.getval(chkConcat.Name));
-  //mySet2(chkFilterComplex, cDefaultSets.getval(chkFilterComplex.Name));
-  //mySet2(chkx264Pass1fast, cDefaultSets.getval(chkx264Pass1fast.Name));
 end;
 
 procedure TfrmGUIta.btnSaveSetsClick(Sender: TObject);
@@ -3914,7 +3947,6 @@ begin
       myUnik.Enabled := False;
     end;
   end;
-  //mySets(False);
 end;
 
 procedure TfrmGUIta.chkAddTracksChange(Sender: TObject);
@@ -4060,7 +4092,6 @@ begin
   //to do: parse output: ffmpeg -f lavfi -i nullsrc -c:v libx264 -preset help -f mp4 -
   //[libx264 @ 0xb02de60] Possible presets: ultrafast superfast veryfast faster fast medium slow slower veryslow placebo
   //[libx264 @ 0xb02de60] Possible tunes: film animation grain stillimage psnr ssim fastdecode zerolatency
-  //edtffmpegChange
   xmyChange2(Sender);
 end;
 
@@ -4228,7 +4259,6 @@ procedure TfrmGUIta.cmbRunCmdGetItems(Sender: TObject);
 var
   i: integer;
 begin
-  //if cmbRunCmd.Items.Count = 18 then
   for i := 0 to High(cCmdIni.sk) do
     myAdd2cmb(cmbRunCmd, cCmdIni.sk[i]);
 end;
@@ -4556,81 +4586,50 @@ end;
 
 procedure TfrmGUIta.FormShow(Sender: TObject);
 var
-  {$IFDEF MSWINDOWS}
-  SLp: TStringList;
-  {$ENDIF}
-  SL, SL1: TStringList;
   i: integer;
-  s, t: string;
+  s: string;
+  {$IFDEF MSWINDOWS}
+  t: string;
   b: boolean;
+  SP,
+  {$ENDIF}
+  SL: TStringList;
 begin
   try
-    SL1 := TStringList.Create;
+    SL := TStringList.Create;
     if ParamCount > 0 then
     begin
       {$IFDEF MSWINDOWS}
-      SLp := TStringList.Create;
-      CommandToList(UTF8Encode(WideString(GetCommandLineW)), SLp);
-      while SLp.Count <= ParamCount do
-        SLp.Add('');
+      SP := TStringList.Create;
+      CommandToList(UTF8Encode(WideString(GetCommandLineW)), SP);
+      while SP.Count <= ParamCount do
+        SP.Add('');
       {$ENDIF}
       for i := 1 to ParamCount do
       begin
         s := ParamStr(i); //UTF8 from Lazarus for test params
         {$IFDEF MSWINDOWS}
         if not (FileExistsUTF8(s) or DirectoryExistsUTF8(s)) then
-          s := SLp[i]; //UTF16 from Windows apps
-        {$ENDIF}
+          s := SP[i]; //UTF16 from Windows apps
         b := False;
-        if Pos('~', s) > 0 then
+        if Pos('~', s) > 1 then //expand 8.3 filename
         begin
           t := myExpandFileNameCaseW(s, b);
           if b then
             s := t;
         end;
-        if FileExistsUTF8(s) or DirectoryExistsUTF8(s) then
-        begin
-          if DirectoryExistsUTF8(s) then
-          begin
-            SL := TStringList.Create;
-            if myGetFileList(s, myGetExts, SL, True) then
-            begin
-              SL.Sort;
-              SL1.AddStrings(SL);
-            end;
-            SL.Free;
-          end
-          else
-            SL1.Add(s);
-        end
-        else if (s[1] = '-') or (s[1] = '/') then
-        begin
-          t := Copy(LowerCase(s), 2, Length(s));
-          if (t = 'start') then
-          begin
-            tAutoStart := TTimer.Create(Self);
-            tAutoStart.Enabled := False;
-            tAutoStart.Interval := 5000;
-            tAutoStart.OnTimer := @ontAutoStart;
-            tAutoStart.Enabled := True;
-          end
-          else
-          if (Copy(t, 1, 2) = 'o:') then
-          begin
-            edtDirOut.Text := StringReplace(Copy(s, 4, Length(s)), '"', '', [rfReplaceAll]);
-          end
-          else
-            ShowMessage(StringReplace(mes[2], '\n', #13, [rfReplaceAll]));
-        end;
+        {$ENDIF}
+        SL.Add(s);
       end;
       {$IFDEF MSWINDOWS}
-      SLp.Free;
+      SP.Free;
       {$ENDIF}
     end
-    else if myGetFileList(GetCurrentDir, myGetExts, SL1, True) then
-      SL1.Sort;
-    myAddFiles(SL1);
-    SL1.Free;
+    else if myGetFileList(GetCurrentDir, myGetExts, SL, True) then
+      SL.Sort;
+    if SL.Count > 0 then
+      myAddFiles(SL);
+    SL.Free;
   except
     on E: Exception do
       ShowMessage(E.Message)
@@ -5282,10 +5281,10 @@ procedure TfrmGUIta.UniqueInstance1OtherInstance(Sender: TObject;
   ParamCount: Integer; Parameters: array of String);
 var
   i:Integer;
-  SL, ST: TStringList;
   s: string;
+  SL: TStringList;
 begin
-  ST := TStringList.Create;
+  SL := TStringList.Create;
   for i := Low(Parameters) to High(Parameters) do
   begin
     {$IFDEF MSWINDOWS}
@@ -5293,22 +5292,11 @@ begin
     {$ELSE}
     s := Parameters[i];
     {$ENDIF}
-    if DirectoryExistsUTF8(s) then
-    begin
-      SL := TStringList.Create;
-      if myGetFileList(s, myGetExts, SL, True) then
-      begin
-        SL.Sort;
-        ST.AddStrings(SL);
-      end;
-      SL.Free;
-    end
-    else
-      ST.Add(s);
+    SL.Add(s);
   end;
-  if ST.Count > 0 then
-    myAddFiles(ST);
-  ST.Free;
+  if SL.Count > 0 then
+    myAddFiles(SL);
+  SL.Free;
   BringToFront;
 end;
 

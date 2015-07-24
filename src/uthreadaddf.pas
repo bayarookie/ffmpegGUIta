@@ -107,8 +107,7 @@ begin
   end;
   ia2 := -1;
   sl := TStringList.Create;
-  s := frmGUIta.myGetProfile(ExtractFileName(jo.f[0].getval('filename')));
-  jo.setval(frmGUIta.cmbProfile.Name, s);
+  s := jo.getval(frmGUIta.cmbProfile.Name);
   s := myGetAnsiFN(AppendPathDelim(sInidir) + s);
   Ini := TIniFile.Create(UTF8ToSys(s));
   Ini.ReadSection('input', sl);
@@ -224,15 +223,6 @@ begin
     s := frmGUIta.SynMemo6.Text;
     s := myBetween(s, 'Duration: ', ',');
     jo.setval('duration', myRealToTimeStr(myTimeStrToReal(s)));
-    if Trim(frmGUIta.edtDirOut.Text) <> '' then
-      s := Trim(frmGUIta.edtDirOut.Text)
-    else
-      s := ExtractFilePath(filename);
-    v := jo.getval(frmGUIta.cmbExt.Name);
-    jo.setval(frmGUIta.edtOfn.Name, myGetOutFN(s, filenamew, v));
-    {$IFDEF MSWINDOWS}
-    jo.setval(frmGUIta.edtOfna.Name, myGetOutFNa(s, filename, v));
-    {$ENDIF}
   end;
   frmGUIta.myGetss4Compare(jo);
   DateTimeToString(s, 'yyyy-mm-dd hh:nn:ss', Now);
@@ -240,11 +230,33 @@ begin
   if pr.ExitStatus <> 0 then
     s := s + ' - ' + mes[6] + ': ' + IntToStr(pr.ExitStatus);
   frmGUIta.StatusBar1.SimpleText := s;
-  if frmGUIta.chkDebug.Checked then
+  if frmGUIta.chkDebug.Checked or (pr.ExitStatus <> 0) then
     frmGUIta.memJournal.Lines.Add(s);
   v := '';
   a := '';
   s := '';
+  if (filenum = 0) then
+  begin
+    li := frmGUIta.LVjobs.Items.Add;
+    li.Checked := bj;
+    li.Caption := jo.getval('index');
+    li.SubItems.Add(filenamew);
+    li.SubItems.Add(myGetFileSize(filename));
+    li.SubItems.Add(frmGUIta.myCalcOutSize(jo));
+    s := jo.getval('duration');
+    li.SubItems.Add(s);
+    DuraAll := DuraAll + myTimeStrToReal(s);
+    inc(DuraAl2);
+    frmGUIta.Caption := sCap + ' - ' + mes[21] + ' = ' + myRealToTimeStr(DuraAll)
+      + ', ' + mes[27] + ' = ' + IntToStr(DuraAl2);
+    frmGUIta.myGetCaptions(jo, v, a, s);
+    li.SubItems.Add(v);
+    li.SubItems.Add(a);
+    li.Data := Pointer(jo);
+    if (frmGUIta.LVjobs.Items.Count = 1) then
+      frmGUIta.LVjobs.Items[0].Selected := True;
+  end
+  else
   for i := 0 to frmGUIta.LVjobs.Items.Count - 1 do
   begin
     if frmGUIta.LVjobs.Items[i].Caption = jo.getval('index') then
@@ -255,27 +267,9 @@ begin
       frmGUIta.LVjobs.Items[i].Data := Pointer(jo);
       if frmGUIta.LVjobs.Items[i].Selected then
         frmGUIta.LVjobsSelectItem(nil, frmGUIta.LVjobs.Items[i], True);
-      Exit;
+      Break;
     end;
   end;
-  li := frmGUIta.LVjobs.Items.Add;
-  li.Checked := bj;
-  li.Caption := jo.getval('index');
-  li.SubItems.Add(filenamew);
-  li.SubItems.Add(myGetFileSize(filename));
-  li.SubItems.Add(frmGUIta.myCalcOutSize(jo));
-  s := jo.getval('duration');
-  li.SubItems.Add(s);
-  DuraAll := DuraAll + myTimeStrToReal(s);
-  inc(DuraAl2);
-  frmGUIta.Caption := sCap + ' - ' + mes[21] + ' = ' + myRealToTimeStr(DuraAll)
-    + ', ' + mes[27] + ' = ' + IntToStr(DuraAl2);
-  frmGUIta.myGetCaptions(jo, v, a, s);
-  li.SubItems.Add(v);
-  li.SubItems.Add(a);
-  li.Data := Pointer(jo);
-  if (frmGUIta.LVjobs.Items.Count = 1) then
-    frmGUIta.LVjobs.Items[0].Selected := True;
 end;
 
 procedure TThreadAddF.ShowJournal;
