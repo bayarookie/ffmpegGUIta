@@ -130,10 +130,11 @@ begin
   s := GetEnvironmentVariableUTF8(Env);
   {$IFDEF MSWINDOWS}
   e := '%' + Env + '%';
+  if Pos(LowerCase(s), LowerCase(Path)) = 1 then
   {$ELSE}
   e := '$' + Env;
+  if Pos(s, Path) = 1 then
   {$ENDIF}
-  if Pos(LowerCase(s), LowerCase(Path)) = 1 then
     Result := e + Copy(Path, Length(s) + 1, Length(Path))
   else
     Result := Path;
@@ -334,10 +335,10 @@ begin
     if DirectoryExistsUTF8(Result) then Exit;
   end;
   Result := StringReplace(Result, '?', '_', [rfReplaceAll]);
-  //если не нашёл, например, отключено в реестре
+  //if not found, for example, disabled on registry
   // [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem]
   // NtfsDisable8dot3NameCreation = 1
-  //то тогда создадим
+  //then create short name
   FullPath := ExtractFileDir(wfn);
   if (FullPath <> ExtractFileDrive(FullPath)) then
     FullPath := myGetAnsiFN(FullPath);

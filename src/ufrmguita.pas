@@ -1675,7 +1675,7 @@ begin
   {$IFDEF MSWINDOWS}
   if Pos(LowerCase(sDirApp), LowerCase(fn)) = 1 then
     fn := ExtractRelativePath(sDirApp, fn)
-  else if Pos(LowerCase(ExtractFileDir(sDirApp)), LowerCase(fn)) = 1 then
+  else if Pos(LowerCase(ExtractFileDir(ExtractFileDir(sDirApp))), LowerCase(fn)) = 1 then
     fn := ExtractRelativePath(Application.ExeName, fn);
   {$ENDIF}
   Result := myUnExpandEnvs(fn);
@@ -4108,9 +4108,11 @@ begin
   end
   else
     cmbExt.Font.Color := clWindowText;
-  if (Length(s) = 0) or ((Length(s) > 0) and (s[1] <> '.')) then
+  i := Length(s);
+  if (i = 0) or ((i > 0) and (s[1] <> '.')) then
     s := '.' + s;
-  edtOfn.Text := ChangeFileExt(edtOfn.Text, s);
+  if s <> '.tee' then
+    edtOfn.Text := ChangeFileExt(edtOfn.Text, s);
   if Sender = cmbExt then
     if cmbExt.Items.IndexOf(s) < 0 then
       cmbFormat.Text := ''
@@ -4209,7 +4211,6 @@ begin
     jo.setval(TabOutput.Controls[i].Name, s);
   end;
   se := Ini.ReadString('1', cmbExt.Name, '');
-  //jo.setval(cmbExt.Name, se);
   jo.setval(edtOfn.Name, ChangeFileExt(jo.getval(edtOfn.Name), se));
   {$IFDEF MSWINDOWS}
   jo.setval(edtOfna.Name, ChangeFileExt(jo.getval(edtOfna.Name), se));
@@ -4312,8 +4313,11 @@ begin
   else
     edtOfna.Text := myGetOutFNa(sd, LVjobs.Selected.SubItems[0], se);
   {$ENDIF}
-  cmbExt.Text := se;
-  cmbExtChange(cmbExt);
+  if cmbExt.Text <> '.tee' then
+  begin
+    cmbExt.Text := se;
+    cmbExtChange(cmbExt);
+  end;
   xmyChange0(cmbFormat);
 end;
 
@@ -4396,12 +4400,13 @@ begin
   fs.ThousandSeparator := ' ';
   DuraAll := 0;
   //get inifile location
-  sDirApp := ExtractFilePath(Application.ExeName);
+  s := SysToUTF8(Application.ExeName);
+  sDirApp := ExtractFilePath(s);
   if DirectoryIsWritable(sDirApp) then
     sInidir := sDirApp
   else
     sInidir := GetAppConfigDirUTF8(False, True);
-  sInifile := AppendPathDelim(sInidir) + ExtractFileNameOnly(Application.ExeName) + '.cfg';
+  sInifile := AppendPathDelim(sInidir) + ExtractFileNameOnly(s) + '.cfg';
   b := FileExistsUTF8(sInifile);
   {$IFDEF MSWINDOWS}
   btnAddScreenGrab.Visible := False; //not tested
