@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, utf8process, Process, fileutil, IniFiles,
-  ComCtrls, ujobinfo, ubyutils;
+  ComCtrls, Math, ujobinfo, ubyutils;
 
 type
 
@@ -19,8 +19,9 @@ type
     filename: string;
     filenamew: string;
     filenum: integer;
-    fcmd: string;
+    fcmd: TStringList;
     fStatus: string;
+    fExitStatus: integer;
     procedure DataGet;
     procedure DataOut;
     procedure ShowJournal;
@@ -46,7 +47,7 @@ var
 begin
   dt := Now;
   filenum := -1;
-  fcmd := '';
+  fcmd.Clear;
   while Files2Add.Count > 0 do
   begin
     jo := TJob(Files2Add.Items[0]);
@@ -56,17 +57,17 @@ begin
       jo.f[l].setval('ffprobe', '1');
       filenamew := jo.f[l].getval('filename');
       filename := myGetAnsiFN(filenamew);
-      fcmd := frmGUIta.myStrReplace('"$ffprobe"');
       s := LowerCase(ExtractFileExt(filename));
       if s = '.vob' then
-        fcmd := fcmd + ' -show_streams -analyzeduration 100M -probesize 100M "' + filename + '"'
+        s := ' -show_format -show_streams -analyzeduration 100M -probesize 100M "' + filename + '"'
       else
       {$IFDEF MSWINDOWS}
       if s = '.jpg' then
-        fcmd := fcmd + ' -show_streams "' + ExtractShortPathNameUTF8(filenamew) + '"'
+        s := ' -show_format -show_streams "' + ExtractShortPathNameUTF8(filenamew) + '"'
       else
       {$ENDIF}
-        fcmd := fcmd + ' -show_streams "' + filename + '"';
+        s := ' -show_format -show_streams "' + filename + '"';
+      fcmd.Add(frmGUIta.myStrReplace('"$ffprobe"') + s);
       filenum := l;
       Break;
     end;
@@ -75,7 +76,7 @@ begin
     else
       Break;
   end;
-  if fcmd <> '' then
+  if fcmd.Count > 0 then
   begin
     frmGUIta.SynMemo6.Clear;
     frmGUIta.StatusBar1.SimpleText := filenamew;
@@ -97,8 +98,8 @@ begin
   bj := False; //job is not checked, if no tracks
   if filenum > 0 then
   begin
-    iv := 0;
-    ia := 0;
+    iv := 0; //need to get number of video if checked
+    ia := 0; //also for audio
   end
   else
   begin
@@ -110,12 +111,25 @@ begin
   s := jo.getval(frmGUIta.cmbProfile.Name);
   s := myGetAnsiFN(AppendPathDelim(sInidir) + s);
   Ini := TIniFile.Create(UTF8ToSys(s));
-  Ini.ReadSection('input', sl);
-  for i := 0 to sl.Count - 1 do
-    jo.f[filenum].setval(sl[i], Ini.ReadString('input', sl[i], ''));
+  //fill output sets from ini
   Ini.ReadSection('1', sl);
   for i := 0 to sl.Count - 1 do
     jo.setval(sl[i], Ini.ReadString('1', sl[i], ''));
+  s := frmGUIta.SynMemo6.Text;
+  //information about the container format of the input multimedia stream
+  sl.Text := myBetween(s, '[FORMAT]', '[/FORMAT]');
+  for i := 0 to sl.Count - 1 do
+  begin
+    j := Pos('=', sl[i]);
+    if j > 0 then
+      jo.f[filenum].setval(Copy(sl[i], 1, j - 1), Copy(sl[i], j + 1, Length(sl[i])));
+  end;
+  jo.f[filenum].setval('-----', '-----=-----=-----');
+  //fill input sets from ini
+  Ini.ReadSection('input', sl);
+  for i := 0 to sl.Count - 1 do
+    jo.f[filenum].setval(sl[i], Ini.ReadString('input', sl[i], ''));
+  //enumerate streams
   s := frmGUIta.SynMemo6.Text;
   repeat
     sl.Text := myBetween(s, '[STREAM]', '[/STREAM]');
@@ -135,11 +149,13 @@ begin
     if (jo.f[filenum].s[k].getval('codec_name') = 'unknown') then
       Continue;
     jo.f[filenum].s[k].setval('-----', '-----=-----=-----');
+    //fill stream sets from ini
     styp := jo.f[filenum].s[k].getval('codec_type');
     sl.Clear;
     Ini.ReadSection(styp, sl);
     for i := 0 to sl.Count - 1 do
       jo.f[filenum].s[k].setval(sl[i], Ini.ReadString(styp, sl[i], ''));
+    //to check, or not to check, that is a question
     bp := sl.Count > 0;
     if (styp = 'video') then
     begin
@@ -170,6 +186,12 @@ begin
       end;
       {$ENDIF}
       jo.f[filenum].s[k].setval(frmGUIta.edtBitrateV.Name, frmGUIta.myCalcBRv(jo.f[filenum].s[k]));
+      //title
+      if frmGUIta.chkTitleCopy.Checked then
+      begin
+        v := jo.f[filenum].s[k].getval('TAG:title');
+        jo.f[filenum].s[k].setval(frmGUIta.cmbTitleVid.Name, v);
+      end;
     end
     else
     if (styp = 'audio') then
@@ -192,6 +214,12 @@ begin
       if bp and (ia2 < 0) then
         ia2 := k;
       jo.f[filenum].s[k].setval(frmGUIta.edtBitrateA.Name, frmGUIta.myCalcBRa(jo.f[filenum].s[k]));
+      //title
+      if frmGUIta.chkTitleCopy.Checked then
+      begin
+        v := jo.f[filenum].s[k].getval('TAG:title');
+        jo.f[filenum].s[k].setval(frmGUIta.cmbTitleAud.Name, v);
+      end;
     end
     else
     if (styp = 'subtitle') then
@@ -210,33 +238,49 @@ begin
         jo.f[filenum].s[k].setval('Checked', '1');
         bj := True;
       end;
+      //title
+      if frmGUIta.chkTitleCopy.Checked then
+      begin
+        v := jo.f[filenum].s[k].getval('TAG:title');
+        jo.f[filenum].s[k].setval(frmGUIta.cmbTitleSub.Name, v);
+      end;
     end;
   until (s = '');
   Ini.Free;
+  //if no audio is checked, check first audio track
   if (ia < 0) and (ia2 >= 0) then
   begin
     jo.f[filenum].s[ia2].setval('Checked', '1');
     bj := True;
   end;
+  //copy duration for backward compatibility, it needs to recode
   if (filenum = 0) then
   begin
-    s := frmGUIta.SynMemo6.Text;
-    s := myBetween(s, 'Duration: ', ',');
-    jo.setval('duration', myRealToTimeStr(myTimeStrToReal(s)));
+    //s := frmGUIta.SynMemo6.Text;
+    //s := myBetween(s, 'Duration: ', ',');
+    //jo.setval('duration', myRealToTimeStr(myTimeStrToReal(s)));
+    s := jo.f[0].getval('duration');
+    jo.setval('duration', myRealToTimeStr(StrToFloatDef(s, 0)));
   end;
   frmGUIta.myGetss4Compare(jo);
   DateTimeToString(s, 'yyyy-mm-dd hh:nn:ss', Now);
   s := s + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
-  if pr.ExitStatus <> 0 then
-    s := s + ' - ' + mes[6] + ': ' + IntToStr(pr.ExitStatus);
+  if fExitStatus <> 0 then
+    s := s + ' - ' + mes[6] + ': ' + IntToStr(fExitStatus);
   frmGUIta.StatusBar1.SimpleText := s;
-  if frmGUIta.chkDebug.Checked or (pr.ExitStatus <> 0) then
+  if frmGUIta.chkDebug.Checked or (fExitStatus <> 0) then
     frmGUIta.memJournal.Lines.Add(s);
+  //add or update to listview
   v := '';
   a := '';
   s := '';
   if (filenum = 0) then
   begin
+    if frmGUIta.chkTitleCopy.Checked then
+      s := jo.f[0].getval('TAG:title')
+    else
+      s := '';
+    jo.setval(frmGUIta.cmbTitleOut.Name, s);
     li := frmGUIta.LVjobs.Items.Add;
     li.Checked := bj;
     li.Caption := jo.getval('index');
@@ -286,7 +330,7 @@ procedure TThreadAddF.ShowSynMemo;
 begin
   frmGUIta.SynMemo6.Lines.Add(fStatus);
 end;
-
+{
 procedure TThreadAddF.Execute;
 const
   READ_BYTES = 2048;
@@ -352,10 +396,98 @@ begin
     end;
   end;
 end;
+}
+procedure TThreadAddF.Execute;
+var
+  scmd, Buffer, s, t: string;
+  BytesAvailable: DWord;
+  BytesRead: longint;
+  i, j: integer;
+begin
+  //scp := GetConsoleTextEncoding;
+  while (not Terminated) and True do
+  begin
+    Synchronize(@DataGet);
+    if fcmd.Count = 0 then
+      Exit;
+    while (not Terminated) and (fcmd.Count > 0) and (fExitStatus = 0) do
+    begin
+      fExitStatus := -1;
+      scmd := fcmd[0];
+      fcmd.Delete(0);
+      if scmd = '' then
+      begin
+        fStatus := mes[6] + ': ' + mes[11];
+        Synchronize(@ShowSynMemo);
+        Break;
+      end;
+      fStatus := scmd;
+      Synchronize(@ShowJournal);
+      Synchronize(@ShowStatus1);
+      Synchronize(@ShowSynMemo);
+      pr := TProcessUTF8.Create(nil);
+      try
+        //pr.CurrentDirectory := fdir;
+        pr.CommandLine := scmd;
+        pr.Options := [poUsePipes{$IFDEF MSWINDOWS}, poStderrToOutPut{$ENDIF}]; //without stderr - infinite run
+        pr.ShowWindow := swoHIDE;
+        pr.Execute;
+        t := '';
+        repeat
+          Sleep(2);
+          BytesAvailable := pr.Output.NumBytesAvailable;
+          BytesRead := 0;
+          while BytesAvailable > 0 do
+          begin
+            SetLength(Buffer, BytesAvailable);
+            BytesRead := pr.OutPut.Read(Buffer[1], BytesAvailable);
+            s := copy(Buffer, 1, BytesRead);
+            //if fOEM then
+            //  s := ConvertEncoding(s, scp, EncodingUTF8);
+            t := t + s;
+            repeat
+              i := Pos(#13, t);
+              j := Pos(#10, t);
+              if (i > 0) and (j <> i + 1) then //carrier return, no line feed
+              begin
+                if (j > i + 1) then j := i;
+                fStatus := Copy(t, 1, i - 1);
+                Delete(t, 1, Max(i, j));
+                Synchronize(@ShowStatus1);
+              end else
+              if ((i > 0) and (j = i + 1))  //crlf
+              or ((i = 0) and (j > 0))      //lf
+              or ((i > j) and (j > 0)) then //lf, cr
+              begin
+                if (i = 0) or (i > j) then i := j;
+                fStatus := Copy(t, 1, Min(i, j) - 1);
+                Delete(t, 1, Max(i, j));
+                Synchronize(@ShowStatus1);
+                Synchronize(@ShowSynMemo);
+              end;
+            until i = 0;
+            BytesAvailable := pr.Output.NumBytesAvailable;
+          end;
+        until Terminated or not pr.Running;
+        if (t <> '') then
+        begin
+          fStatus := t;
+          Synchronize(@ShowSynMemo);
+        end;
+        fExitStatus := pr.ExitStatus;
+      finally
+        pr.Free;
+      end;
+    end;
+    Synchronize(@DataOut);
+  end;
+end;
 
 constructor TThreadAddF.Create(CreateSuspended: boolean);
 begin
   FreeOnTerminate := True;
+  fcmd := TStringList.Create;
+  fExitStatus := 0;
   inherited Create(CreateSuspended);
 end;
 

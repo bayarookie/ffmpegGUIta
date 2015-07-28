@@ -2,10 +2,11 @@ unit ufrmGUIta;
 {
 component's property Tag
 0 = default, normal component
-1 = readonly, doesnt need to save to profile
+1 = readonly, dont save to profile
 2 = filters, depends from chkFilterComplex.Checked
 3 = output filename, dont save to profile
 4 = x264 x265
+5 = metadata, title
 }
 
 {$mode objfpc}{$H+}
@@ -71,6 +72,10 @@ type
     btnAddScreenGrab: TButton;
     btnSaveSets: TButton;
     btnReset: TButton;
+    chkTitleWork: TCheckBox;
+    chkxtermconv: TCheckBox;
+    chkTitleClear: TCheckBox;
+    chkTitleCopy: TCheckBox;
     chkSaveOnExit: TCheckBox;
     chk1instance: TCheckBox;
     chkAddTracks: TCheckBox;
@@ -82,7 +87,7 @@ type
     chkPlayer2: TCheckBox;
     chkPlayer3: TCheckBox;
     chkPlayerIn: TCheckBox;
-    chkRunMode: TCheckBox;
+    chkxterm1str: TCheckBox;
     chkSaveFormPos: TCheckBox;
     chkSynColor: TCheckBox;
     chkUseEditedCmd: TCheckBox;
@@ -130,11 +135,15 @@ type
     cmbSRate: TComboBox;
     cmbTestDurationss: TComboBox;
     cmbTestDurationt: TComboBox;
+    cmbTitleVid: TComboBox;
+    cmbTitleAud: TComboBox;
+    cmbTitleSub: TComboBox;
     cmbx264preset: TComboBox;
     cmbx264tune: TComboBox;
     cmbDurationt2: TComboBox;
     cmbAddOptsV: TComboBox;
     cmbFilterComplex: TComboBox;
+    cmbTitleOut: TComboBox;
     edtDirOut: TComboBox;
     edtDirTmp: TComboBox;
     edtffmpeg: TComboBox;
@@ -149,6 +158,10 @@ type
     ImageList1: TImageList;
     edtBitrateV: TLabeledEdit;
     edtOfna: TLabeledEdit;
+    lblAddOptsS: TLabel;
+    lblAddOptsV: TLabel;
+    lblAddOptsA: TLabel;
+    lblTitleOut: TLabel;
     lblDirLast: TLabel;
     lblDirOut: TLabel;
     lblDirTmp: TLabel;
@@ -184,6 +197,9 @@ type
     lblScale: TLabel;
     lblSRate: TLabel;
     lblTestStartDurationTime: TLabel;
+    lblTitleVid: TLabel;
+    lblTitleAud: TLabel;
+    lblTitleSub: TLabel;
     lblx264preset: TLabel;
     lblx264tune: TLabel;
     lblxterm: TLabel;
@@ -299,6 +315,7 @@ type
     procedure chkPlayer2Change(Sender: TObject);
     procedure chkPlayer3Change(Sender: TObject);
     procedure chkSynColorChange(Sender: TObject);
+    procedure chkTitleWorkChange(Sender: TObject);
     procedure chkUseMasksChange(Sender: TObject);
     procedure cmbBitrateAChange(Sender: TObject);
     procedure cmbBitrateVChange(Sender: TObject);
@@ -540,7 +557,10 @@ begin
           if bRead then
             Value := Ini.ReadInteger(s, Name, Value)
           else
-            myToIni(Ini, s, Name, Text)
+          begin
+            if Enabled then
+              myToIni(Ini, s, Name, Text)
+          end
       else if c[k] is TCheckBox then
         with TCheckBox(c[k]) do
           if bRead then
@@ -1086,6 +1106,16 @@ var
         end;
         s := c.getval(cmbAddOptsV.Name);
         vi := vi + IfThen(s <> '', ' ' + s);
+        //title
+        if jo.getval(chkTitleWork.Name) = '1' then
+        if jo.getval(chkTitleClear.Name) <> '1' then
+        begin
+          s := c.getval(cmbTitleVid.Name);
+          if (s <> '') then
+            so := so + ' -metadata:s:v:' + ni + ' title="' + s + '"'
+          else if ((s = '') and (c.getval('TAG:title') <> '')) then
+            so := so + ' -metadata:s:v:' + ni + ' title=';
+        end;
       end;
     end
     else
@@ -1119,6 +1149,16 @@ var
         au := au + IfThen(s <> '', ' -ac:a:' + ni + ' ' + s);
         s := c.getval(cmbAddOptsA.Name);
         au := au + IfThen(s <> '', ' ' + s);
+        //title
+        if jo.getval(chkTitleWork.Name) = '1' then
+        if jo.getval(chkTitleClear.Name) <> '1' then
+        begin
+          s := c.getval(cmbTitleAud.Name);
+          if (s <> '') then
+            so := so + ' -metadata:s:a:' + ni + ' title="' + s + '"'
+          else if ((s = '') and (c.getval('TAG:title') <> '')) then
+            so := so + ' -metadata:s:a:' + ni + ' title=';
+        end;
       end;
     end
     else
@@ -1137,6 +1177,16 @@ var
       begin
         s := c.getval(cmbAddOptsS.Name);
         su := su + IfThen(s <> '', ' ' + s);
+        //title
+        if jo.getval(chkTitleWork.Name) = '1' then
+        if jo.getval(chkTitleClear.Name) <> '1' then
+        begin
+          s := c.getval(cmbTitleSub.Name);
+          if (s <> '') then
+            so := so + ' -metadata:s:s:' + ni + ' title="' + s + '"'
+          else if ((s = '') and (c.getval('TAG:title') <> '')) then
+            so := so + ' -metadata:s:s:' + ni + ' title=';
+        end;
       end;
     end
     else
@@ -1318,7 +1368,21 @@ begin
   if vi = '' then vi := ' -vn'; //no video
   if au = '' then au := ' -an'; //no audio
   if su = '' then su := ' -sn'; //no subtitle
-  // params for output file
+  // metadata
+  if jo.getval(chkTitleWork.Name) = '1' then
+  begin
+    if jo.getval(chkTitleClear.Name) <> '1' then
+    begin
+      s := jo.getval(cmbTitleOut.Name);
+      if (s <> '') then
+        so := so + ' -metadata title="' + s + '"'
+      else if ((s = '') and (jo.f[0].getval('TAG:title') <> '')) then
+        so := so + ' -metadata title=';
+    end
+    else
+      so := so + ' -map_metadata -1';
+  end;
+  // time
   if mode = 1 then
   begin
     if (rso > 0) and (rso < rst) then
@@ -1327,13 +1391,15 @@ begin
       sto := stt;
   end;
   so := so + IfThen(sso <> '', ' -ss ' + sso) + IfThen(sto <> '', ' -t ' + sto);
+  // additional options
   s := jo.getval(cmbAddOptsO.Name);
   so := so + IfThen(s <> '', ' ' + s);
+  // format
   s := jo.getval(cmbFormat.Name);
   so := so + IfThen(s <> '', ' -f ' + s);
   // output filename
   fno := jo.getval(edtOfn.Name);
-  if (fno <> '') and (mode <> 2) then
+  if (fno <> '') and (mode <> 2) then //if (mode=2) - play through pipe
   begin
     if FileExistsUTF8(fno) then
     begin
@@ -1387,7 +1453,7 @@ begin
   try
     pr.CommandLine := cmd;
     pr.Options := [poUsePipes, poStderrToOutPut];
-    pr.ShowWindow := swoHide;
+    pr.ShowWindow := swoHIDE;
     pr.Execute;
     t := '';
     repeat
@@ -1456,7 +1522,7 @@ begin
   try
     pr.CommandLine := cmd;
     pr.Options := [poUsePipes, poStderrToOutPut];
-    pr.ShowWindow := swoHide;
+    pr.ShowWindow := swoHIDE;
     pr.Execute;
     // read while the process is running
     while pr.Running do begin
@@ -1493,7 +1559,7 @@ begin
   p := TProcessUTF8.Create(nil);
   p.Executable := edtxterm.Text;
   p.Parameters.Add(edtxtermopts.Text);
-  if chkRunMode.Checked then
+  if chkxterm1str.Checked then
     p.Parameters.Add(cmd)
   else
   begin
@@ -3802,6 +3868,8 @@ begin
     cDefaultSets.setval(Panel15.Controls[i].Name, myGet2(Panel15.Controls[i]));
   for i := 0 to TabDefSets.ControlCount - 1 do
     cDefaultSets.setval(TabDefSets.Controls[i].Name, myGet2(TabDefSets.Controls[i]));
+  cDefaultSets.setval(chkTitleWork.Name, myGet2(chkTitleWork));
+  cDefaultSets.setval(chkTitleClear.Name, myGet2(chkTitleClear));
   cDefaultSets.setval(chkConcat.Name, myGet2(chkConcat));
   cDefaultSets.setval(chkFilterComplex.Name, myGet2(chkFilterComplex));
   cDefaultSets.setval(chkx264Pass1fast.Name, myGet2(chkx264Pass1fast));
@@ -3955,18 +4023,21 @@ begin
 end;
 
 procedure TfrmGUIta.chkFilterComplexChange(Sender: TObject);
+var
+  b: boolean;
 begin
   xmyChange0(Sender);
-  cmbFilterComplex.Enabled := chkFilterComplex.Checked;
+  b := not chkFilterComplex.Checked;
+  cmbFilterComplex.Enabled := not b;
   //for i := 0 to TabVideo do if controls[i].Tag = 2 then
-  cmbCrop.Enabled := not chkFilterComplex.Checked;
-  cmbScale.Enabled := not chkFilterComplex.Checked;
-  cmbPad.Enabled := not chkFilterComplex.Checked;
-  cmbhqdn3d.Enabled := not chkFilterComplex.Checked;
-  cmbSetDAR.Enabled := not chkFilterComplex.Checked;
-  cmbRotate.Enabled := not chkFilterComplex.Checked;
-  cmbFiltersV.Enabled := not chkFilterComplex.Checked;
-  cmbFiltersA.Enabled := not chkFilterComplex.Checked;
+  cmbCrop.Enabled := b;
+  cmbScale.Enabled := b;
+  cmbPad.Enabled := b;
+  cmbhqdn3d.Enabled := b;
+  cmbSetDAR.Enabled := b;
+  cmbRotate.Enabled := b;
+  cmbFiltersV.Enabled := b;
+  cmbFiltersA.Enabled := b;
 end;
 
 procedure TfrmGUIta.chkLangA1Change(Sender: TObject);
@@ -4030,12 +4101,39 @@ begin
     myWindowColorIsDark;
 end;
 
-procedure TfrmGUIta.chkUseMasksChange(Sender: TObject);
+procedure TfrmGUIta.chkTitleWorkChange(Sender: TObject);
+var
+  b: boolean;
 begin
-  LVmasks.Enabled := chkUseMasks.Checked;
-  btnMaskAdd.Enabled := chkUseMasks.Checked;
-  btnMaskDel.Enabled := chkUseMasks.Checked;
-  btnMaskEdit.Enabled := chkUseMasks.Checked;
+  b := chkTitleWork.Checked;
+  chkTitleClear.Enabled := b;
+  b := b and not chkTitleClear.Checked;
+  //for i := 0 to TabOutput do if controls[i].Tag = 5 then
+  lblTitleOut.Enabled := b;
+  lblTitleVid.Enabled := b;
+  lblTitleAud.Enabled := b;
+  lblTitleSub.Enabled := b;
+  cmbTitleOut.Enabled := b;
+  cmbTitleVid.Enabled := b;
+  cmbTitleAud.Enabled := b;
+  cmbTitleSub.Enabled := b;
+  xmyChange0(Sender);
+  {$IFDEF MSWINDOWS}
+  {$ELSE}
+  if b then
+    StatusBar1.SimpleText := 'Enable: ' + chkxtermconv.Caption;
+  {$ENDIF}
+end;
+
+procedure TfrmGUIta.chkUseMasksChange(Sender: TObject);
+var
+  b: boolean;
+begin
+  b := chkUseMasks.Checked;
+  LVmasks.Enabled := b;
+  btnMaskAdd.Enabled := b;
+  btnMaskDel.Enabled := b;
+  btnMaskEdit.Enabled := b;
 end;
 
 procedure TfrmGUIta.cmbBitrateAChange(Sender: TObject);
@@ -4325,23 +4423,23 @@ procedure TfrmGUIta.edtxtermSelect(Sender: TObject);
 begin
   if edtxterm.Text = 'cmd.exe' then begin
     edtxtermopts.Text := '/c';
-    chkRunMode.Checked := False;
+    chkxterm1str.Checked := False;
   end else
   if edtxterm.Text = '/bin/sh' then begin
     edtxtermopts.Text := '-c';
-    chkRunMode.Checked := True;
+    chkxterm1str.Checked := True;
   end else
   if edtxterm.Text = '/usr/bin/xterm' then begin
     edtxtermopts.Text := '-e';
-    chkRunMode.Checked := True;
+    chkxterm1str.Checked := True;
   end else
   if edtxterm.Text = '/usr/bin/x-terminal-emulator' then begin
     edtxtermopts.Text := '-e';
-    chkRunMode.Checked := False;
+    chkxterm1str.Checked := False;
   end else
   if edtxterm.Text = '/usr/bin/gnome-terminal' then begin
     edtxtermopts.Text := '-x';
-    chkRunMode.Checked := False;
+    chkxterm1str.Checked := False;
   end;
 end;
 
@@ -4455,7 +4553,7 @@ begin
   edtxtermopts.Items.Add('-e');
   edtxtermopts.Items.Add('-x');
   edtxtermopts.Items.Add('--hold -e');
-  chkRunMode.Checked := True;
+  chkxterm1str.Checked := True;
   {$ENDIF}
   bUpdFromCode := False;
   chkSynColor.Checked := myWindowColorIsDark;

@@ -20,6 +20,10 @@ type
     dt: TDateTime;
     jo: TJob;
     fOEM: boolean;
+    fterm_use: boolean;
+    fterminal: string;
+    ftermopts: string;
+    fterm1str: boolean;
     fcmd: TStringList;
     fdir: string;
     fStatus: string;
@@ -45,8 +49,13 @@ uses ufrmGUIta;
 procedure TThreadConv.DataGet;
 var
   i: integer;
+  s: string;
 begin
   dt := Now;
+  fterm_use := frmGUIta.chkxtermconv.Checked;
+  fterminal := frmGUIta.edtxterm.Text;
+  ftermopts := frmGUIta.edtxtermopts.Text;
+  fterm1str := frmGUIta.chkxterm1str.Checked;
   fcmd.Clear;
   for i := 0 to frmGUIta.LVjobs.Items.Count - 1 do
   begin
@@ -54,7 +63,8 @@ begin
     begin
       frmGUIta.SynMemo3.Clear;
       jo := TJob(frmGUIta.LVjobs.Items[i].Data);
-      frmGUIta.memJournal.Lines.Add(DateTimeToStr(dt) + ' - ' + jo.f[0].getval('filename'));
+      DateTimeToString(s, 'yyyy-mm-dd hh:nn:ss', Now);
+      frmGUIta.memJournal.Lines.Add(s + ' - ' + jo.f[0].getval('filename'));
       fcmd.Text := frmGUIta.myGetCmdFromJo(jo);
       jo.setval('Completed', '2');
       frmGUIta.LVjobs.Refresh;
@@ -102,7 +112,9 @@ begin
       Break;
     end;
   end;
-  s := DateTimeToStr(Now) + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
+  DateTimeToString(s, 'yyyy-mm-dd hh:nn:ss', Now);
+  s := s + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
+  //s := DateTimeToStr(Now) + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
   if fExitStatus <> 0 then
   begin
     s := s + ' - ' + mes[6] + ': ' + IntToStr(fExitStatus);
@@ -144,6 +156,7 @@ var
   BytesAvailable: DWord;
   BytesRead: longint;
   i, j: integer;
+  sl: TStringList;
 begin
   scp := GetConsoleTextEncoding;
   while (not Terminated) and True do
@@ -169,9 +182,25 @@ begin
       pr := TProcessUTF8.Create(nil);
       try
         //pr.CurrentDirectory := fdir;
-        pr.CommandLine := scmd;
+        if fterm_use then
+        begin
+          pr.Executable := fterminal;
+          pr.Parameters.Add(ftermopts);
+          if fterm1str then
+            pr.Parameters.Add(scmd)
+          else
+          begin
+            sl := TStringList.Create;
+            process.CommandToList(scmd, sl);
+            for i := 0 to sl.Count - 1 do
+              pr.Parameters.Add(sl[i]);
+            sl.Free;
+          end;
+        end
+        else
+          pr.CommandLine := scmd;
         pr.Options := [poUsePipes, poStderrToOutPut];
-        pr.ShowWindow := swoHide;
+        pr.ShowWindow := swoHIDE;
         pr.Execute;
         t := '';
         repeat
