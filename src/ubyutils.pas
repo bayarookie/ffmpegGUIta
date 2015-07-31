@@ -30,6 +30,7 @@ procedure myExecProc1(ComLine: string; sw: TShowWindowOptions = swoShowNormal);
 procedure myOpenDoc(Path: string);
 function myCompareInt(List: TStringList; Index1, Index2: integer): integer;
 function myGetLocaleLanguage: string;
+function myDTtoStr(FormatStr: string; DateTime: TDateTime): string;
 
 implementation
 
@@ -550,6 +551,11 @@ begin
 begin
   Result := Copy(SysUtils.GetEnvironmentVariable('LANG'), 1, 2);
 {$ENDIF}
+end;
+
+function myDTtoStr(FormatStr: string; DateTime: TDateTime): string;
+begin
+  DateTimeToString(Result, FormatStr, DateTime);
 end;
 
 end.

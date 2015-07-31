@@ -50,7 +50,6 @@ uses ufrmGUIta;
 procedure TThreadTest.DataGet;
 var
   jo: TJob;
-  s: string;
 begin
   dt := Now;
   fterm_use := frmGUIta.chkxtermconv.Checked;
@@ -60,8 +59,8 @@ begin
   fcmd.Clear;
   frmGUIta.SynMemo5.Clear;
   jo := TJob(li.Data);
-  DateTimeToString(s, 'yyyy-mm-dd hh:nn:ss', Now);
-  frmGUIta.memJournal.Lines.Add(s + ' - ' + jo.f[0].getval('filename'));
+  frmGUIta.memJournal.Lines.Add(myDTtoStr('yyyy-mm-dd hh:nn:ss', Now)
+    + ' - ' + jo.f[0].getval('filename'));
   fcmd.Text := frmGUIta.myGetCmdFromJo(jo, 1);
   jo.setval('Completed', '2');
   frmGUIta.LVjobs.Refresh;
@@ -96,9 +95,7 @@ begin
     jo.setval(frmGUIta.edtOfna.Name, fnoa);
   end;
   {$ENDIF}
-  DateTimeToString(s, 'yyyy-mm-dd hh:nn:ss', Now);
-  s := s + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
-  //s := DateTimeToStr(Now) + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
+  s := myDTtoStr('yyyy-mm-dd hh:nn:ss ', Now) + mes[5] + ' ' + TimeToStr(Now - dt);
   i := SecondsBetween(dt, Now);
   d := myTimeStrToReal(jo.getval('duration'));
   e := myTimeStrToReal(frmGUIta.cmbTestDurationt.Text);

@@ -263,8 +263,7 @@ begin
     jo.setval('duration', myRealToTimeStr(StrToFloatDef(s, 0)));
   end;
   frmGUIta.myGetss4Compare(jo);
-  DateTimeToString(s, 'yyyy-mm-dd hh:nn:ss', Now);
-  s := s + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
+  s := myDTtoStr('yyyy-mm-dd hh:nn:ss ', Now) + mes[5] + ' ' + TimeToStr(Now - dt);
   if fExitStatus <> 0 then
     s := s + ' - ' + mes[6] + ': ' + IntToStr(fExitStatus);
   frmGUIta.StatusBar1.SimpleText := s;

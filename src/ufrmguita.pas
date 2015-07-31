@@ -24,7 +24,7 @@ uses
   {$ELSE}
   clipbrd,
   {$ENDIF}
-  ucalcul, ufrmcompare, ujobinfo, utaversion, UniqueInstance2,
+  ucalcul, ufrmcompare, ujobinfo, utaversion, UniqueInstance2, cpucount,
   uthreadconv, uthreadtest, uthreadaddf, uthreadexec, ufrmmaskprof;
 
 type
@@ -72,6 +72,7 @@ type
     btnAddScreenGrab: TButton;
     btnSaveSets: TButton;
     btnReset: TButton;
+    chkStopIfError: TCheckBox;
     chkTitleWork: TCheckBox;
     chkxtermconv: TCheckBox;
     chkTitleClear: TCheckBox;
@@ -158,6 +159,7 @@ type
     ImageList1: TImageList;
     edtBitrateV: TLabeledEdit;
     edtOfna: TLabeledEdit;
+    lblCpuCount: TLabel;
     lblAddOptsS: TLabel;
     lblAddOptsV: TLabel;
     lblAddOptsA: TLabel;
@@ -244,13 +246,13 @@ type
     PopupMenu1: TPopupMenu;
     PopupMenu2: TPopupMenu;
     PopupMenu3: TPopupMenu;
+    spnCpuCount: TSpinEdit;
     Splitter1: TSplitter;
     spnKoefA: TSpinEdit;
     spnKoefV: TSpinEdit;
     StatusBar1: TStatusBar;
     memJournal: TSynMemo;
     SynMemo2: TSynMemo;
-    SynMemo3: TSynMemo;
     SynMemo4: TSynMemo;
     SynMemo5: TSynMemo;
     SynMemo6: TSynMemo;
@@ -258,7 +260,6 @@ type
     TabJournal: TTabSheet;
     TabConsole: TTabSheet;
     TabConsole1: TTabSheet;
-    TabConsole2: TTabSheet;
     TabConvJob: TTabSheet;
     TabOutput: TTabSheet;
     TabContRows: TTabSheet;
@@ -405,6 +406,7 @@ type
     {$IFDEF MSWINDOWS}
     procedure myAddFilesAsAVS1(fns: TStrings);
     procedure myAddFilesAsAVS2(fns: TStrings);
+    function myGetAvs(fn: string): string;
     {$ENDIF}
     procedure myAddFileSplit(files: TStrings);
     procedure myAddFilesPlus(li: TListItem; files: TStrings);
@@ -422,9 +424,6 @@ type
     procedure myGetWHXY(s: string; var w, h, x, y: string);
     function myValInt(f, v: string): integer;
     function myDirExists(dir, mes: string): boolean;
-    {$IFDEF MSWINDOWS}
-    function myGetAvs(fn: string): string;
-    {$ENDIF}
     function myError(i: integer; w: string): integer;
     procedure myFillEnc;
     procedure myFillFmt;
@@ -479,10 +478,12 @@ var
   frmGUIta: TfrmGUIta;
   sCap, sDirApp, sInidir, sInifile, sLngfile: string;
   fs: TFormatSettings;
-  mes: array [0..28] of string;
+  mes: array [0..31] of string;
   tAutoStart: TTimer;
   bUpdFromCode: boolean;
-  ThreadConv: TThreadConv;
+  //ThreadConv: TThreadConv;
+  aThrs: array of TThreadConv;
+  aMems: array of TSynMemo;
   ThreadTest: TThreadTest;
   ThreadAddF: TThreadAddF;
   ThreadCmdr: TThreadExec;
@@ -494,6 +495,7 @@ var
   myUnik: TUniqueInstance;
   cDefaultSets: TCont;
   cCmdIni: TCont;
+  iTabCount: integer;
 
 implementation
 
@@ -864,9 +866,7 @@ begin
   myAddFiles(ST);
   ST.Free;
 end;
-{$ENDIF}
 
-{$IFDEF MSWINDOWS}
 procedure TfrmGUIta.myAddFilesAsAVS2(fns: TStrings);
 var
   s, fn, tmp: string;
@@ -891,6 +891,56 @@ begin
   SL.Text := fn;
   myAddFiles(SL);
   SL.Free;
+end;
+
+function TfrmGUIta.myGetAvs(fn: string): string;
+var
+  sp, sf, tc, se, fps, vc: string;
+  reg: TRegistry;
+begin
+  sf := myGetAnsiFN(fn);
+  tc := ExtractFileName(sf) + '.txt';
+  se := LowerCase(ExtractFileExt(sf));
+  fps := '25'; //myGetMediaInfo(sf, 'FrameRate');
+  if se = '.avi' then
+    Result := 'AviSource("' + sf + '")'
+  else if se = '.wmv' then
+    Result := 'DirectShowSource("' + sf + '", fps=' + fps + ', convertfps=true)'
+  else if (Pos(se, '.mkv;.mp4;.m2ts;.evo') > 0) then
+  begin
+    Result := 'DirectShowSource("' + sf + '", convertfps=true)';
+    vc := myGetMediaInfo(sf, 'Format');
+    if vc = 'AVC' then
+    begin
+      sp := '';
+      reg := TRegistry.Create;
+      try
+        Reg.RootKey := HKEY_LOCAL_MACHINE;
+        if Reg.OpenKeyReadOnly('\SOFTWARE\AviSynth') then
+          sp := AppendPathDelim(Reg.ReadString('plugindir2_5'));
+        Reg.CloseKey;
+      except
+        on E: Exception do
+          ShowMessage(E.Message);
+      end;
+      reg.Free;
+      if FileExistsUTF8(sp + 'ffms2.dll') then
+      begin
+        //Result := 'audio = FFAudioSource("' + sf + '", 1) # or track#2, or #3, etc'#13#10 +
+        //  'video = FFVideoSource("' + sf + '")'#13#10 +
+        //  'AudioDub(video, audio)'#13#10;
+        Result := 'FFmpegSource2("' + sf + '", vtrack = -1, atrack = -1, timecodes="' +
+          tc + '")';
+      end
+      else if FileExistsUTF8(sp + 'DGAVCDecode.dll') then
+      begin
+        Result := '# raw video demuxed from M2TS (Blu-ray BDAV MPEG-2 transport streams)'#13#10 + 'LoadPlugin("' + sp + 'DGAVCDecode.dll")'#13#10 +
+          'AVCSource("D:\track1.dga") #http://avisynth.org/mediawiki/FAQ_loading_clips';
+      end;
+    end;
+  end
+  else
+    Result := 'DirectShowSource("' + sf + '")';
 end;
 {$ENDIF}
 
@@ -1101,8 +1151,9 @@ var
               Exit;
             tmp := AppendPathDelim(tmp);
           end;
-          sp1 := ' -pass 1 -passlogfile "' + tmp + 'ff-tmp"' + f1p;
-          sp2 := ' -pass 2 -passlogfile "' + tmp + 'ff-tmp"';
+          s := ' -passlogfile "' + tmp + 'ff-tmp' + jo.getval('index') + '"';
+          sp1 := ' -pass 1' + s + f1p;
+          sp2 := ' -pass 2' + s;
         end;
         s := c.getval(cmbAddOptsV.Name);
         vi := vi + IfThen(s <> '', ' ' + s);
@@ -1616,7 +1667,7 @@ procedure TfrmGUIta.myFindPlayers(bSet2: boolean);
 var
   i: integer;
   s: string;
-  {$IFDEF MSWINDOWS}
+{$IFDEF MSWINDOWS}
   j: integer;
   Reg, Re2: TRegistry;
   SL: TStringList;
@@ -1644,12 +1695,7 @@ var
     end;
   end;
 
-  {$ELSE}
-  a: array [0..9] of string = ('mplayer', 'vlc', 'dragon', 'avplay', 'ffplay',
-                               'totem', 'xine', 'mpv', 'smplayer', 'miro');
-  {$ENDIF}
 begin
-  {$IFDEF MSWINDOWS}
   Reg := TRegistry.Create;
   Re2 := TRegistry.Create;
   try
@@ -1688,14 +1734,17 @@ begin
   end;
   Reg.Free;
   Re2.Free;
-  {$ELSE}
+{$ELSE}
+  a: array [0..9] of string = ('mplayer', 'vlc', 'dragon', 'avplay', 'ffplay',
+                               'totem', 'xine', 'mpv', 'smplayer', 'miro');
+begin
   for i := Low(a) to High(a) do
   begin
     s := a[i];
     if FileExistsUTF8(FindDefaultExecutablePath(s)) then
       myAdd2cmb(cmbExtPlayer, s);
   end;
-  {$ENDIF}
+{$ENDIF}
   if bSet2 and (cmbExtPlayer.Items.Count > 0) then
     cmbExtPlayer.ItemIndex := 0;
 end;
@@ -1781,10 +1830,8 @@ begin
   p := ExtractFileDir(p);
   Result := StringReplace(Result, '$dirinp', p, [rfReplaceAll]);
   Result := StringReplace(Result, '$output',
-  {$IFDEF MSWINDOWS}
-    jo.getval(edtOfna.Name), [rfReplaceAll]);
-  {$ELSE}
-    jo.getval(edtOfn.Name), [rfReplaceAll]);
+  {$IFDEF MSWINDOWS} jo.getval(edtOfna.Name), [rfReplaceAll]);
+  {$ELSE}            jo.getval(edtOfn.Name), [rfReplaceAll]);
   {$ENDIF}
 end;
 
@@ -2116,6 +2163,9 @@ begin
     mes[26] := 'length of cuts in seconds:';
     mes[27] := 'Files';
     mes[28] := 'Search in folder:';
+    mes[29] := 'All files';
+    mes[30] := 'Process';
+    mes[31] := 'terminated';
     Exit;
   end;
   Ini := TIniFile.Create(UTF8ToSys(s1));
@@ -2144,10 +2194,10 @@ var
   l: integer;
   jo: TJob;
 begin
-  b := (ThreadConv <> nil);
-  btnStart.Enabled := not b;
-  btnSuspend.Enabled := b;
-  btnStop.Enabled := b;
+  //b := (ThreadConv <> nil);
+  //btnStart.Enabled := not b;
+  //btnSuspend.Enabled := b;
+  //btnStop.Enabled := b;
   b := (LVjobs.Selected <> nil);
   if b then
     jo := TJob(LVjobs.Selected.Data);
@@ -2552,58 +2602,6 @@ begin
       Result := False;
     end;
 end;
-
-{$IFDEF MSWINDOWS}
-function TfrmGUIta.myGetAvs(fn: string): string;
-var
-  sp, sf, tc, se, fps, vc: string;
-  reg: TRegistry;
-begin
-  sf := myGetAnsiFN(fn);
-  tc := ExtractFileName(sf) + '.txt';
-  se := LowerCase(ExtractFileExt(sf));
-  fps := '25'; //myGetMediaInfo(sf, 'FrameRate');
-  if se = '.avi' then
-    Result := 'AviSource("' + sf + '")'
-  else if se = '.wmv' then
-    Result := 'DirectShowSource("' + sf + '", fps=' + fps + ', convertfps=true)'
-  else if (Pos(se, '.mkv;.mp4;.m2ts;.evo') > 0) then
-  begin
-    Result := 'DirectShowSource("' + sf + '", convertfps=true)';
-    vc := myGetMediaInfo(sf, 'Format');
-    if vc = 'AVC' then
-    begin
-      sp := '';
-      reg := TRegistry.Create;
-      try
-        Reg.RootKey := HKEY_LOCAL_MACHINE;
-        if Reg.OpenKeyReadOnly('\SOFTWARE\AviSynth') then
-          sp := AppendPathDelim(Reg.ReadString('plugindir2_5'));
-        Reg.CloseKey;
-      except
-        on E: Exception do
-          ShowMessage(E.Message);
-      end;
-      reg.Free;
-      if FileExistsUTF8(sp + 'ffms2.dll') then
-      begin
-        //Result := 'audio = FFAudioSource("' + sf + '", 1) # or track#2, or #3, etc'#13#10 +
-        //  'video = FFVideoSource("' + sf + '")'#13#10 +
-        //  'AudioDub(video, audio)'#13#10;
-        Result := 'FFmpegSource2("' + sf + '", vtrack = -1, atrack = -1, timecodes="' +
-          tc + '")';
-      end
-      else if FileExistsUTF8(sp + 'DGAVCDecode.dll') then
-      begin
-        Result := '# raw video demuxed from M2TS (Blu-ray BDAV MPEG-2 transport streams)'#13#10 + 'LoadPlugin("' + sp + 'DGAVCDecode.dll")'#13#10 +
-          'AVCSource("D:\track1.dga") #http://avisynth.org/mediawiki/FAQ_loading_clips';
-      end;
-    end;
-  end
-  else
-    Result := 'DirectShowSource("' + sf + '")';
-end;
-{$ENDIF}
 
 function TfrmGUIta.myError(i: integer; w: string): integer;
 var
@@ -3123,7 +3121,7 @@ begin
   od := TOpenDialog.Create(frmGUIta);
   if DirectoryExistsUTF8(myExpandFN(cmbDirLast.Text, True)) then
     od.InitialDir := myExpandFN(cmbDirLast.Text, True);
-  od.Filter := mes[0] + '|' + myGetExts + '|' + mes[1];
+  od.Filter := mes[0] + '|' + myGetExts + '|' + mes[29] + ' (' + AllFilesMask + ')|' + AllFilesMask;
   od.Title := mes[20] + ' - ' + mes[0];
   od.Options := [ofEnableSizing, ofViewDetail, ofAllowMultiSelect, ofFileMustExist];
   if od.Execute then
@@ -3504,7 +3502,7 @@ var
 begin
   sd := TSaveDialog.Create(Self);
   sd.InitialDir := myExpandFN(edtDirOut.Text, True);
-  sd.Filter := '*.log|*.log|' + mes[1];
+  sd.Filter := '*.log|*.log|' + mes[29] + ' (' + AllFilesMask + ')|' + AllFilesMask;
   i := 0;
   repeat
     Inc(i);
@@ -3685,7 +3683,7 @@ begin
     Inc(i);
   end;
   sd.InitialDir := s;
-  sd.Filter := mes[1];
+  sd.Filter := mes[29] + ' (' + AllFilesMask + ')|' + AllFilesMask;
   sd.FileName := ExtractFileName(edtOfn.Text);
   if sd.Execute then
     edtOfn.Text := sd.FileName;
@@ -3820,7 +3818,7 @@ var
 begin
   sd := TSaveDialog.Create(Self);
   sd.InitialDir := sInidir;
-  sd.Filter := '*.ini|*.ini|' + mes[1];
+  sd.Filter := '*.ini|*.ini|' + mes[29] + ' (' + AllFilesMask + ')|' + AllFilesMask;
   sd.DefaultExt := '.ini';
   if not myDirExists(sd.InitialDir, '') then
     Exit;
@@ -3893,50 +3891,133 @@ begin
 end;
 
 procedure TfrmGUIta.btnStartClick(Sender: TObject);
+var
+  i: integer;
+  t: TTabSheet;
 begin
-  if (ThreadConv <> nil) then
-  begin
-    {$IFDEF MSWINDOWS}
-    if ThreadConv.Suspended then
-      ThreadConv.Resume;
-    {$ENDIF}
-    Exit;
-  end;
-  ThreadConv := TThreadConv.Create(myStrReplace('$dirtmp'));
-  if Assigned(ThreadConv.FatalException) then
-    raise ThreadConv.FatalException;
-  ThreadConv.OnTerminate := @onConvTerminate;
-  ThreadConv.Start;
+  //if (ThreadConv <> nil) then
+  //begin
+  //  {$IFDEF MSWINDOWS}
+  //  if ThreadConv.Suspended then
+  //    ThreadConv.Resume;
+  //  {$ENDIF}
+  //  Exit;
+  //end;
+  //ThreadConv := TThreadConv.Create(0, SynMemo3);
+  //if Assigned(ThreadConv.FatalException) then
+  //  raise ThreadConv.FatalException;
+  //ThreadConv.OnTerminate := @onConvTerminate;
+  //ThreadConv.Start;
+  //btnStart.Enabled := False;
+  //btnSuspend.Enabled := True;
+  //btnStop.Enabled := True;
+  //PageControl3.ActivePage := TabConsole2;
   btnStart.Enabled := False;
+  if (spnCpuCount.Value = 0) then
+    spnCpuCount.Value := 1;
+  if ((High(aThrs) + 1) <> spnCpuCount.Value) then
+  begin
+    SetLength(aThrs, spnCpuCount.Value);
+    SetLength(aMems, spnCpuCount.Value);
+  end;
+  for i := Low(aThrs) to High(aThrs) do
+  begin
+    if PageControl3.PageCount > iTabCount + i then
+      t := PageControl3.Pages[iTabCount + i]
+    else
+    begin
+      t := PageControl3.AddTabSheet;
+      t.Caption := mes[30] + ' ' + IntToStr(i + 1);
+    end;
+    if aMems[i] = nil then
+    begin
+      aMems[i] := TSynMemo.Create(t);
+      aMems[i].Parent := t;
+      aMems[i].Align := alClient;
+      aMems[i].Color := clWindow;
+      aMems[i].Font.Color := clWindowText;
+      aMems[i].Highlighter := SynUNIXShellScriptSyn1;
+    end;
+    aThrs[i] := TThreadConv.Create(i);
+    if Assigned(aThrs[i].FatalException) then
+      raise aThrs[i].FatalException;
+    aThrs[i].OnTerminate := @onConvTerminate;
+    aThrs[i].Start;
+    Sleep(2);
+  end;
+  while PageControl3.PageCount > iTabCount + 1 + High(aThrs) do
+    PageControl3.Pages[PageControl3.PageCount - 1].Destroy;
   btnSuspend.Enabled := True;
   btnStop.Enabled := True;
-  PageControl3.ActivePage := TabConsole2;
+  if chkDebug.Checked then
+    memJournal.Lines.Add('Threads started: ' + IntToStr(High(aThrs) + 1));
+  PageControl3.ActivePageIndex := PageControl3.PageCount - 1;
 end;
 
 procedure TfrmGUIta.btnStopClick(Sender: TObject);
+var
+  i: integer;
 begin
-  if ThreadConv <> nil then
+  //if ThreadConv <> nil then
+  //begin
+  //  ThreadConv.pr.Input.WriteAnsiString('q');
+  //  Sleep(2000);
+  //  ThreadConv.Terminate;
+  //  if ThreadConv.pr <> nil then
+  //    ThreadConv.pr.Terminate(-2);
+  //  {$IFDEF MSWINDOWS}
+  //  if ThreadConv.Suspended then
+  //    ThreadConv.Resume;
+  //  {$ENDIF}
+  //end;
+  for i := Low(aThrs) to High(aThrs) do
   begin
-    ThreadConv.pr.Input.WriteAnsiString('q');
-    Sleep(2000);
-    ThreadConv.Terminate;
-    if ThreadConv.pr <> nil then
-      ThreadConv.pr.Terminate(-2);
-    {$IFDEF MSWINDOWS}
-    if ThreadConv.Suspended then
-      ThreadConv.Resume;
-    {$ENDIF}
+    if (aThrs[i] <> nil) then
+    begin
+      aThrs[i].pr.Input.WriteAnsiString('q'); //if ffmpeg
+      Sleep(1000);
+      aThrs[i].Terminate;
+      if aThrs[i].pr <> nil then
+        aThrs[i].pr.Terminate(-2);
+      {$IFDEF MSWINDOWS}
+      if aThrs[i].Suspended then
+        aThrs[i].Resume;
+      {$ENDIF}
+    end;
   end;
 end;
 
 procedure TfrmGUIta.btnSuspendClick(Sender: TObject);
+{$IFDEF MSWINDOWS}
+var
+  i: integer;
+  s: string;
+{$ENDIF}
 begin
   {$IFDEF MSWINDOWS}
-  if ThreadConv <> nil then
-    if ThreadConv.Suspended then
-      ThreadConv.Resume
-    else
-      ThreadConv.Suspend;
+  //if ThreadConv <> nil then
+  //  if ThreadConv.Suspended then
+  //    ThreadConv.Resume
+  //  else
+  //    ThreadConv.Suspend;
+  s := '';
+  for i := Low(aThrs) to High(aThrs) do
+  begin
+    if (aThrs[i] <> nil) then
+    begin
+      if aThrs[i].Suspended then
+      begin
+        aThrs[i].Resume;
+        s := s + ' process ' + IntToStr(i + 1) + ' continued';
+      end
+      else
+      begin
+        aThrs[i].Suspend;
+        s := s + ' process ' + IntToStr(i + 1) + ' suspended';
+      end;
+    end;
+  end;
+  StatusBar1.SimpleText := s;
   {$ENDIF}
 end;
 
@@ -4119,6 +4200,7 @@ begin
   cmbTitleSub.Enabled := b;
   xmyChange0(Sender);
   {$IFDEF MSWINDOWS}
+  //in win, quotes in metadata works ok
   {$ELSE}
   if b then
     StatusBar1.SimpleText := 'Enable: ' + chkxtermconv.Caption;
@@ -4497,6 +4579,7 @@ begin
   fs.DecimalSeparator := '.';
   fs.ThousandSeparator := ' ';
   DuraAll := 0;
+  iTabCount := PageControl3.PageCount;
   //get inifile location
   s := SysToUTF8(Application.ExeName);
   sDirApp := ExtractFilePath(s);
@@ -4506,6 +4589,7 @@ begin
     sInidir := GetAppConfigDirUTF8(False, True);
   sInifile := AppendPathDelim(sInidir) + ExtractFileNameOnly(s) + '.cfg';
   b := FileExistsUTF8(sInifile);
+  //hide some unused components
   {$IFDEF MSWINDOWS}
   btnAddScreenGrab.Visible := False; //not tested
   {$ELSE}
@@ -4600,6 +4684,11 @@ begin
   //if masks empty then set defaults
   if LVmasks.Items.Count = 0 then
     btnMaskResetClick(nil);
+  //process count for one thread formats: png xvid etc
+  if spnCpuCount.Value = 0 then
+    spnCpuCount.Value := cpucount.GetLogicalCpuCount;
+  SetLength(aThrs, spnCpuCount.Value);
+  SetLength(aMems, spnCpuCount.Value);
   //TComboBox - did not work onChange, red color for not existed files
   edtffmpegChange(edtffmpeg); //and fill some comboboxes with codecs and formats
   xmyCheckFile(edtffplay);
@@ -5125,11 +5214,11 @@ var
   s: string;
   sl: TStringList;
   b: boolean;
-  {$ENDIF}
+{$ENDIF}
 begin
+  {$IFDEF MSWINDOWS}
   if LVjobs.Selected = nil then
     Exit;
-  {$IFDEF MSWINDOWS}
   b := False;
   s := myExpandFileNameCaseW(LVjobs.Selected.SubItems[0], b);
   if not b then
@@ -5227,8 +5316,37 @@ begin
 end;
 
 procedure TfrmGUIta.onConvTerminate(Sender: TObject);
+//begin
+  //ThreadConv := nil;
+  //btnStart.Enabled := True;
+  //btnSuspend.Enabled := False;
+  //btnStop.Enabled := False;
+var
+  b: boolean;
+  i: integer;
+  s: string;
 begin
-  ThreadConv := nil;
+  i := (Sender as TThreadConv).num;
+  if (i >= Low(aThrs)) and (i <= High(aThrs)) then
+    aThrs[i] := nil;
+  s := IntToStr(i + 1) + ': ' + mes[30] + ' ' + mes[31];
+  if chkDebug.Checked then
+    memJournal.Lines.Add(s);
+  StatusBar1.SimpleText := s;
+  b := False;
+  for i := Low(aThrs) to High(aThrs) do
+  begin
+    if (aThrs[i] <> nil) then
+    begin
+      {$IFDEF MSWINDOWS}
+      if aThrs[i].Suspended then
+        aThrs[i].Resume;
+      {$ENDIF}
+      b := True;
+    end;
+  end;
+  if b then
+    Exit;
   btnStart.Enabled := True;
   btnSuspend.Enabled := False;
   btnStop.Enabled := False;
@@ -5499,12 +5617,12 @@ var
   s: string;
 begin
   s := myExpandFN(myGet2(Sender), True);
-  {$IFDEF MSWINDOWS}
-  if Copy(s, 2, 1) <> ':' then
-  {$ELSE}
-  if Copy(s, 1, 1) <> '/' then
-  {$ENDIF}
-    s := sDirApp + s;
+  //{$IFDEF MSWINDOWS}
+  //if (Pos(':', s) = 0) then
+  //{$ELSE}
+  //if (Pos('/', s) <> 1) then
+  //{$ENDIF}
+  //  s := sDirApp + s;
   if DirectoryExistsUTF8(s) then
     TWinControl(Sender).Font.Color := clWindowText
   else
@@ -5551,26 +5669,15 @@ begin
   if (w <> '') then
   begin
     sExt := ExtractFileExt(w);
-    w := myExpandFN(w);
-    {$IFDEF MSWINDOWS}
-    if Copy(w, 2, 1) <> ':' then
-    {$ELSE}
-    if Copy(w, 1, 1) <> '/' then
-    {$ENDIF}
-      w := sDirApp + w;
-    od.InitialDir := ExtractFileDir(w);
+    od.InitialDir := ExtractFileDir(myExpandFN(w));
     w := ExtractFileName(w);
-    od.FileName := w;
   end
   else
-  begin
-    w := Copy((Sender as TControl).Name, 4, 20) + sExt;
-    od.FileName := w;
-  end;
-  if sExt <> '' then
-    od.Filter := w + '|' + w + '|' + mes[17] + ' (*' + sExt + ')|*' + sExt + '|' + mes[1]
-  else
-    od.Filter := w + '|' + w + '|' + mes[1];
+    w := t;
+  od.FileName := w;
+  od.Filter := w + '|' + w
+    + IfThen(sExt <> '', '|' + mes[17] + ' (*' + sExt + ')|*' + sExt)
+    + '|' + mes[29] + ' (' + AllFilesMask + ')|' + AllFilesMask;
   od.DefaultExt := sExt;
   if od.Execute then
   begin

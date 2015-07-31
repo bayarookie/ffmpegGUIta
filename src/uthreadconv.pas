@@ -5,11 +5,11 @@ unit uthreadconv;
 interface
 
 uses
-  Classes, SysUtils, utf8process, Process, LConvEncoding,
+  Classes, SysUtils, utf8process, Process, synmemo, Math,
   {$IFDEF MSWINDOWS}
-  Fileutil, ubyutils,
+  Fileutil,
   {$ENDIF}
-  Math, ujobinfo;
+  ubyutils, ujobinfo;
 
 type
 
@@ -19,13 +19,13 @@ type
   private
     dt: TDateTime;
     jo: TJob;
-    fOEM: boolean;
     fterm_use: boolean;
     fterminal: string;
     ftermopts: string;
     fterm1str: boolean;
+    fStopIfError: boolean;
     fcmd: TStringList;
-    fdir: string;
+    fmemo: TSynMemo;
     fStatus: string;
     fExitStatus: integer;
     procedure DataGet;
@@ -37,7 +37,8 @@ type
     procedure Execute; override;
   public
     pr: TProcessUTF8;
-    constructor Create(dir: string);
+    num: integer;
+    constructor Create(threadnum: integer);
   end;
 
 implementation
@@ -49,22 +50,23 @@ uses ufrmGUIta;
 procedure TThreadConv.DataGet;
 var
   i: integer;
-  s: string;
 begin
   dt := Now;
+  fmemo := aMems[num];
   fterm_use := frmGUIta.chkxtermconv.Checked;
   fterminal := frmGUIta.edtxterm.Text;
   ftermopts := frmGUIta.edtxtermopts.Text;
   fterm1str := frmGUIta.chkxterm1str.Checked;
-  fcmd.Clear;
+  fStopIfError := frmGUIta.chkStopIfError.Checked;
   for i := 0 to frmGUIta.LVjobs.Items.Count - 1 do
   begin
     if frmGUIta.LVjobs.Items[i].Checked then
     begin
-      frmGUIta.SynMemo3.Clear;
+      frmGUIta.LVjobs.Items[i].Checked := False;
+      fmemo.Clear;
       jo := TJob(frmGUIta.LVjobs.Items[i].Data);
-      DateTimeToString(s, 'yyyy-mm-dd hh:nn:ss', Now);
-      frmGUIta.memJournal.Lines.Add(s + ' - ' + jo.f[0].getval('filename'));
+      frmGUIta.memJournal.Lines.Add(IntToStr(num + 1) +
+        myDTtoStr(': yyyy-mm-dd hh:nn:ss', Now) + ' - ' + jo.f[0].getval('filename'));
       fcmd.Text := frmGUIta.myGetCmdFromJo(jo);
       jo.setval('Completed', '2');
       frmGUIta.LVjobs.Refresh;
@@ -76,7 +78,7 @@ end;
 procedure TThreadConv.DataOut;
 var
   i: integer;
-  s, t, fno: string;
+  s, fno: string;
   {$IFDEF MSWINDOWS}
   fnoa: string;
   {$ENDIF}
@@ -102,36 +104,33 @@ begin
   {$ENDIF}
   for i := 0 to frmGUIta.LVjobs.Items.Count - 1 do
   begin
-    s := TJob(frmGUIta.LVjobs.Items[i].Data).getval('index');
-    t := jo.getval('index');
-    if s = t then
+    if frmGUIta.LVjobs.Items[i].Caption = jo.getval('index') then
     begin
-      frmGUIta.LVjobs.Items[i].Checked := False;
       if frmGUIta.LVjobs.Items[i].Selected then
         frmGUIta.LVjobsSelectItem(nil, frmGUIta.LVjobs.Items[i], True);
       Break;
     end;
   end;
-  DateTimeToString(s, 'yyyy-mm-dd hh:nn:ss', Now);
-  s := s + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
-  //s := DateTimeToStr(Now) + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
+  s := IntToStr(num + 1) + myDTtoStr(': yyyy-mm-dd hh:nn:ss ', Now) +
+    mes[5] + ' ' + TimeToStr(Now - dt);
   if fExitStatus <> 0 then
   begin
     s := s + ' - ' + mes[6] + ': ' + IntToStr(fExitStatus);
-    frmGUIta.SynMemo3.Lines.Add(s);
+    fmemo.Lines.Add(s);
     fno := ChangeFileExt(fno, '_error.log');
     {$IFDEF MSWINDOWS}
     fnoa := ChangeFileExt(fnoa, '_error.log');
-    frmGUIta.SynMemo3.Lines.SaveToFile(fnoa);
+    fmemo.Lines.SaveToFile(fnoa);
     RenameFileUTF8(fnoa, fno);
     {$ELSE}
-    frmGUIta.SynMemo3.Lines.SaveToFile(fno);
+    fmemo.Lines.SaveToFile(fno);
     {$ENDIF}
   end;
   frmGUIta.memJournal.Lines.Add(s);
   frmGUIta.StatusBar1.SimpleText := s;
-  frmGUIta.memJournal.Lines.Add(sdiv);
-  frmGUIta.SynMemo3.Lines.Add(sdiv);
+  if frmGUIta.spnCpuCount.Value = 1 then
+    frmGUIta.memJournal.Lines.Add(sdiv);
+  fmemo.Lines.Add(sdiv);
   frmGUIta.LVjobs.Refresh;
 end;
 
@@ -147,24 +146,24 @@ end;
 
 procedure TThreadConv.ShowSynMemo;
 begin
-  frmGUIta.SynMemo3.Lines.Add(fStatus);
+  fmemo.Lines.Add(fStatus);
 end;
 
 procedure TThreadConv.Execute;
 var
-  scmd, Buffer, s, t, scp: string;
+  scmd, Buffer, s, t: string;
   BytesAvailable: DWord;
   BytesRead: longint;
   i, j: integer;
   sl: TStringList;
 begin
-  scp := GetConsoleTextEncoding;
-  while (not Terminated) and True do
+  //scp := GetConsoleTextEncoding;
+  while not Terminated and (fExitStatus = 0) do
   begin
     Synchronize(@DataGet);
     if fcmd.Count = 0 then
       Exit;
-    while (not Terminated) and (fcmd.Count > 0) and (fExitStatus = 0) do
+    while not Terminated and (fExitStatus = 0) and (fcmd.Count > 0) do
     begin
       fExitStatus := -1;
       scmd := fcmd[0];
@@ -175,7 +174,7 @@ begin
         Synchronize(@ShowSynMemo);
         Break;
       end;
-      fStatus := scmd;
+      fStatus := IntToStr(num + 1) + ': ' + scmd;
       Synchronize(@ShowJournal);
       Synchronize(@ShowStatus1);
       Synchronize(@ShowSynMemo);
@@ -212,24 +211,27 @@ begin
             SetLength(Buffer, BytesAvailable);
             BytesRead := pr.OutPut.Read(Buffer[1], BytesAvailable);
             s := copy(Buffer, 1, BytesRead);
-            if fOEM then
-              s := ConvertEncoding(s, scp, EncodingUTF8);
+            //if fOEM then
+            //  s := ConvertEncoding(s, scp, EncodingUTF8);
             t := t + s;
             repeat
               i := Pos(#13, t);
               j := Pos(#10, t);
               if (i > 0) and (j <> i + 1) then //carrier return, no line feed
               begin
-                if (j > i + 1) then j := i;
+                if (j > i + 1) then
+                  j := i;
                 fStatus := Copy(t, 1, i - 1);
                 Delete(t, 1, Max(i, j));
                 Synchronize(@ShowStatus1);
-              end else
+              end
+              else
               if ((i > 0) and (j = i + 1))  //crlf
-              or ((i = 0) and (j > 0))      //lf
-              or ((i > j) and (j > 0)) then //lf, cr
+                or ((i = 0) and (j > 0))      //lf
+                or ((i > j) and (j > 0)) then //lf, cr
               begin
-                if (i = 0) or (i > j) then i := j;
+                if (i = 0) or (i > j) then
+                  i := j;
                 fStatus := Copy(t, 1, Min(i, j) - 1);
                 Delete(t, 1, Max(i, j));
                 Synchronize(@ShowStatus1);
@@ -250,18 +252,18 @@ begin
       end;
     end;
     Synchronize(@DataOut);
+    if not fStopIfError and (fExitStatus <> 0) then
+      fExitStatus := 0;
   end;
 end;
 
-constructor TThreadConv.Create(dir: string);
+constructor TThreadConv.Create(threadnum: integer);
 begin
   FreeOnTerminate := True;
   fcmd := TStringList.Create;
-  fdir := dir;
+  num := threadnum;
   fExitStatus := 0;
-  fOEM := False;
   inherited Create(True);
 end;
 
 end.
-
