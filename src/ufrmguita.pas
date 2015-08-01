@@ -6,7 +6,7 @@ component's property Tag
 2 = filters, depends from chkFilterComplex.Checked
 3 = output filename, dont save to profile
 4 = x264 x265
-5 = metadata, title
+5 = metadata: title, language
 }
 
 {$mode objfpc}{$H+}
@@ -73,10 +73,10 @@ type
     btnSaveSets: TButton;
     btnReset: TButton;
     chkStopIfError: TCheckBox;
-    chkTitleWork: TCheckBox;
+    chkMetadataWork: TCheckBox;
     chkxtermconv: TCheckBox;
-    chkTitleClear: TCheckBox;
-    chkTitleCopy: TCheckBox;
+    chkMetadataClear: TCheckBox;
+    chkMetadataGet: TCheckBox;
     chkSaveOnExit: TCheckBox;
     chk1instance: TCheckBox;
     chkAddTracks: TCheckBox;
@@ -118,6 +118,8 @@ type
     cmbLangS: TComboBox;
     cmbLangsList: TComboBox;
     cmbLanguage: TComboBox;
+    cmbTagLangA: TComboBox;
+    cmbTagLangS: TComboBox;
     cmbSetDAR: TComboBox;
     cmbEncoderA: TComboBox;
     cmbEncoderS: TComboBox;
@@ -136,15 +138,16 @@ type
     cmbSRate: TComboBox;
     cmbTestDurationss: TComboBox;
     cmbTestDurationt: TComboBox;
-    cmbTitleVid: TComboBox;
-    cmbTitleAud: TComboBox;
-    cmbTitleSub: TComboBox;
+    cmbTagTitleV: TComboBox;
+    cmbTagTitleA: TComboBox;
+    cmbTagTitleS: TComboBox;
     cmbx264preset: TComboBox;
     cmbx264tune: TComboBox;
     cmbDurationt2: TComboBox;
     cmbAddOptsV: TComboBox;
     cmbFilterComplex: TComboBox;
-    cmbTitleOut: TComboBox;
+    cmbTagTitleOut: TComboBox;
+    cmbTagLangV: TComboBox;
     edtDirOut: TComboBox;
     edtDirTmp: TComboBox;
     edtffmpeg: TComboBox;
@@ -159,11 +162,14 @@ type
     ImageList1: TImageList;
     edtBitrateV: TLabeledEdit;
     edtOfna: TLabeledEdit;
+    lblTagLangV: TLabel;
     lblCpuCount: TLabel;
     lblAddOptsS: TLabel;
     lblAddOptsV: TLabel;
     lblAddOptsA: TLabel;
-    lblTitleOut: TLabel;
+    lblTagLangA: TLabel;
+    lblTagLangS: TLabel;
+    lblTagTitleOut: TLabel;
     lblDirLast: TLabel;
     lblDirOut: TLabel;
     lblDirTmp: TLabel;
@@ -199,9 +205,9 @@ type
     lblScale: TLabel;
     lblSRate: TLabel;
     lblTestStartDurationTime: TLabel;
-    lblTitleVid: TLabel;
-    lblTitleAud: TLabel;
-    lblTitleSub: TLabel;
+    lblTagTitleV: TLabel;
+    lblTagTitleA: TLabel;
+    lblTagTitleS: TLabel;
     lblx264preset: TLabel;
     lblx264tune: TLabel;
     lblxterm: TLabel;
@@ -316,7 +322,7 @@ type
     procedure chkPlayer2Change(Sender: TObject);
     procedure chkPlayer3Change(Sender: TObject);
     procedure chkSynColorChange(Sender: TObject);
-    procedure chkTitleWorkChange(Sender: TObject);
+    procedure chkMetadataWorkChange(Sender: TObject);
     procedure chkUseMasksChange(Sender: TObject);
     procedure cmbBitrateAChange(Sender: TObject);
     procedure cmbBitrateVChange(Sender: TObject);
@@ -436,7 +442,6 @@ type
     procedure myDefaultSets;
     procedure myToIni(Ini: TIniFile; s1, s2, s3: string; t: Integer = 0);
     procedure mySets1(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean);
-    procedure mySets3(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean);
     procedure mySets4(Ini: TIniFile; bRead: boolean);
     procedure mySets(bRead: boolean);
     procedure myFormPosLoad(Form: TForm; Ini: TIniFile);
@@ -481,7 +486,6 @@ var
   mes: array [0..31] of string;
   tAutoStart: TTimer;
   bUpdFromCode: boolean;
-  //ThreadConv: TThreadConv;
   aThrs: array of TThreadConv;
   aMems: array of TSynMemo;
   ThreadTest: TThreadTest;
@@ -508,11 +512,7 @@ begin
   if (t <> 1) and ((cDefaultSets.getval(s2) = s3) or (s3 = '')) then
     Ini.DeleteKey(s1, s2)
   else if Ini.ReadString(s1, s2, '') <> s3 then
-  begin
-    if (s3 <> '') and (s3[1] = '"') and (s3[Length(s3)] = '"') then
-      s3 := '''' + s3 + '''';
     Ini.WriteString(s1, s2, s3);
-  end;
 end;
 
 procedure TfrmGUIta.mySets1(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean);
@@ -580,35 +580,6 @@ begin
       //    mySets1(Ini, s, [TScrollBox(c[k]).Controls[i]], bRead)
 end;
 
-procedure TfrmGUIta.mySets3(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean);
-var
-  i, k: integer;
-  w: string;
-begin
-  for k := Low(c) to High(c) do
-    if c[k] is TComboBox then
-      with TComboBox(c[k]) do
-        if bRead then
-        begin
-          //Text := Ini.ReadString(s, Name, Text);
-          i := 0;
-          repeat
-            w := Ini.ReadString(Name, IntToStr(i), '');
-            if w <> '' then
-              myAdd2cmb(TComboBox(c[k]), w);
-            Inc(i);
-          until w = '';
-          myAdd2cmb(TComboBox(c[k]), Text);
-        end
-        else
-        begin
-          //myToIni(Ini, s, Name, Text);
-          if (Items.Count > 1) or ((Items.Count = 1) and (Items[0] <> Text)) then
-            for i := 0 to Items.Count - 1 do
-              myToIni(Ini, Name, IntToStr(i), Items[i]);
-        end;
-end;
-
 procedure TfrmGUIta.mySets4(Ini: TIniFile; bRead: boolean);
 var
   i: integer;
@@ -637,6 +608,7 @@ begin
     Exit;
   bUpdFromCode := True;
   Ini := TIniFile.Create(UTF8ToSys(sInifile));
+  Ini.StripQuotes := False;
   s := 'Main';
   mySets1(Ini, s, [TabDefSets], bRead);
   if not chkUseMasks.Checked then
@@ -744,12 +716,14 @@ procedure TfrmGUIta.myAddFiles(params: TStrings);
 var
   i, j: integer;
   s, t, e, o: string;
-  jo: TJob;
-  sl: TStringList;
-  Ini: TIniFile;
+  ST: TStringList;
   procedure my1(fn: string);
   var
+    jo: TJob;
     i, j: integer;
+    s: string;
+    sl: TStringList;
+    Ini: TIniFile;
   begin
     jo := TJob.Create;
     Inc(Counter);
@@ -759,6 +733,7 @@ var
     jo.setval(cmbProfile.Name, s);
     s := myGetAnsiFN(AppendPathDelim(sInidir) + s);
     Ini := TIniFile.Create(UTF8ToSys(s));
+    Ini.StripQuotes := False;
     sl := TStringList.Create;
     Ini.ReadSection('1', sl);
     for i := 0 to sl.Count - 1 do
@@ -802,18 +777,18 @@ begin
     s := params[i];
     if DirectoryExistsUTF8(s) then
     begin
-      SL := TStringList.Create;
-      if myGetFileList(s, myGetExts, SL, True) then
+      ST := TStringList.Create;
+      if myGetFileList(s, myGetExts, ST, True) then
       begin
-        SL.Sort;
-        for j := 0 to SL.Count - 1 do
-          my1(SL[j]);
+        ST.Sort;
+        for j := 0 to ST.Count - 1 do
+          my1(ST[j]);
       end;
-      SL.Free;
+      ST.Free;
     end
     else if FileExistsUTF8(s) then
       my1(s)
-    else if (s[1] = '-') or (s[1] = '/') then
+    else if (s > '') and (s[1] = '-') or (s[1] = '/') then
     begin
       t := Copy(LowerCase(s), 2, Length(s));
       if (t = 'start') then
@@ -1158,14 +1133,19 @@ var
         s := c.getval(cmbAddOptsV.Name);
         vi := vi + IfThen(s <> '', ' ' + s);
         //title
-        if jo.getval(chkTitleWork.Name) = '1' then
-        if jo.getval(chkTitleClear.Name) <> '1' then
+        if jo.getval(chkMetadataWork.Name) = '1' then
+        if jo.getval(chkMetadataClear.Name) <> '1' then
         begin
-          s := c.getval(cmbTitleVid.Name);
+          s := c.getval(cmbTagTitleV.Name);
           if (s <> '') then
             so := so + ' -metadata:s:v:' + ni + ' title="' + s + '"'
           else if ((s = '') and (c.getval('TAG:title') <> '')) then
             so := so + ' -metadata:s:v:' + ni + ' title=';
+          s := c.getval(cmbTagLangV.Name);
+          if (s <> '') then
+            so := so + ' -metadata:s:v:' + ni + ' language="' + s + '"'
+          else if ((s = '') and (c.getval('TAG:language') <> '')) then
+            so := so + ' -metadata:s:v:' + ni + ' language=';
         end;
       end;
     end
@@ -1201,14 +1181,19 @@ var
         s := c.getval(cmbAddOptsA.Name);
         au := au + IfThen(s <> '', ' ' + s);
         //title
-        if jo.getval(chkTitleWork.Name) = '1' then
-        if jo.getval(chkTitleClear.Name) <> '1' then
+        if jo.getval(chkMetadataWork.Name) = '1' then
+        if jo.getval(chkMetadataClear.Name) <> '1' then
         begin
-          s := c.getval(cmbTitleAud.Name);
+          s := c.getval(cmbTagTitleA.Name);
           if (s <> '') then
             so := so + ' -metadata:s:a:' + ni + ' title="' + s + '"'
           else if ((s = '') and (c.getval('TAG:title') <> '')) then
             so := so + ' -metadata:s:a:' + ni + ' title=';
+          s := c.getval(cmbTagLangA.Name);
+          if (s <> '') then
+            so := so + ' -metadata:s:a:' + ni + ' language="' + s + '"'
+          else if ((s = '') and (c.getval('TAG:language') <> '')) then
+            so := so + ' -metadata:s:a:' + ni + ' language=';
         end;
       end;
     end
@@ -1229,14 +1214,19 @@ var
         s := c.getval(cmbAddOptsS.Name);
         su := su + IfThen(s <> '', ' ' + s);
         //title
-        if jo.getval(chkTitleWork.Name) = '1' then
-        if jo.getval(chkTitleClear.Name) <> '1' then
+        if jo.getval(chkMetadataWork.Name) = '1' then
+        if jo.getval(chkMetadataClear.Name) <> '1' then
         begin
-          s := c.getval(cmbTitleSub.Name);
+          s := c.getval(cmbTagTitleS.Name);
           if (s <> '') then
             so := so + ' -metadata:s:s:' + ni + ' title="' + s + '"'
           else if ((s = '') and (c.getval('TAG:title') <> '')) then
             so := so + ' -metadata:s:s:' + ni + ' title=';
+          s := c.getval(cmbTagLangS.Name);
+          if (s <> '') then
+            so := so + ' -metadata:s:s:' + ni + ' language="' + s + '"'
+          else if ((s = '') and (c.getval('TAG:language') <> '')) then
+            so := so + ' -metadata:s:s:' + ni + ' language=';
         end;
       end;
     end
@@ -1275,7 +1265,7 @@ begin
   sto := jo.getval(cmbDurationt2.Name);
   stt := IfThen(mode = 1, Trim(cmbTestDurationt.Text));
   // calc time range for test
-  rd := myTimeStrToReal(jo.getval('duration'));
+  rd := myTimeStrToReal(jo.f[0].getval('duration'));
   rso := myTimeStrToReal(sso);
   rto := myTimeStrToReal(sto);
   if mode = 1 then
@@ -1420,11 +1410,11 @@ begin
   if au = '' then au := ' -an'; //no audio
   if su = '' then su := ' -sn'; //no subtitle
   // metadata
-  if jo.getval(chkTitleWork.Name) = '1' then
+  if jo.getval(chkMetadataWork.Name) = '1' then
   begin
-    if jo.getval(chkTitleClear.Name) <> '1' then
+    if jo.getval(chkMetadataClear.Name) <> '1' then
     begin
-      s := jo.getval(cmbTitleOut.Name);
+      s := jo.getval(cmbTagTitleOut.Name);
       if (s <> '') then
         so := so + ' -metadata title="' + s + '"'
       else if ((s = '') and (jo.f[0].getval('TAG:title') <> '')) then
@@ -1464,7 +1454,7 @@ begin
       fnoa := myGetOutFNa(ExtractFilePath(fnoa), jo.f[0].getval('filename'), ExtractFileExt(fnoa));
       jo.setval(edtOfna.Name, fnoa);
     end;
-    fn1 := ' -y NUL' + jo.getval(cmbExt.Name);
+    fn1 := ' -y NUL'; // + jo.getval(cmbExt.Name);
     {$ELSE}
     fnoa := fno;
     fn1 := ' -y /dev/null';
@@ -1791,6 +1781,11 @@ begin
   if Pos(LowerCase(sDirApp), LowerCase(fn)) = 1 then
     fn := ExtractRelativePath(sDirApp, fn)
   else if Pos(LowerCase(ExtractFileDir(ExtractFileDir(sDirApp))), LowerCase(fn)) = 1 then
+    fn := ExtractRelativePath(Application.ExeName, fn);
+  {$ELSE}
+  if Pos(sDirApp, fn) = 1 then
+    fn := ExtractRelativePath(sDirApp, fn)
+  else if Pos(ExtractFileDir(ExtractFileDir(sDirApp)), fn) = 1 then
     fn := ExtractRelativePath(Application.ExeName, fn);
   {$ENDIF}
   Result := myUnExpandEnvs(fn);
@@ -2133,6 +2128,8 @@ var
 begin
   s1 := AppendPathDelim(sInidir) + cmbLanguage.Text;
   if bRead and not FileExistsUTF8(s1) then
+    Exit;
+  if bRead then
   begin
     mes[0] := 'Video files';
     mes[1] := 'All files (*)|*';
@@ -2166,9 +2163,9 @@ begin
     mes[29] := 'All files';
     mes[30] := 'Process';
     mes[31] := 'terminated';
-    Exit;
   end;
   Ini := TIniFile.Create(UTF8ToSys(s1));
+  Ini.StripQuotes := False;
   s1 := 'Captions';
   s2 := 'Hints';
   s3 := 'Messages';
@@ -2194,10 +2191,6 @@ var
   l: integer;
   jo: TJob;
 begin
-  //b := (ThreadConv <> nil);
-  //btnStart.Enabled := not b;
-  //btnSuspend.Enabled := b;
-  //btnStop.Enabled := b;
   b := (LVjobs.Selected <> nil);
   if b then
     jo := TJob(LVjobs.Selected.Data);
@@ -2307,6 +2300,7 @@ var
   end;
 
 begin
+  //get bitrate per second for every checked tracks
   r := 0;
   for l := 0 to High(jo.f) do
   for k := 0 to High(jo.f[l].s) do
@@ -2334,8 +2328,9 @@ begin
       r := r + q;
     end;
   sExt := LowerCase(ExtractFileExt(jo.getval(edtOfn.Name)));
+  //additional bitrate, something like index
   if sExt = '.mkv' then
-    q := 3500
+    q := 4000
   else if sExt = '.avi' then
     q := 10000
   else if sExt = '.mp4' then
@@ -2347,13 +2342,25 @@ begin
   r := r + q;
   if chkDebug.Checked then
     memJournal.Lines.Add('calc out size: out br=' + FloatToStr(r));
+  //multiplicate to duration
   if jo.getval(cmbDurationt2.Name) <> '' then
     q := myTimeStrToReal(jo.getval(cmbDurationt2.Name))
   else
-    q := myTimeStrToReal(jo.getval('duration'));
+    q := myTimeStrToReal(jo.f[0].getval('duration'));
   if chkDebug.Checked then
     memJournal.Lines.Add('calc out size: duration=' + FloatToStr(q));
-  r := r / 8 * q;
+  if q = 0 then
+    r := r / 8
+  else
+    r := r / 8 * q;
+  //header, in bytes, it is temporary. It needs some research in future
+  if sExt = '.mkv' then
+    q := 1360
+  else if sExt = '.mp4' then
+    q := 3860
+  else
+    q := 10000;
+  r := r + q;
   if chkDebug.Checked then
     memJournal.Lines.Add('calc out size: out size=' + FloatToStr(r));
   Result := Trim(Format('%12.0n', [r], fs));
@@ -2745,7 +2752,7 @@ procedure TfrmGUIta.myGetss4Compare(jo: TJob; rs: double = 0; rt: double = 0);
 var
   rd, ri, ro, rm: double;
 begin
-  rd := myTimeStrToReal(jo.getval('duration'));
+  rd := myTimeStrToReal(jo.f[0].getval('duration'));
   if rs = 0 then
     rs := myTimeStrToReal(jo.getval(cmbDurationss2.Name));
   if rt = 0 then
@@ -2790,7 +2797,7 @@ var
   s, sf: string;
 begin
   sf := myGetAnsiFN(fn);
-  {$IFDEF MSWINDOWS}
+  {$IFDEF MSWINDOWS} //ffmpeg ticket #4697 https://trac.ffmpeg.org/ticket/4697
   if LowerCase(ExtractFileExt(sf)) = '.jpg' then
     sf := ExtractShortPathNameUTF8(sf);
   {$ENDIF}
@@ -2911,7 +2918,7 @@ begin
   ss := jo.getval(cmbDurationss2.Name);
   si := myStrReplace('"$ffmpeg"') + IfThen(ss <> '', ' -ss ' + ss);
   s := myGetAnsiFN(jo.f[l].getval('filename'));
-  {$IFDEF MSWINDOWS}
+  {$IFDEF MSWINDOWS} //ffmpeg ticket #4697 https://trac.ffmpeg.org/ticket/4697
   if LowerCase(ExtractFileExt(s)) = '.jpg' then
     s := ExtractShortPathNameUTF8(s);
   {$ENDIF}
@@ -3766,7 +3773,7 @@ begin
     s := jo.f[l].getval(cmbDurationt1.Name);
     si := si + IfThen((t = '') and (s <> ''), ' -ss ' + s);
     s := myGetAnsiFN(jo.f[l].getval('filename'));
-    {$IFDEF MSWINDOWS}
+    {$IFDEF MSWINDOWS} //ffmpeg ticket #4697 https://trac.ffmpeg.org/ticket/4697
     if LowerCase(ExtractFileExt(s)) = '.jpg' then
       s := ExtractShortPathNameUTF8(s);
     {$ENDIF}
@@ -3841,6 +3848,7 @@ begin
           ExtractFileName(sd.FileName);
     end;
     Ini := TIniFile.Create(UTF8ToSys(s));
+    Ini.StripQuotes := False;
     mySets1(Ini, '1', [TabOutput], False);
     mySets1(Ini, 'input', [TabInput], False);
     mySets1(Ini, 'video', [TabVideo], False);
@@ -3866,8 +3874,8 @@ begin
     cDefaultSets.setval(Panel15.Controls[i].Name, myGet2(Panel15.Controls[i]));
   for i := 0 to TabDefSets.ControlCount - 1 do
     cDefaultSets.setval(TabDefSets.Controls[i].Name, myGet2(TabDefSets.Controls[i]));
-  cDefaultSets.setval(chkTitleWork.Name, myGet2(chkTitleWork));
-  cDefaultSets.setval(chkTitleClear.Name, myGet2(chkTitleClear));
+  cDefaultSets.setval(chkMetadataWork.Name, myGet2(chkMetadataWork));
+  cDefaultSets.setval(chkMetadataClear.Name, myGet2(chkMetadataClear));
   cDefaultSets.setval(chkConcat.Name, myGet2(chkConcat));
   cDefaultSets.setval(chkFilterComplex.Name, myGet2(chkFilterComplex));
   cDefaultSets.setval(chkx264Pass1fast.Name, myGet2(chkx264Pass1fast));
@@ -3895,23 +3903,6 @@ var
   i: integer;
   t: TTabSheet;
 begin
-  //if (ThreadConv <> nil) then
-  //begin
-  //  {$IFDEF MSWINDOWS}
-  //  if ThreadConv.Suspended then
-  //    ThreadConv.Resume;
-  //  {$ENDIF}
-  //  Exit;
-  //end;
-  //ThreadConv := TThreadConv.Create(0, SynMemo3);
-  //if Assigned(ThreadConv.FatalException) then
-  //  raise ThreadConv.FatalException;
-  //ThreadConv.OnTerminate := @onConvTerminate;
-  //ThreadConv.Start;
-  //btnStart.Enabled := False;
-  //btnSuspend.Enabled := True;
-  //btnStop.Enabled := True;
-  //PageControl3.ActivePage := TabConsole2;
   btnStart.Enabled := False;
   if (spnCpuCount.Value = 0) then
     spnCpuCount.Value := 1;
@@ -3958,18 +3949,6 @@ procedure TfrmGUIta.btnStopClick(Sender: TObject);
 var
   i: integer;
 begin
-  //if ThreadConv <> nil then
-  //begin
-  //  ThreadConv.pr.Input.WriteAnsiString('q');
-  //  Sleep(2000);
-  //  ThreadConv.Terminate;
-  //  if ThreadConv.pr <> nil then
-  //    ThreadConv.pr.Terminate(-2);
-  //  {$IFDEF MSWINDOWS}
-  //  if ThreadConv.Suspended then
-  //    ThreadConv.Resume;
-  //  {$ENDIF}
-  //end;
   for i := Low(aThrs) to High(aThrs) do
   begin
     if (aThrs[i] <> nil) then
@@ -3995,11 +3974,6 @@ var
 {$ENDIF}
 begin
   {$IFDEF MSWINDOWS}
-  //if ThreadConv <> nil then
-  //  if ThreadConv.Suspended then
-  //    ThreadConv.Resume
-  //  else
-  //    ThreadConv.Suspend;
   s := '';
   for i := Low(aThrs) to High(aThrs) do
   begin
@@ -4182,22 +4156,28 @@ begin
     myWindowColorIsDark;
 end;
 
-procedure TfrmGUIta.chkTitleWorkChange(Sender: TObject);
+procedure TfrmGUIta.chkMetadataWorkChange(Sender: TObject);
 var
   b: boolean;
 begin
-  b := chkTitleWork.Checked;
-  chkTitleClear.Enabled := b;
-  b := b and not chkTitleClear.Checked;
+  b := chkMetadataWork.Checked;
+  chkMetadataClear.Enabled := b;
+  b := b and not chkMetadataClear.Checked;
   //for i := 0 to TabOutput do if controls[i].Tag = 5 then
-  lblTitleOut.Enabled := b;
-  lblTitleVid.Enabled := b;
-  lblTitleAud.Enabled := b;
-  lblTitleSub.Enabled := b;
-  cmbTitleOut.Enabled := b;
-  cmbTitleVid.Enabled := b;
-  cmbTitleAud.Enabled := b;
-  cmbTitleSub.Enabled := b;
+  lblTagTitleOut.Enabled := b;
+  lblTagTitleV.Enabled := b;
+  lblTagTitleA.Enabled := b;
+  lblTagTitleS.Enabled := b;
+  lblTagLangV.Enabled := b;
+  lblTagLangA.Enabled := b;
+  lblTagLangS.Enabled := b;
+  cmbTagTitleOut.Enabled := b;
+  cmbTagTitleV.Enabled := b;
+  cmbTagTitleA.Enabled := b;
+  cmbTagTitleS.Enabled := b;
+  cmbTagLangV.Enabled := b;
+  cmbTagLangA.Enabled := b;
+  cmbTagLangS.Enabled := b;
   xmyChange0(Sender);
   {$IFDEF MSWINDOWS}
   //in win, quotes in metadata works ok
@@ -4240,7 +4220,7 @@ end;
 
 procedure TfrmGUIta.cmbEncoderVChange(Sender: TObject);
 var
-  b, b1, b2, b3: boolean;
+  b, b2, b3, b4, b5: boolean;
   i: integer;
   s: string;
   c: TWinControl;
@@ -4255,19 +4235,21 @@ begin
   end;
   s := TComboBox(Sender).Text;
   b := (s <> 'copy');
-  b1 := b and not chkFilterComplex.Checked;
-  b2 := (Pos('x264', s) > 0);
-  b3 := (Pos('x265', s) > 0);
+  b2 := b and not chkFilterComplex.Checked;
+  b3 := (Pos('x264', s) > 0);
+  b4 := (Pos('x265', s) > 0);
+  b5 := b and chkMetadataWork.Checked;
   c := TControl(Sender).Parent;
   for i := 0 to c.ControlCount - 1 do
     if c.Controls[i].Name <> TControl(Sender).Name then
       c.Controls[i].Enabled := (b and (c.Controls[i].Tag = 0))
-      or (b1 and (c.Controls[i].Tag = 2))
-      or ((b2 or b3) and (c.Controls[i].Tag = 4));
+      or (b2 and (c.Controls[i].Tag = 2))
+      or ((b3 or b4) and (c.Controls[i].Tag = 4))
+      or (b5 and (c.Controls[i].Tag = 5));
   cmbx264tune.Items.Clear;
-  if b2 then //x264
+  if b3 then //x264
     cmbx264tune.Items.AddStrings(['', 'film', 'animation', 'grain', 'stillimage', 'psnr', 'ssim', 'fastdecode', 'zerolatency']);
-  if b3 then //x265
+  if b4 then //x265
     cmbx264tune.Items.AddStrings(['', 'psnr', 'ssim', 'grain', 'zerolatency', 'fastdecode']);
   //to do: parse output: ffmpeg -f lavfi -i nullsrc -c:v libx264 -preset help -f mp4 -
   //[libx264 @ 0xb02de60] Possible presets: ultrafast superfast veryfast faster fast medium slow slower veryslow placebo
@@ -4382,10 +4364,11 @@ begin
     Exit;
   s := myGetAnsiFN(s);
   Ini := TIniFile.Create(UTF8ToSys(s));
+  Ini.StripQuotes := False;
   jo := TJob(LVjobs.Selected.Data);
   jo.setval(cmbProfile.Name, cmbProfile.Text);
   for i := 0 to TabOutput.ControlCount - 1 do
-  if (TabOutput.Controls[i].Tag in [0, 2]) then
+  if not (TabOutput.Controls[i].Tag in [1, 3]) then
   begin
     s := Ini.ReadString('1', TabOutput.Controls[i].Name, '');
     jo.setval(TabOutput.Controls[i].Name, s);
@@ -4398,6 +4381,7 @@ begin
   for l := 0 to High(jo.f) do
   begin
     for i := 0 to TabInput.ControlCount - 1 do
+    if not (TabInput.Controls[i].Tag in [1, 3]) then
     begin
       s := Ini.ReadString('input', TabInput.Controls[i].Name, '');
       jo.f[l].setval(TabInput.Controls[i].Name, s);
@@ -4414,6 +4398,7 @@ begin
       else
         Continue;
       for i := 0 to t.ControlCount - 1 do
+      if not (t.Controls[i].Tag in [1, 3]) then
       begin
         s := Ini.ReadString(c, t.Controls[i].Name, '');
         jo.f[l].s[k].setval(t.Controls[i].Name, s);
@@ -4884,6 +4869,11 @@ begin
     LVfiles.Clear;
     LVstreams.Clear;
     myDisComp;
+  end
+  else
+  if PageControl2.ActivePage = TabContRows then
+  begin
+    TabContRowsShow(Sender);
   end;
 end;
 
@@ -4973,7 +4963,7 @@ begin
     if LVjobs.Items[i].Checked then
     begin
       jo := TJob(LVjobs.Items[i].Data);
-      DuraAll := DuraAll + myTimeStrToReal(jo.getval('duration'));
+      DuraAll := DuraAll + myTimeStrToReal(jo.f[0].getval('duration'));
       inc(DuraAl2);
     end;
   frmGUIta.Caption := sCap + ' - ' + mes[21] + ' = ' + myRealToTimeStr(DuraAll)
@@ -5316,11 +5306,6 @@ begin
 end;
 
 procedure TfrmGUIta.onConvTerminate(Sender: TObject);
-//begin
-  //ThreadConv := nil;
-  //btnStart.Enabled := True;
-  //btnSuspend.Enabled := False;
-  //btnStop.Enabled := False;
 var
   b: boolean;
   i: integer;
@@ -5438,12 +5423,16 @@ begin
   SynMemo4.Clear;
   if LVjobs.Selected = nil then Exit;
   jo := TJob(LVjobs.Selected.Data);
-  if LVstreams.Selected = nil then
+  if (LVstreams.Selected = nil) or (Sender = LVjobs) then
   begin
-    for i := 0 to High(jo.f) do
-      SynMemo4.Lines.Add('$inpu' + IntToStr(i) + '=' + jo.f[i].getval('filename'));
-    for i := 0 to High(jo.sk) do
-      SynMemo4.Lines.Add(jo.sk[i] + '=' + jo.sv[i]);
+    for l := 0 to High(jo.f) do
+    begin
+      for i := 0 to High(jo.sk) do
+        SynMemo4.Lines.Add(jo.sk[i] + '=' + jo.sv[i]);
+      SynMemo4.Lines.Add('$inpu' + IntToStr(l) + '=' + jo.f[l].getval('filename'));
+      for i := 0 to High(jo.f[l].sk) do
+        SynMemo4.Lines.Add(jo.f[l].sk[i] + '=' + jo.f[l].sv[i]);
+    end;
   end
   else
   begin
@@ -5617,12 +5606,6 @@ var
   s: string;
 begin
   s := myExpandFN(myGet2(Sender), True);
-  //{$IFDEF MSWINDOWS}
-  //if (Pos(':', s) = 0) then
-  //{$ELSE}
-  //if (Pos('/', s) <> 1) then
-  //{$ENDIF}
-  //  s := sDirApp + s;
   if DirectoryExistsUTF8(s) then
     TWinControl(Sender).Font.Color := clWindowText
   else

@@ -8,7 +8,7 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, ufrmGUIta, utaVersion, uCalcul;
+  Forms, ufrmGUIta;
 
 {$R *.res}
 
@@ -18,4 +18,4 @@ begin
   Application.CreateForm(TfrmGUIta, frmGUIta);
   Application.Run;
 end.
-
+

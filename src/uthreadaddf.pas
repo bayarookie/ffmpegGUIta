@@ -87,9 +87,7 @@ procedure TThreadAddF.DataOut;
 var
   s, v, a, lng, styp: string;
   i, j, k, iv, ia, ia2: integer;
-  {$IFDEF MSWINDOWS}
   r: double;
-  {$ENDIF}
   sl: TStringList;
   Ini: TIniFile;
   li: TListItem;
@@ -187,10 +185,12 @@ begin
       {$ENDIF}
       jo.f[filenum].s[k].setval(frmGUIta.edtBitrateV.Name, frmGUIta.myCalcBRv(jo.f[filenum].s[k]));
       //title
-      if frmGUIta.chkTitleCopy.Checked then
+      if frmGUIta.chkMetadataGet.Checked then
       begin
         v := jo.f[filenum].s[k].getval('TAG:title');
-        jo.f[filenum].s[k].setval(frmGUIta.cmbTitleVid.Name, v);
+        jo.f[filenum].s[k].setval(frmGUIta.cmbTagTitleV.Name, v);
+        v := jo.f[filenum].s[k].getval('TAG:language');
+        jo.f[filenum].s[k].setval(frmGUIta.cmbTagLangV.Name, v);
       end;
     end
     else
@@ -215,10 +215,12 @@ begin
         ia2 := k;
       jo.f[filenum].s[k].setval(frmGUIta.edtBitrateA.Name, frmGUIta.myCalcBRa(jo.f[filenum].s[k]));
       //title
-      if frmGUIta.chkTitleCopy.Checked then
+      if frmGUIta.chkMetadataGet.Checked then
       begin
         v := jo.f[filenum].s[k].getval('TAG:title');
-        jo.f[filenum].s[k].setval(frmGUIta.cmbTitleAud.Name, v);
+        jo.f[filenum].s[k].setval(frmGUIta.cmbTagTitleA.Name, v);
+        v := jo.f[filenum].s[k].getval('TAG:language');
+        jo.f[filenum].s[k].setval(frmGUIta.cmbTagLangA.Name, v);
       end;
     end
     else
@@ -239,10 +241,12 @@ begin
         bj := True;
       end;
       //title
-      if frmGUIta.chkTitleCopy.Checked then
+      if frmGUIta.chkMetadataGet.Checked then
       begin
         v := jo.f[filenum].s[k].getval('TAG:title');
-        jo.f[filenum].s[k].setval(frmGUIta.cmbTitleSub.Name, v);
+        jo.f[filenum].s[k].setval(frmGUIta.cmbTagTitleS.Name, v);
+        v := jo.f[filenum].s[k].getval('TAG:language');
+        jo.f[filenum].s[k].setval(frmGUIta.cmbTagLangS.Name, v);
       end;
     end;
   until (s = '');
@@ -252,15 +256,6 @@ begin
   begin
     jo.f[filenum].s[ia2].setval('Checked', '1');
     bj := True;
-  end;
-  //copy duration for backward compatibility, it needs to recode
-  if (filenum = 0) then
-  begin
-    //s := frmGUIta.SynMemo6.Text;
-    //s := myBetween(s, 'Duration: ', ',');
-    //jo.setval('duration', myRealToTimeStr(myTimeStrToReal(s)));
-    s := jo.f[0].getval('duration');
-    jo.setval('duration', myRealToTimeStr(StrToFloatDef(s, 0)));
   end;
   frmGUIta.myGetss4Compare(jo);
   s := myDTtoStr('yyyy-mm-dd hh:nn:ss ', Now) + mes[5] + ' ' + TimeToStr(Now - dt);
@@ -275,20 +270,24 @@ begin
   s := '';
   if (filenum = 0) then
   begin
-    if frmGUIta.chkTitleCopy.Checked then
+    if frmGUIta.chkMetadataGet.Checked then
       s := jo.f[0].getval('TAG:title')
     else
       s := '';
-    jo.setval(frmGUIta.cmbTitleOut.Name, s);
+    jo.setval(frmGUIta.cmbTagTitleOut.Name, s);
     li := frmGUIta.LVjobs.Items.Add;
     li.Checked := bj;
     li.Caption := jo.getval('index');
     li.SubItems.Add(filenamew);
     li.SubItems.Add(myGetFileSize(filename));
     li.SubItems.Add(frmGUIta.myCalcOutSize(jo));
-    s := jo.getval('duration');
+    r := myTimeStrToReal(jo.f[0].getval('duration'));
+    if r = 0 then
+      s := jo.f[0].getval('duration')
+    else
+      s := myRealToTimeStr(r);
     li.SubItems.Add(s);
-    DuraAll := DuraAll + myTimeStrToReal(s);
+    DuraAll := DuraAll + r;
     inc(DuraAl2);
     frmGUIta.Caption := sCap + ' - ' + mes[21] + ' = ' + myRealToTimeStr(DuraAll)
       + ', ' + mes[27] + ' = ' + IntToStr(DuraAl2);
