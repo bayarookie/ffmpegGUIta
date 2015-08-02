@@ -16,6 +16,7 @@ type
   private
     dt: TDateTime;
     jo: TJob;
+    fStopIfError: boolean;
     filename: string;
     filenamew: string;
     filenum: integer;
@@ -46,6 +47,7 @@ var
   s: string;
 begin
   dt := Now;
+  fStopIfError := frmGUIta.chkStopIfError.Checked;
   filenum := -1;
   fcmd.Clear;
   while Files2Add.Count > 0 do
@@ -61,11 +63,6 @@ begin
       if s = '.vob' then
         s := ' -show_format -show_streams -analyzeduration 100M -probesize 100M "' + filename + '"'
       else
-      {$IFDEF MSWINDOWS}
-      if s = '.jpg' then
-        s := ' -show_format -show_streams "' + ExtractShortPathNameUTF8(filenamew) + '"'
-      else
-      {$ENDIF}
         s := ' -show_format -show_streams "' + filename + '"';
       fcmd.Add(frmGUIta.myStrReplace('"$ffprobe"') + s);
       filenum := l;
@@ -122,7 +119,7 @@ begin
     if j > 0 then
       jo.f[filenum].setval(Copy(sl[i], 1, j - 1), Copy(sl[i], j + 1, Length(sl[i])));
   end;
-  jo.f[filenum].setval('-----', '-----=-----=-----');
+  jo.f[filenum].setval('----------', '---------------------------------------------------------------------');
   //fill input sets from ini
   Ini.ReadSection('input', sl);
   for i := 0 to sl.Count - 1 do
@@ -146,7 +143,7 @@ begin
     end;
     if (jo.f[filenum].s[k].getval('codec_name') = 'unknown') then
       Continue;
-    jo.f[filenum].s[k].setval('-----', '-----=-----=-----');
+    jo.f[filenum].s[k].setval('----------', '---------------------------------------------------------------------');
     //fill stream sets from ini
     styp := jo.f[filenum].s[k].getval('codec_type');
     sl.Clear;
@@ -403,7 +400,7 @@ var
   i, j: integer;
 begin
   //scp := GetConsoleTextEncoding;
-  while (not Terminated) and True do
+  while (not Terminated) and (fExitStatus = 0) do
   begin
     Synchronize(@DataGet);
     if fcmd.Count = 0 then
@@ -478,6 +475,8 @@ begin
       end;
     end;
     Synchronize(@DataOut);
+    if not fStopIfError and (fExitStatus <> 0) then
+      fExitStatus := 0;
   end;
 end;
 

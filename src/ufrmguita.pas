@@ -786,8 +786,6 @@ begin
       end;
       ST.Free;
     end
-    else if FileExistsUTF8(s) then
-      my1(s)
     else if (s > '') and (s[1] = '-') or (s[1] = '/') then
     begin
       t := Copy(LowerCase(s), 2, Length(s));
@@ -810,7 +808,9 @@ begin
         ShowMessage(StringReplace(mes[2], '\n', #13, [rfReplaceAll]))
       else
         my1(s);
-    end;
+    end
+    else //if FileExistsUTF8(s) then
+      my1(s);
   end;
   myAddFileStart;
 end;
@@ -1324,11 +1324,6 @@ begin
     if LowerCase(ExtractFileExt(s)) = '.vob' then
       si := si + ' -analyzeduration 100M -probesize 100M -i "' + s + '"'
     else
-    {$IFDEF MSWINDOWS}
-    if LowerCase(ExtractFileExt(s)) = '.jpg' then //ffmpeg ticket #4697 https://trac.ffmpeg.org/ticket/4697
-      si := si + ' -i "' + ExtractShortPathNameUTF8(s) + '"' //and #819 https://trac.ffmpeg.org/ticket/819
-    else
-    {$ENDIF}
       si := si + ' -i "' + s + '"';
   end;
   bfi := (jo.getval(chkFilterComplex.Name) = '1')
@@ -1806,6 +1801,9 @@ begin
   if LVjobs.Selected = nil then
     Exit;
   jo := TJob(LVjobs.Selected.Data);
+  q := '$inputw';
+  p := jo.f[0].getval('filename');
+  Result := StringReplace(Result, q, p, [rfReplaceAll]);
   i := High(jo.f);
   while i > -2 do
   begin
@@ -2797,10 +2795,6 @@ var
   s, sf: string;
 begin
   sf := myGetAnsiFN(fn);
-  {$IFDEF MSWINDOWS} //ffmpeg ticket #4697 https://trac.ffmpeg.org/ticket/4697
-  if LowerCase(ExtractFileExt(sf)) = '.jpg' then
-    sf := ExtractShortPathNameUTF8(sf);
-  {$ENDIF}
   Result := myGetOutFN(myStrReplace('$dirtmp'), 'tmp', '.bmp');
   if ss = '' then
     ss := '0';
@@ -2918,10 +2912,6 @@ begin
   ss := jo.getval(cmbDurationss2.Name);
   si := myStrReplace('"$ffmpeg"') + IfThen(ss <> '', ' -ss ' + ss);
   s := myGetAnsiFN(jo.f[l].getval('filename'));
-  {$IFDEF MSWINDOWS} //ffmpeg ticket #4697 https://trac.ffmpeg.org/ticket/4697
-  if LowerCase(ExtractFileExt(s)) = '.jpg' then
-    s := ExtractShortPathNameUTF8(s);
-  {$ENDIF}
   si := si + ' -i "' + s + '"';
   j := -1;
   for i := 0 to High(jo.f[l].s) do
@@ -3773,10 +3763,6 @@ begin
     s := jo.f[l].getval(cmbDurationt1.Name);
     si := si + IfThen((t = '') and (s <> ''), ' -ss ' + s);
     s := myGetAnsiFN(jo.f[l].getval('filename'));
-    {$IFDEF MSWINDOWS} //ffmpeg ticket #4697 https://trac.ffmpeg.org/ticket/4697
-    if LowerCase(ExtractFileExt(s)) = '.jpg' then
-      s := ExtractShortPathNameUTF8(s);
-    {$ENDIF}
     si := si + ' "' + s + '"'; // -autoexit
     s := myStrReplace(si + vf + af + vn + an + sn);
     if chkDebug.Checked then
@@ -5429,6 +5415,7 @@ begin
     begin
       for i := 0 to High(jo.sk) do
         SynMemo4.Lines.Add(jo.sk[i] + '=' + jo.sv[i]);
+      SynMemo4.Lines.Add(sdiv);
       SynMemo4.Lines.Add('$inpu' + IntToStr(l) + '=' + jo.f[l].getval('filename'));
       for i := 0 to High(jo.f[l].sk) do
         SynMemo4.Lines.Add(jo.f[l].sk[i] + '=' + jo.f[l].sv[i]);
