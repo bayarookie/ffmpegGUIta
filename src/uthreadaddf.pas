@@ -54,10 +54,10 @@ begin
   begin
     jo := TJob(Files2Add.Items[0]);
     for l := 0 to High(jo.f) do
-    if jo.f[l].getval('ffprobe') = '0' then
+    if jo.f[l].getval(sMyffprobe) = '0' then
     begin
-      jo.f[l].setval('ffprobe', '1');
-      filenamew := jo.f[l].getval('filename');
+      jo.f[l].setval(sMyffprobe, '1');
+      filenamew := jo.f[l].getval(sMyFilename);
       filename := myGetAnsiFN(filenamew);
       s := LowerCase(ExtractFileExt(filename));
       if s = '.vob' then
@@ -255,7 +255,7 @@ begin
     bj := True;
   end;
   frmGUIta.myGetss4Compare(jo);
-  s := myDTtoStr('yyyy-mm-dd hh:nn:ss ', Now) + mes[5] + ' ' + TimeToStr(Now - dt);
+  s := myDTtoStr(sMyDTformat, Now) + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
   if fExitStatus <> 0 then
     s := s + ' - ' + mes[6] + ': ' + IntToStr(fExitStatus);
   frmGUIta.StatusBar1.SimpleText := s;

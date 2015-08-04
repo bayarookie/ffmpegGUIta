@@ -65,8 +65,8 @@ begin
       frmGUIta.LVjobs.Items[i].Checked := False;
       fmemo.Clear;
       jo := TJob(frmGUIta.LVjobs.Items[i].Data);
-      frmGUIta.memJournal.Lines.Add(IntToStr(num + 1) +
-        myDTtoStr(': yyyy-mm-dd hh:nn:ss', Now) + ' - ' + jo.f[0].getval('filename'));
+      frmGUIta.memJournal.Lines.Add(IntToStr(num + 1) + ': '
+        + myDTtoStr(sMyDTformat, Now) + ' - ' + jo.f[0].getval(sMyFilename));
       fcmd.Text := frmGUIta.myGetCmdFromJo(jo);
       jo.setval('Completed', '2');
       frmGUIta.LVjobs.Refresh;
@@ -111,8 +111,8 @@ begin
       Break;
     end;
   end;
-  s := IntToStr(num + 1) + myDTtoStr(': yyyy-mm-dd hh:nn:ss ', Now) +
-    mes[5] + ' ' + TimeToStr(Now - dt);
+  s := IntToStr(num + 1) + ': ' + myDTtoStr(sMyDTformat, Now) + ' '
+    + mes[5] + ' ' + TimeToStr(Now - dt);
   if fExitStatus <> 0 then
   begin
     s := s + ' - ' + mes[6] + ': ' + IntToStr(fExitStatus);

@@ -285,7 +285,7 @@ end;
 function SetFileShortNameW(hFile: THandle; ShortName: PWideChar): longbool; stdcall;
   external 'kernel32.dll' Name 'SetFileShortNameW';
 
-function myGenDosNam(f: string; l: integer): string;
+function myGenDosNam1(f: string; l: integer): string;
 var
   s: string;
   j, k: integer;
@@ -307,14 +307,28 @@ begin
   Result := Copy(Result, 1, l);
 end;
 
+function myGenDosNam2(f: string): string;
+var
+  FullPath, ext, w: string;
+  i: integer;
+begin
+  FullPath := ExtractFilePath(f);
+  ext := myGenDosNam1(ExtractFileExt(f), 4);
+  i := 0;
+  repeat
+    Inc(i);
+    w := myGenDosNam1(ExtractFileNameOnly(f), 7 - Length(IntToStr(i))) + '~' + IntToStr(i) + ext;
+  until (not FileExistsUTF8(FullPath + w) and not DirectoryExistsUTF8(FullPath + w))
+  or (i = 999999);
+  Result := FullPath + w;
+end;
+
 function mySetFileShortName(wfn: string): boolean;
 var
   Reg: TRegistry;
-  ext, w: string;
+  w: string;
   i: integer;
   h: THandle;
-  FullPath: string;
-
 begin
 //HKLM\SYSTEM\CurrentControlSet\Control\FileSystem, NtfsDisable8dot3NameCreation = 1, default = 2
   Reg := TRegistry.Create;
@@ -334,14 +348,8 @@ begin
     + 'HKLM\SYSTEM\CurrentControlSet\Control\FileSystem, NtfsDisable8dot3NameCreation = 1');
     Exit;
   end;
-  FullPath := ExtractFilePath(wfn);
-  ext := myGenDosNam(ExtractFileExt(wfn), 4);
-  i := 0;
-  repeat
-    Inc(i);
-    w := myGenDosNam(ExtractFileNameOnly(wfn), 7 - Length(IntToStr(i))) + '~' + IntToStr(i) + ext;
-  until (not FileExistsUTF8(FullPath + w) and not DirectoryExistsUTF8(FullPath + w))
-  or (i = 999999);
+  //generate name
+  w := myGenDosNam2(wfn);
   if not NTSetPrivilege('SeRestorePrivilege', True) then
   begin
     ShowMessage('Cannot get privilege to create short filename for ' + wfn);
@@ -408,7 +416,6 @@ begin
   if (FullPath <> ExtractFileDrive(FullPath)+'\') then
     FullPath := myGet127FN(FullPath, False);
   Result := ExtractShortPathNameUTF8(wfn);
-
   s := ExtractFileName(Result);
   for i := 1 to Length(s) do
   begin
@@ -423,17 +430,9 @@ begin
 end;
 
 function myGetAnsiFN(wfn: string; bCreateSymLink: boolean = False): string;
-var
-  FullPath: string;
 begin
   //ffmpeg tickets: #4697 https://trac.ffmpeg.org/ticket/4697 and #819 https://trac.ffmpeg.org/ticket/819
-  if not DirectoryExistsUTF8(wfn)
-  and (Pos(LowerCase(ExtractFileExt(wfn)), '.jpg .jpeg') > 0) then
-  begin
-    Result := myGet127FN(wfn);
-    if myCheckAnsi(Result) then Exit;
-  end
-  else
+  if Pos(LowerCase(ExtractFileExt(wfn)), '.jpg .jpeg') = 0 then
   begin
     //ansi chars?
     Result := wfn;
@@ -442,24 +441,13 @@ begin
     Result := ExtractShortPathNameUTF8(wfn);
     if myCheckAnsi(Result) then Exit;
   end;
-  //cannot get short filename, so create it
-  //maybe, disabled on registry
-  // HKLM\SYSTEM\CurrentControlSet\Control\FileSystem, NtfsDisable8dot3NameCreation = 1
-  Result := wfn;
-  FullPath := ExtractFileDir(wfn);
-  if (FullPath <> ExtractFileDrive(FullPath)) then
-    FullPath := myGetAnsiFN(FullPath, False);
-  if mySetFileShortName(wfn) then
-  begin
-    Result := ExtractShortPathNameUTF8(wfn);
-    if myCheckAnsi(Result) then Exit;
-  end;
+  Result := myGet127FN(wfn);
+  if myCheckAnsi(Result) then Exit;
   //maybe, network drive with no msdos file system
   //create symlink to network file and return as result
   if bCreateSymLink then
   begin
-    Result := myExpandEnv('%TEMP%\') + myGenDosNam(ExtractFileNameOnly(wfn), 8)
-      + myGenDosNam(ExtractFileExt(wfn), 4);
+    Result := myGenDosNam2(myExpandEnv('%TEMP%\') + wfn);
     if myCreateSymLink(Result, wfn) then
       if myCheckAnsi(Result) then Exit;
   end;

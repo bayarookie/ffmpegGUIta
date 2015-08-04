@@ -458,7 +458,7 @@ type
     function myGetFilter(jo: TJob; v: TCont; all: boolean = True): string;
     function myGetCmdFromJo(jo: TJob; mode: integer = 0): string;
     function myGetPic(ss, fn, fv: string; sm: TSynMemo; st: TStatusBar): string;
-    function myStrReplace(s: string): string;
+    function myStrReplace(s: string; jo: TJob = nil): string;
     function myValFPS(a: array of string): extended;
     function myGetFPS(jo: TJob; stream: string): extended;
     procedure myAdd2cmb(c: TComboBox; s: string; add: boolean = True);
@@ -500,6 +500,9 @@ var
   cDefaultSets: TCont;
   cCmdIni: TCont;
   iTabCount: integer;
+  sMyFilename: string = 'my_filename';
+  sMyffprobe: string = 'my_ffprobe';
+  sMyDTformat: string = 'yyyy-mm-dd hh:nn:ss';
 
 implementation
 
@@ -753,8 +756,8 @@ var
     {$ENDIF}
     SetLength(jo.f, 1);
     jo.f[0] := TFil.Create;
-    jo.f[0].setval('filename', fn);
-    jo.f[0].setval('ffprobe', '0');
+    jo.f[0].setval(sMyFilename, fn);
+    jo.f[0].setval(sMyffprobe, '0');
     if chkAddTracks.Checked then
     begin
       sl := TStringList.Create;
@@ -763,8 +766,8 @@ var
       begin
         SetLength(jo.f, 2 + j);
         jo.f[1 + j] := TFil.Create;
-        jo.f[1 + j].setval('filename', sl[j]);
-        jo.f[1 + j].setval('ffprobe', '0');
+        jo.f[1 + j].setval(sMyFilename, sl[j]);
+        jo.f[1 + j].setval(sMyffprobe, '0');
       end;
       sl.Free;
     end;
@@ -954,8 +957,8 @@ begin
       jo.setval(cmbDurationt2.Name, myRealToTimeStr(r, False));
       SetLength(jo.f, 1);
       jo.f[0] := TFil.Create;
-      jo.f[0].setval('filename', files[i]);
-      jo.f[0].setval('ffprobe', '0');
+      jo.f[0].setval(sMyFilename, files[i]);
+      jo.f[0].setval(sMyffprobe, '0');
       jo.f[0].setval(cmbDurationss1.Name, myRealToTimeStr(k, False));
       Files2Add.Add(Pointer(jo));
       k := k + r;
@@ -975,8 +978,8 @@ begin
   begin
     SetLength(jo.f, i + 1 + j);
     jo.f[i + j] := TFil.Create;
-    jo.f[i + j].setval('filename', files[j]);
-    jo.f[i + j].setval('ffprobe', '0');
+    jo.f[i + j].setval(sMyFilename, files[j]);
+    jo.f[i + j].setval(sMyffprobe, '0');
   end;
   Files2Add.Add(Pointer(jo));
   myAddFileStart;
@@ -1030,12 +1033,12 @@ var
       if i < 0 then
       begin
         q := '$input';
-        p := myGetAnsiFN(jo.f[0].getval('filename'));
+        p := myGetAnsiFN(jo.f[0].getval(sMyFilename));
       end
       else
       begin
         q := '$inpu' + IntToStr(i);
-        p := myGetAnsiFN(jo.f[i].getval('filename'));
+        p := myGetAnsiFN(jo.f[i].getval(sMyFilename));
       end;
       if Pos(q, r) > 0 then
       begin
@@ -1320,7 +1323,7 @@ begin
     si := si + IfThen(sti <> '', ' -t ' + sti);
     s := jo.f[l].getval(cmbAddOptsI.Name);
     si := si + IfThen(s <> '', ' ' + s);
-    s := myGetAnsiFN(jo.f[l].getval('filename'));
+    s := myGetAnsiFN(jo.f[l].getval(sMyFilename));
     if LowerCase(ExtractFileExt(s)) = '.vob' then
       si := si + ' -analyzeduration 100M -probesize 100M -i "' + s + '"'
     else
@@ -1439,14 +1442,14 @@ begin
   begin
     if FileExistsUTF8(fno) then
     begin
-      fno := myGetOutFN(ExtractFilePath(fno), jo.f[0].getval('filename'),  ExtractFileExt(fno));
+      fno := myGetOutFN(ExtractFilePath(fno), jo.f[0].getval(sMyFilename),  ExtractFileExt(fno));
       jo.setval(edtOfn.Name, fno);
     end;
     {$IFDEF MSWINDOWS}
     fnoa := jo.getval(edtOfna.Name); //short filename
     if FileExistsUTF8(fnoa) then
     begin
-      fnoa := myGetOutFNa(ExtractFilePath(fnoa), jo.f[0].getval('filename'), ExtractFileExt(fnoa));
+      fnoa := myGetOutFNa(ExtractFilePath(fnoa), jo.f[0].getval(sMyFilename), ExtractFileExt(fnoa));
       jo.setval(edtOfna.Name, fnoa);
     end;
     fn1 := ' -y NUL'; // + jo.getval(cmbExt.Name);
@@ -1467,7 +1470,7 @@ begin
             + si + fi + vi + au + su + ma + sp2 + so + fn2
   else
     Result := si + fi + vi + au + su + ma + so + fn2;
-  Result := myStrReplace(Result);
+  Result := myStrReplace(Result, jo);
 end;
 
 function TfrmGUIta.myGetDosOut(cmd, beg, fin: string; mem: TSynMemo;
@@ -1786,46 +1789,49 @@ begin
   Result := myUnExpandEnvs(fn);
 end;
 
-function TfrmGUIta.myStrReplace(s: string): string;
+function TfrmGUIta.myStrReplace(s: string; jo: TJob = nil): string;
 var
   p, q: string;
   i: integer;
-  jo: TJob;
 begin
   Result := s;
-  Result := StringReplace(Result, '$dirtmp', myExpandFN(edtDirTmp.Text, True), [rfReplaceAll]);
-  Result := StringReplace(Result, '$dirout', myExpandFN(edtDirOut.Text, True), [rfReplaceAll]);
   Result := StringReplace(Result, '$ffmpeg', myExpandFN(edtffmpeg.Text), [rfReplaceAll]);
   Result := StringReplace(Result, '$ffplay', myExpandFN(edtffplay.Text), [rfReplaceAll]);
   Result := StringReplace(Result, '$ffprobe', myExpandFN(edtffprobe.Text), [rfReplaceAll]);
-  if LVjobs.Selected = nil then
-    Exit;
-  jo := TJob(LVjobs.Selected.Data);
-  q := '$inputw';
-  p := jo.f[0].getval('filename');
-  Result := StringReplace(Result, q, p, [rfReplaceAll]);
-  i := High(jo.f);
-  while i > -2 do
+  Result := StringReplace(Result, '$dirtmp', myExpandFN(edtDirTmp.Text, True), [rfReplaceAll]);
+  if jo <> nil then
   begin
-    if i < 0 then
-    begin
-      q := '$input';
-      p := myGetAnsiFN(jo.f[0].getval('filename'));
-    end
-    else
-    begin
-      q := '$inpu' + IntToStr(i);
-      p := myGetAnsiFN(jo.f[i].getval('filename'));
-    end;
+    q := '$inputw';
+    p := jo.f[0].getval(sMyFilename);
     Result := StringReplace(Result, q, p, [rfReplaceAll]);
-    dec(i);
+    i := High(jo.f);
+    while i > -2 do
+    begin
+      if i < 0 then
+      begin
+        q := '$input';
+        p := myGetAnsiFN(jo.f[0].getval(sMyFilename));
+      end
+      else
+      begin
+        q := '$inpu' + IntToStr(i);
+        p := myGetAnsiFN(jo.f[i].getval(sMyFilename));
+      end;
+      Result := StringReplace(Result, q, p, [rfReplaceAll]);
+      dec(i);
+    end;
+    q := ExtractFileDir(jo.f[0].getval(sMyFilename));
+    Result := StringReplace(Result, '$dirinp', q, [rfReplaceAll]);
+    if Trim(edtDirOut.Text) <> '' then
+      q := myExpandFN(Trim(edtDirOut.Text), True)
+    else
+      q := ExtractFileDir(jo.f[0].getval(sMyFilename));
+    Result := StringReplace(Result, '$dirout', q, [rfReplaceAll]);
+    Result := StringReplace(Result, '$output',
+    {$IFDEF MSWINDOWS} jo.getval(edtOfna.Name), [rfReplaceAll]);
+    {$ELSE}            jo.getval(edtOfn.Name), [rfReplaceAll]);
+    {$ENDIF}
   end;
-  p := ExtractFileDir(p);
-  Result := StringReplace(Result, '$dirinp', p, [rfReplaceAll]);
-  Result := StringReplace(Result, '$output',
-  {$IFDEF MSWINDOWS} jo.getval(edtOfna.Name), [rfReplaceAll]);
-  {$ELSE}            jo.getval(edtOfn.Name), [rfReplaceAll]);
-  {$ENDIF}
 end;
 
 function TfrmGUIta.myGetFileList(const Path, Mask: string; List: TStrings;
@@ -2196,7 +2202,7 @@ begin
     l := LVfiles.Selected.Index
   else
     l := 0;
-  b1 := b and FileExistsUTF8(jo.f[l].getval('filename'));
+  b1 := b and FileExistsUTF8(jo.f[l].getval(sMyFilename));
   btnPlayIn.Enabled := b1;
   mnuOpen.Enabled := b1;
   mnuView.Enabled := b1;
@@ -2208,7 +2214,7 @@ begin
   btnMediaInfo2.Enabled := b2 and b3;
   btnPlayOut.Enabled := b2;
   btnCompare.Enabled := b1 and b2;
-  b3 := b1 and (LowerCase(ExtractFileExt(jo.f[0].getval('filename'))) = '.avs');
+  b3 := b1 and (LowerCase(ExtractFileExt(jo.f[0].getval(sMyFilename))) = '.avs');
   mnuEditAvs.Enabled := b3;
   mnuCopyAsAvs.Enabled := b1 and not b3;
   chkConcat.Enabled := b and (Length(jo.f) > 1);
@@ -2911,7 +2917,7 @@ var
 begin
   ss := jo.getval(cmbDurationss2.Name);
   si := myStrReplace('"$ffmpeg"') + IfThen(ss <> '', ' -ss ' + ss);
-  s := myGetAnsiFN(jo.f[l].getval('filename'));
+  s := myGetAnsiFN(jo.f[l].getval(sMyFilename));
   si := si + ' -i "' + s + '"';
   j := -1;
   for i := 0 to High(jo.f[l].s) do
@@ -3103,8 +3109,8 @@ var
   v, a: string;
 begin
   Result := '';
-  v := ExtractFileNameOnly(jo.f[0].getval('filename'));
-  a := ExtractFileNameOnly(jo.f[l].getval('filename'));
+  v := ExtractFileNameOnly(jo.f[0].getval(sMyFilename));
+  a := ExtractFileNameOnly(jo.f[l].getval(sMyFilename));
   if Pos(v, a) = 1 then
     Result := Trim(Copy(a, Length(v) + 2, Length(a)));
 end;
@@ -3171,13 +3177,13 @@ begin
     jo.setval('Completed', '0');
     SetLength(jo.f, 2);
     jo.f[0] := TFil.Create;
-    jo.f[0].setval('filename', frmG.ComboBox1.Text);
+    jo.f[0].setval(sMyFilename, frmG.ComboBox1.Text);
     jo.f[0].setval(cmbAddOptsI.Name, frmG.ComboBox2.Text);
-    jo.f[0].setval('ffprobe', '1');
+    jo.f[0].setval(sMyffprobe, '1');
     jo.f[1] := TFil.Create;
-    jo.f[1].setval('filename', frmG.ComboBox3.Text);
+    jo.f[1].setval(sMyFilename, frmG.ComboBox3.Text);
     jo.f[1].setval(cmbAddOptsI.Name, frmG.ComboBox4.Text);
-    jo.f[1].setval('ffprobe', '1');
+    jo.f[1].setval(sMyffprobe, '1');
     if Trim(edtDirOut.Text) <> '' then
       s := Trim(edtDirOut.Text)
     else
@@ -3279,7 +3285,7 @@ begin
     l := na;
   if (l < 0) or (l > High(jo.f)) then
     l := 0;
-  fn := jo.f[l].getval('filename');
+  fn := jo.f[l].getval(sMyFilename);
   if not FileExistsUTF8(fn) then
     Exit;
   if iv <> '' then
@@ -3338,8 +3344,11 @@ end;
 procedure TfrmGUIta.btnCmdRunClick(Sender: TObject);
 var
   s: string;
+  jo: TJob;
 begin
-  s := myStrReplace(cmbRunCmd.Text);
+  if LVjobs.Selected <> nil then
+    jo := TJob(LVjobs.Selected.Data);
+  s := myStrReplace(cmbRunCmd.Text, jo);
   if chkRunInWindow.Checked then
     myRunCmd(s)
   else
@@ -3390,7 +3399,7 @@ begin
     xmyChange2v(cmbCrop);
   end;
   iv := ' -map 0:' + IntToStr(k);
-  fn := jo.f[l].getval('filename');
+  fn := jo.f[l].getval(sMyFilename);
   if not FileExistsUTF8(fn) then
     Exit;
   Application.CreateForm(TfrmCrop, frmCrop);
@@ -3624,7 +3633,7 @@ begin
       l := LVfiles.Selected.Index
     else
       l := 0;
-    fn := TJob(LVjobs.Selected.Data).f[l].getval('filename');
+    fn := TJob(LVjobs.Selected.Data).f[l].getval(sMyFilename);
   end;
   {$IFDEF MSWINDOWS}
   s := myGetAnsiFN(myExpandFN(edtMediaInfo.Text));
@@ -3762,9 +3771,9 @@ begin
     si := si + IfThen(t <> '', ' -t ' + t);
     s := jo.f[l].getval(cmbDurationt1.Name);
     si := si + IfThen((t = '') and (s <> ''), ' -ss ' + s);
-    s := myGetAnsiFN(jo.f[l].getval('filename'));
+    s := myGetAnsiFN(jo.f[l].getval(sMyFilename));
     si := si + ' "' + s + '"'; // -autoexit
-    s := myStrReplace(si + vf + af + vn + an + sn);
+    s := myStrReplace(si + vf + af + vn + an + sn, jo);
     if chkDebug.Checked then
       memJournal.Lines.Add(s);
     myExecProc1(s);
@@ -3995,7 +4004,7 @@ begin
     {$ENDIF}
     Exit;
   end;
-  ThreadTest := TThreadTest.Create(myStrReplace('$dirtmp'), LVjobs.Selected);
+  ThreadTest := TThreadTest.Create(LVjobs.Selected);
   if Assigned(ThreadTest.FatalException) then
     raise ThreadTest.FatalException;
   ThreadTest.OnTerminate := @onTestTerminate;
@@ -4855,11 +4864,6 @@ begin
     LVfiles.Clear;
     LVstreams.Clear;
     myDisComp;
-  end
-  else
-  if PageControl2.ActivePage = TabContRows then
-  begin
-    TabContRowsShow(Sender);
   end;
 end;
 
@@ -4981,14 +4985,14 @@ begin
   if LVjobs.Selected <> nil then
     jo := TJob(LVjobs.Selected.Data)
   else
-    jo := TJob(Item.Data);
+    jo := TJob(Item.Data); //bug
   myGetValsFromCont(TabOutput, jo);
   myGetValsFromCont(TabCmdline, jo);
   for l := 0 to High(jo.f) do
   begin
     li := LVfiles.Items.Add;
     li.Caption := IntToStr(l);;
-    li.SubItems.Add(jo.f[l].getval('filename'));
+    li.SubItems.Add(jo.f[l].getval(sMyFilename));
   end;
   for i := 0 to High(jo.m) do
   begin
@@ -5013,6 +5017,8 @@ begin
     LVstreams.Items[0].Selected := True;
   if PageControl2.ActivePage = TabCmdline then
     TabCmdlineShow(Sender);
+  if PageControl2.ActivePage = TabContRows then
+    TabContRowsShow(Sender);
 end;
 
 procedure TfrmGUIta.LVmasksCustomDrawSubItem(Sender: TCustomListView;
@@ -5416,7 +5422,7 @@ begin
       for i := 0 to High(jo.sk) do
         SynMemo4.Lines.Add(jo.sk[i] + '=' + jo.sv[i]);
       SynMemo4.Lines.Add(sdiv);
-      SynMemo4.Lines.Add('$inpu' + IntToStr(l) + '=' + jo.f[l].getval('filename'));
+      SynMemo4.Lines.Add('$inpu' + IntToStr(l));
       for i := 0 to High(jo.f[l].sk) do
         SynMemo4.Lines.Add(jo.f[l].sk[i] + '=' + jo.f[l].sv[i]);
     end;

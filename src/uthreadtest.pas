@@ -24,7 +24,6 @@ type
     ftermopts: string;
     fterm1str: boolean;
     fcmd: TStringList;
-    fdir: string;
     fStatus: string;
     d, e: double;
     fExitStatus: integer;
@@ -38,7 +37,7 @@ type
     procedure Execute; override;
   public
     pr: TProcessUTF8;
-    constructor Create(dir: string; Item: TListItem);
+    constructor Create(Item: TListItem);
   end;
 
 implementation
@@ -59,8 +58,8 @@ begin
   fcmd.Clear;
   frmGUIta.SynMemo5.Clear;
   jo := TJob(li.Data);
-  frmGUIta.memJournal.Lines.Add(myDTtoStr('yyyy-mm-dd hh:nn:ss', Now)
-    + ' - ' + jo.f[0].getval('filename'));
+  frmGUIta.memJournal.Lines.Add(myDTtoStr(sMyDTformat, Now)
+    + ' - ' + jo.f[0].getval(sMyFilename));
   fcmd.Text := frmGUIta.myGetCmdFromJo(jo, 1);
   jo.setval('Completed', '2');
   frmGUIta.LVjobs.Refresh;
@@ -95,9 +94,9 @@ begin
     jo.setval(frmGUIta.edtOfna.Name, fnoa);
   end;
   {$ENDIF}
-  s := myDTtoStr('yyyy-mm-dd hh:nn:ss ', Now) + mes[5] + ' ' + TimeToStr(Now - dt);
+  s := myDTtoStr(sMyDTformat, Now) + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
   i := SecondsBetween(dt, Now);
-  d := myTimeStrToReal(jo.getval('duration'));
+  d := myTimeStrToReal(jo.f[0].getval('duration'));
   e := myTimeStrToReal(frmGUIta.cmbTestDurationt.Text);
   if (d <> 0) and (e > d) then
     e := d;
@@ -172,7 +171,6 @@ begin
     Synchronize(@ShowSynMemo);
     pr := TProcessUTF8.Create(nil);
     try
-      //pr.CurrentDirectory := fdir;
       if fterm_use then
       begin
         pr.Executable := fterminal;
@@ -241,11 +239,10 @@ begin
   Synchronize(@DataOut);
 end;
 
-constructor TThreadTest.Create(dir: string; Item: TListItem);
+constructor TThreadTest.Create(Item: TListItem);
 begin
   FreeOnTerminate := True;
   fcmd := TStringList.Create;
-  fdir := dir;
   li := Item;
   fExitStatus := 0;
   inherited Create(True);
