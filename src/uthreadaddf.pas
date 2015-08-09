@@ -20,7 +20,8 @@ type
     filename: string;
     filenamew: string;
     filenum: integer;
-    fcmd: TStringList;
+    fcmd: string;
+    fpar: TStringList;
     fStatus: string;
     fExitStatus: integer;
     procedure DataGet;
@@ -49,7 +50,8 @@ begin
   dt := Now;
   fStopIfError := frmGUIta.chkStopIfError.Checked;
   filenum := -1;
-  fcmd.Clear;
+  fcmd := '';
+  fpar.Clear;
   while Files2Add.Count > 0 do
   begin
     jo := TJob(Files2Add.Items[0]);
@@ -60,11 +62,15 @@ begin
       filenamew := jo.f[l].getval(sMyFilename);
       filename := myGetAnsiFN(filenamew);
       s := LowerCase(ExtractFileExt(filename));
+      fpar.Add('-show_format');
+      fpar.Add('-show_streams');
       if s = '.vob' then
-        s := ' -show_format -show_streams -analyzeduration 100M -probesize 100M "' + filename + '"'
-      else
-        s := ' -show_format -show_streams "' + filename + '"';
-      fcmd.Add(frmGUIta.myStrReplace('"$ffprobe"') + s);
+      begin
+        fpar.Add('-analyzeduration'); fpar.Add('100M');
+        fpar.Add('-probesize');       fpar.Add('100M');
+      end;
+      fpar.Add(filename);
+      fcmd := frmGUIta.myStrReplace('$ffprobe');
       filenum := l;
       Break;
     end;
@@ -73,7 +79,7 @@ begin
     else
       Break;
   end;
-  if fcmd.Count > 0 then
+  if fcmd > '' then
   begin
     frmGUIta.SynMemo6.Clear;
     frmGUIta.StatusBar1.SimpleText := filenamew;
@@ -130,11 +136,13 @@ begin
     sl.Text := myBetween(s, '[STREAM]', '[/STREAM]');
     if (sl.Text = '') then
       Break;
-    k := Length(jo.f[filenum].s);
-    SetLength(jo.f[filenum].s, k + 1);
-    SetLength(jo.m, Length(jo.m) + 1); //add for map tracks
-    jo.m[High(jo.m)] := IntToStr(filenum) + ':' + IntToStr(k);
-    jo.f[filenum].s[k] := TCont.Create;
+    //k := Length(jo.f[filenum].s);
+    //SetLength(jo.f[filenum].s, k + 1);
+    //SetLength(jo.m, Length(jo.m) + 1); //add for map tracks
+    //jo.m[High(jo.m)] := IntToStr(filenum) + ':' + IntToStr(k);
+    //jo.f[filenum].s[k] := TCont.Create;
+    k := jo.f[filenum].AddStream;
+    jo.AddMap(IntToStr(filenum) + ':' + IntToStr(k));
     for i := 0 to sl.Count - 1 do
     begin
       j := Pos('=', sl[i]);
@@ -325,76 +333,10 @@ procedure TThreadAddF.ShowSynMemo;
 begin
   frmGUIta.SynMemo6.Lines.Add(fStatus);
 end;
-{
-procedure TThreadAddF.Execute;
-const
-  READ_BYTES = 2048;
-var
-  MemStream: TMemoryStream;
-  NumBytes, BytesRead: integer;
-  sl: TStringList;
-  i: integer;
-  b: boolean;
-begin
-  b := True;
-  while (not Terminated) and b do //?
-  begin
-    BytesRead := 0;
-    sl := Nil;
-    MemStream := TMemoryStream.Create;
-    pr := TProcessUTF8.Create(nil);
-    try
-      Synchronize(@DataGet);
-      if fcmd <> '' then
-      begin
-        fStatus := fcmd;
-        Synchronize(@ShowJournal);
-        Synchronize(@ShowStatus1);
-        Synchronize(@ShowSynMemo);
-        pr.CommandLine := fcmd;
-        pr.Options := [poUsePipes, poStderrToOutPut];
-        pr.ShowWindow := swoHide;
-        pr.Execute;
-        // read while the process is running
-        while pr.Running do begin
-          MemStream.SetSize(BytesRead + READ_BYTES); // make sure we have room
-          // try reading it
-          NumBytes := pr.Output.Read((MemStream.Memory + BytesRead)^, READ_BYTES);
-          if NumBytes > 0 then
-            Inc(BytesRead, NumBytes)
-          else                                       // no data, wait 10 ms
-            Sleep(10);
-        end;
-        // read last part
-        repeat
-          MemStream.SetSize(BytesRead + READ_BYTES);
-          NumBytes := pr.Output.Read((MemStream.Memory + BytesRead)^, READ_BYTES);
-          if NumBytes > 0 then
-            Inc(BytesRead, NumBytes);
-        until NumBytes <= 0;
-        MemStream.SetSize(BytesRead);
-        sl := TStringList.Create;
-        sl.LoadFromStream(MemStream);
-        for i := 0 to sl.Count - 1 do
-        begin
-          fStatus := sl[i];
-          Synchronize(@ShowSynMemo);
-        end;
-        Synchronize(@DataOut);
-      end
-      else
-        b := False;
-    finally
-      sl.Free;
-      pr.Free;
-      MemStream.Free;
-    end;
-  end;
-end;
-}
+
 procedure TThreadAddF.Execute;
 var
-  scmd, Buffer, s, t: string;
+  Buffer, s, t: string;
   BytesAvailable: DWord;
   BytesRead: longint;
   i, j: integer;
@@ -403,30 +345,25 @@ begin
   while (not Terminated) and (fExitStatus = 0) do
   begin
     Synchronize(@DataGet);
-    if fcmd.Count = 0 then
+    if fcmd = '' then
       Exit;
-    while (not Terminated) and (fcmd.Count > 0) and (fExitStatus = 0) do
+    while (not Terminated) and (fcmd > '') and (fExitStatus = 0) do
     begin
       fExitStatus := -1;
-      scmd := fcmd[0];
-      fcmd.Delete(0);
-      if scmd = '' then
-      begin
-        fStatus := mes[6] + ': ' + mes[11];
-        Synchronize(@ShowSynMemo);
-        Break;
-      end;
-      fStatus := scmd;
+      fStatus := fcmd + ' ' + StringReplace(fpar.Text, LineEnding, ' ', [rfReplaceAll]);
       Synchronize(@ShowJournal);
       Synchronize(@ShowStatus1);
       Synchronize(@ShowSynMemo);
       pr := TProcessUTF8.Create(nil);
       try
         //pr.CurrentDirectory := fdir;
-        pr.CommandLine := scmd;
+        //pr.CommandLine := scmd;
+        pr.Executable := fcmd;
+        pr.Parameters.AddStrings(fpar);
         pr.Options := [poUsePipes{$IFDEF MSWINDOWS}, poStderrToOutPut{$ENDIF}]; //without stderr - infinite run
         pr.ShowWindow := swoHIDE;
         pr.Execute;
+        fcmd := '';
         t := '';
         repeat
           Sleep(2);
@@ -457,7 +394,7 @@ begin
                 if (i = 0) or (i > j) then i := j;
                 fStatus := Copy(t, 1, Min(i, j) - 1);
                 Delete(t, 1, Max(i, j));
-                Synchronize(@ShowStatus1);
+                //Synchronize(@ShowStatus1);
                 Synchronize(@ShowSynMemo);
               end;
             until i = 0;
@@ -483,7 +420,8 @@ end;
 constructor TThreadAddF.Create(CreateSuspended: boolean);
 begin
   FreeOnTerminate := True;
-  fcmd := TStringList.Create;
+  fcmd := '';
+  fpar := TStringList.Create;
   fExitStatus := 0;
   inherited Create(CreateSuspended);
 end;

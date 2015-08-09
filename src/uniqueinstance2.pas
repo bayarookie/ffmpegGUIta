@@ -38,7 +38,7 @@ unit UniqueInstance2;
 interface
 
 uses
-  Forms, Classes, SysUtils, simpleipc, ExtCtrls;
+  Forms, Classes, SysUtils, simpleipc, ExtCtrls, fileutil;
   
 type
 
@@ -85,7 +85,7 @@ var
 begin
   Result := '';
   for i := 1 to ParamCount do
-    Result := Result + ParamStr(i) + Separator;
+    Result := Result + ParamStrUTF8(i) + Separator;
 end;
 
 { TUniqueInstance }

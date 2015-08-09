@@ -24,7 +24,7 @@ type
     ftermopts: string;
     fterm1str: boolean;
     fStopIfError: boolean;
-    fcmd: TStringList;
+    cmd: TJob;
     fmemo: TSynMemo;
     fStatus: string;
     fExitStatus: integer;
@@ -58,6 +58,7 @@ begin
   ftermopts := frmGUIta.edtxtermopts.Text;
   fterm1str := frmGUIta.chkxterm1str.Checked;
   fStopIfError := frmGUIta.chkStopIfError.Checked;
+  SetLength(cmd.f, 0);
   for i := 0 to frmGUIta.LVjobs.Items.Count - 1 do
   begin
     if frmGUIta.LVjobs.Items[i].Checked then
@@ -65,10 +66,8 @@ begin
       frmGUIta.LVjobs.Items[i].Checked := False;
       fmemo.Clear;
       jo := TJob(frmGUIta.LVjobs.Items[i].Data);
-      frmGUIta.memJournal.Lines.Add(IntToStr(num + 1) + ': '
-        + myDTtoStr(sMyDTformat, Now) + ' - ' + jo.f[0].getval(sMyFilename));
-      fcmd.Text := frmGUIta.myGetCmdFromJo(jo);
-      jo.setval('Completed', '2');
+      frmGUIta.myGetCmdFromJo(jo, cmd);
+      jo.setval(sMyCompleted, '2');
       frmGUIta.LVjobs.Refresh;
       Break;
     end;
@@ -84,9 +83,9 @@ var
   {$ENDIF}
 begin
   if fExitStatus = 0 then
-    jo.setval('Completed', '1')
+    jo.setval(sMyCompleted, '1')
   else
-    jo.setval('Completed', '3');
+    jo.setval(sMyCompleted, '3');
   fno := jo.getval(frmGUIta.edtOfn.Name);
   {$IFDEF MSWINDOWS}
   fnoa := jo.getval(frmGUIta.edtOfna.Name);
@@ -154,54 +153,52 @@ var
   scmd, Buffer, s, t: string;
   BytesAvailable: DWord;
   BytesRead: longint;
-  i, j: integer;
-  sl: TStringList;
+  i, j, k, l: integer;
 begin
   //scp := GetConsoleTextEncoding;
   while not Terminated and (fExitStatus = 0) do
   begin
     Synchronize(@DataGet);
-    if fcmd.Count = 0 then
+    if Length(cmd.f) = 0 then
       Exit;
-    while not Terminated and (fExitStatus = 0) and (fcmd.Count > 0) do
+    for l := 0 to High(cmd.f) do
     begin
       fExitStatus := -1;
-      scmd := fcmd[0];
-      fcmd.Delete(0);
-      if scmd = '' then
-      begin
-        fStatus := mes[6] + ': ' + mes[11];
-        Synchronize(@ShowSynMemo);
-        Break;
-      end;
-      fStatus := IntToStr(num + 1) + ': ' + scmd;
+      scmd := cmd.f[l].getval(sMyFilename);
+      t := '';
+      for k := 0 to High(cmd.f[l].s) do
+        t := t + frmGUIta.myGetStr(cmd.f[l].s[k].sv);
+      fStatus := IntToStr(num + 1) + ': ' + myDTtoStr(sMyDTformat, Now) + ' - ' + scmd + ' ' + t;
       Synchronize(@ShowJournal);
       Synchronize(@ShowStatus1);
       Synchronize(@ShowSynMemo);
       pr := TProcessUTF8.Create(nil);
       try
-        //pr.CurrentDirectory := fdir;
         if fterm_use then
         begin
           pr.Executable := fterminal;
           pr.Parameters.Add(ftermopts);
           if fterm1str then
-            pr.Parameters.Add(scmd)
+            pr.Parameters.Add(frmGUIta.myEscapeStr(scmd) + ' ' + t)
           else
           begin
-            sl := TStringList.Create;
-            process.CommandToList(scmd, sl);
-            for i := 0 to sl.Count - 1 do
-              pr.Parameters.Add(sl[i]);
-            sl.Free;
+            for k := 0 to High(cmd.f[l].s) do
+            for i := 0 to High(cmd.f[l].s[k].sv) do
+              pr.Parameters.Add(cmd.f[l].s[k].sv[i]);
           end;
         end
         else
-          pr.CommandLine := scmd;
+        begin
+          pr.Executable := scmd;
+          for k := 0 to High(cmd.f[l].s) do
+          for i := 0 to High(cmd.f[l].s[k].sv) do
+            pr.Parameters.Add(cmd.f[l].s[k].sv[i]);
+        end;
         pr.Options := [poUsePipes, poStderrToOutPut];
         pr.ShowWindow := swoHIDE;
         pr.Execute;
         t := '';
+
         repeat
           Sleep(2);
           BytesAvailable := pr.Output.NumBytesAvailable;
@@ -221,7 +218,7 @@ begin
               begin
                 if (j > i + 1) then
                   j := i;
-                fStatus := Copy(t, 1, i - 1);
+                fStatus := IntToStr(num + 1) + ': ' + TimeToStr(Now - dt) + ' ' + Copy(t, 1, i - 1);
                 Delete(t, 1, Max(i, j));
                 Synchronize(@ShowStatus1);
               end
@@ -234,7 +231,7 @@ begin
                   i := j;
                 fStatus := Copy(t, 1, Min(i, j) - 1);
                 Delete(t, 1, Max(i, j));
-                Synchronize(@ShowStatus1);
+                //Synchronize(@ShowStatus1);
                 Synchronize(@ShowSynMemo);
               end;
             until i = 0;
@@ -250,6 +247,7 @@ begin
       finally
         pr.Free;
       end;
+      if fExitStatus <> 0 then Break;
     end;
     Synchronize(@DataOut);
     if not fStopIfError and (fExitStatus <> 0) then
@@ -260,7 +258,7 @@ end;
 constructor TThreadConv.Create(threadnum: integer);
 begin
   FreeOnTerminate := True;
-  fcmd := TStringList.Create;
+  cmd := TJob.Create;
   num := threadnum;
   fExitStatus := 0;
   inherited Create(True);

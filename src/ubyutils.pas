@@ -19,14 +19,12 @@ function myUnExpandEnv2(Path, Env: string): string;
 function myUnExpandEnvs(Path: string): string;
 function myRealToTimeStr(rt: double; full: boolean = True): string;
 function myTimeStrToReal(s: string): double;
-{$IFDEF MSWINDOWS}
-function myGetAnsiFN(wfn: string; bCreateSymLink: boolean = False): string;
-{$ELSE}
 function myGetAnsiFN(wfn: string): string;
-{$ENDIF}
 procedure myGetListFromStr(s, sep: string; List: TStrings);
 function myGetOutFN(Dir, Inp, Ext: string): string;
+{$IFDEF MSWINDOWS}
 function myGetOutFNa(Dir, Inp, Ext: string): string;
+{$ENDIF}
 function myBetween(var s: string; const s1, s2: string): string;
 procedure myExecProc(Path: string; ComLine: array of string; sw: TShowWindowOptions = swoShowNormal);
 procedure myExecProc1(ComLine: string; sw: TShowWindowOptions = swoShowNormal);
@@ -36,6 +34,8 @@ function myGetLocaleLanguage: string;
 function myDTtoStr(FormatStr: string; DateTime: TDateTime): string;
 
 implementation
+
+uses ufrmGUIta;
 
 function myGetFileSize(fn: string; short: boolean = False): string;
 var
@@ -282,8 +282,40 @@ begin
     raise Exception.Create(SysErrorMessage(GetLastError));
 end;
 
-function SetFileShortNameW(hFile: THandle; ShortName: PWideChar): longbool; stdcall;
-  external 'kernel32.dll' Name 'SetFileShortNameW';
+//function SetFileShortNameW(hFile: THandle; ShortName: PWideChar): longbool; stdcall;
+//  external 'kernel32.dll' Name 'SetFileShortNameW';
+type
+  TSetFileShortNameW = function(
+    hFile: THandle;
+    ShortName: PWideChar): BOOL; stdcall;
+type
+  TCreateSymbolicLinkW = function(
+    pwcSymlinkFileName,
+    pwcTargetFileName: PWideChar;
+    dwFlags: DWORD): BOOL; stdcall;
+
+function myCanCreateDosNam: boolean;
+var
+  Reg: TRegistry;
+  i: integer;
+begin
+  //HKLM\SYSTEM\CurrentControlSet\Control\FileSystem, NtfsDisable8dot3NameCreation = 1, default = 2
+  Reg := TRegistry.Create;
+  try
+    Reg.RootKey := HKEY_LOCAL_MACHINE;
+    if Reg.OpenKeyReadOnly('\SYSTEM\CurrentControlSet\Control\FileSystem') then
+      i := Reg.ReadInteger('NtfsDisable8dot3NameCreation');
+    Reg.CloseKey;
+  except
+    on E: Exception do
+      frmGUIta.myError(-1, E.Message);
+  end;
+  Reg.Free;
+  if i = 1 then
+    frmGUIta.myError(1, 'Short filename creating are disabled: '
+    + 'HKLM\SYSTEM\CurrentControlSet\Control\FileSystem\NtfsDisable8dot3NameCreation = ' + IntToStr(i));
+  Result := i <> 1;
+end;
 
 function myGenDosNam1(f: string; l: integer): string;
 var
@@ -307,7 +339,7 @@ begin
   Result := Copy(Result, 1, l);
 end;
 
-function myGenDosNam2(f: string): string;
+function myGenDosName(f: string): string;
 var
   FullPath, ext, w: string;
   i: integer;
@@ -325,75 +357,92 @@ end;
 
 function mySetFileShortName(wfn: string): boolean;
 var
-  Reg: TRegistry;
   w: string;
-  i: integer;
-  h: THandle;
+  h, f: THandle;
+  SetFileShortNameW: TSetFileShortNameW;
 begin
-//HKLM\SYSTEM\CurrentControlSet\Control\FileSystem, NtfsDisable8dot3NameCreation = 1, default = 2
-  Reg := TRegistry.Create;
-  try
-    Reg.RootKey := HKEY_LOCAL_MACHINE;
-    if Reg.OpenKeyReadOnly('\SYSTEM\CurrentControlSet\Control\FileSystem') then
-      i := Reg.ReadInteger('NtfsDisable8dot3NameCreation');
-    Reg.CloseKey;
-  except
-    on E: Exception do
-      ShowMessage(E.Message);
-  end;
-  Reg.Free;
-  if i = 1 then
-  begin
-    ShowMessage('Cannot set short filename for:' + LineEnding + wfn + LineEnding
-    + 'HKLM\SYSTEM\CurrentControlSet\Control\FileSystem, NtfsDisable8dot3NameCreation = 1');
-    Exit;
-  end;
-  //generate name
-  w := myGenDosNam2(wfn);
+  if not myCanCreateDosNam then Exit;
   if not NTSetPrivilege('SeRestorePrivilege', True) then
   begin
-    ShowMessage('Cannot get privilege to create short filename for ' + wfn);
+    frmGUIta.myError(2, 'Cannot get privilege to create short filename for ' + wfn);
     Exit;
   end;
-  h := CreateFileW(PWideChar(UTF8Decode(wfn)), GENERIC_ALL, FILE_SHARE_WRITE,
+  h := GetModuleHandle('kernel32.dll');
+  if h = 0 then
+  begin
+    frmGUIta.myError(3, 'Can not load library "kernel32.dll"');
+    Exit;
+  end;
+  SetFileShortNameW := TSetFileShortNameW(GetProcAddress(h, 'SetFileShortNameW'));
+  if not Assigned(SetFileShortNameW) then
+  begin
+    frmGUIta.myError(4, 'Can not get function address for "SetFileShortNameW"');
+    Exit;
+  end;
+  f := CreateFileW(PWideChar(UTF8Decode(wfn)), GENERIC_ALL, FILE_SHARE_WRITE,
     nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
-  if h = INVALID_HANDLE_VALUE then
-    ShowMessage('Error creating short filename. Cannot get handle for:' + LineEnding
-    + wfn + LineEnding + 'maybe, not NTFS, or no rights. Copy file or create symlink.')
+  if f = INVALID_HANDLE_VALUE then
+    frmGUIta.myError(5, 'Create short filename. Cannot get handle for: '
+    + wfn + ', maybe nave no rights. Copy file or create symlink.')
   else
   begin
-    Result := SetFileShortNameW(h, PWideChar(UTF8Decode(w)));
+    //generate 8.3 name, it needs to be improved
+    w := ExtractFileName(myGenDosName(wfn));
+    Result := SetFileShortNameW(f, PWideChar(UTF8Decode(w)));
     if not Result then
-      ShowMessage('Cannot set short filename to ' + wfn);
+      frmGUIta.myError(6, 'Cannot set short filename: ' + w + ' ' + wfn + ' -> Copy file or create symlink.');
   end;
-  CloseHandle(h);
+  CloseHandle(f);
 end;
 
-type
-  TCreateSymbolicLinkW = function(
-    pwcSymlinkFileName,
-    pwcTargetFileName: PWideChar;
-    dwFlags: DWORD): BOOL; stdcall;
+function myGenSymLnkNam(linkdir, target: string): string;
+var
+  w, ext: string;
+  i: integer;
+begin
+  if myCanCreateDosNam then
+  begin
+    w := ExtractFileName(target);
+  end
+  else
+  begin
+    ext := myGenDosNam1(ExtractFileExt(target), 4);
+    i := 0;
+    repeat
+      Inc(i);
+      w := myGenDosNam1(ExtractFileNameOnly(target), 7 - Length(IntToStr(i))) + '~' + IntToStr(i) + ext;
+      //if FileExistsUTF8(linkdir + w) then
+      //begin
+      //  if link.target = target
+      //end
+      //else
+        i := 999999;
+    until (i = 999999);
+  end;
+  Result := linkdir + w;
+end;
 
 function myCreateSymLink(link, target: string): boolean;
 var
   h: THandle;
   CreateSymbolicLinkW: TCreateSymbolicLinkW;
 begin
-  Result := False;
+  Result := FileExistsUTF8(link);
+  if Result then Exit; //or delete?
   h := GetModuleHandle('kernel32.dll');
   if h = 0 then
   begin
-    ShowMessage('Can not load library "kernel32.dll"');
+    frmGUIta.myError(7, 'Can not load library "kernel32.dll"');
     Exit;
   end;
   CreateSymbolicLinkW := TCreateSymbolicLinkW(GetProcAddress(h, 'CreateSymbolicLinkW'));
   if not Assigned(CreateSymbolicLinkW) then
   begin
-    ShowMessage('Can not get function address for "CreateSymbolicLinkW"');
+    frmGUIta.myError(8, 'Can not get function address for "CreateSymbolicLinkW"');
     Exit;
   end;
-  Result := CreateSymbolicLinkW(PWideChar(UTF8Decode(link)), PWideChar(UTF8Decode(target)), 0);
+  if FileExistsUTF8(target) then
+    Result := CreateSymbolicLinkW(PWideChar(UTF8Decode(link)), PWideChar(UTF8Decode(target)), 0);
 end;
 
 function myCheckAnsi(s: string): boolean;
@@ -406,7 +455,7 @@ begin
   Result := (w > '') and (Pos('?', w) = 0) and (FileExistsUTF8(w) or DirectoryExistsUTF8(w));
 end;
 
-function myGet127FN(wfn: string; bCreateSymLink: boolean = False): string;
+function myGet127FN(wfn: string): string;
 var
   s, FullPath: string;
   i: integer;
@@ -414,42 +463,58 @@ var
 begin
   FullPath := ExtractFileDir(wfn);
   if (FullPath <> ExtractFileDrive(FullPath)+'\') then
-    FullPath := myGet127FN(FullPath, False);
+    FullPath := myGet127FN(FullPath);
   Result := ExtractShortPathNameUTF8(wfn);
   s := ExtractFileName(Result);
+  if s = '' then
+  begin
+    if frmGUIta.chkCreateDosFN.Checked and mySetFileShortName(wfn) then
+      Result := ExtractShortPathNameUTF8(wfn);
+  end
+  else
   for i := 1 to Length(s) do
   begin
     c := s[i];
-    if word(c) > 127 then
+    if (word(c) > 127) then //error of oem ansi converting
     begin
-      if mySetFileShortName(s) then
-        Result := ExtractShortPathNameUTF8(s);
+      if frmGUIta.chkCreateDosFN.Checked and mySetFileShortName(wfn) then
+        Result := ExtractShortPathNameUTF8(wfn);
       Break;
     end;
   end;
 end;
 
-function myGetAnsiFN(wfn: string; bCreateSymLink: boolean = False): string;
+function myGetAnsiFN(wfn: string): string;
 begin
+  Result := wfn;
+  //if Pos('?', wfn) > 0 then
+  if not (FileExistsUTF8(wfn) or DirectoryExistsUTF8(wfn)) then
+  begin
+    frmGUIta.myError(9, 'incorrect filename? - ' + wfn);
+    Exit;
+  end;
   //ffmpeg tickets: #4697 https://trac.ffmpeg.org/ticket/4697 and #819 https://trac.ffmpeg.org/ticket/819
   if Pos(LowerCase(ExtractFileExt(wfn)), '.jpg .jpeg') = 0 then
   begin
     //ansi chars?
-    Result := wfn;
     if myCheckAnsi(Result) then Exit;
     //non ansi chars
     Result := ExtractShortPathNameUTF8(wfn);
     if myCheckAnsi(Result) then Exit;
   end;
+  //something is wrong, trying to get 8.3 name
   Result := myGet127FN(wfn);
   if myCheckAnsi(Result) then Exit;
   //maybe, network drive with no msdos file system
   //create symlink to network file and return as result
-  if bCreateSymLink then
+  if frmGUIta.chkCreateSymLink.Checked then
   begin
-    Result := myGenDosNam2(myExpandEnv('%TEMP%\') + wfn);
+    Result := myGenSymLnkNam(myExpandEnv('%TEMP%\'), wfn);
     if myCreateSymLink(Result, wfn) then
+    begin
+      Result := ExtractShortPathNameUTF8(Result);
       if myCheckAnsi(Result) then Exit;
+    end;
   end;
   //surrender
 {$ELSE}
@@ -512,10 +577,12 @@ begin
   end;
 end;
 
+{$IFDEF MSWINDOWS}
 function myGetOutFNa(Dir, Inp, Ext: string): string;
 begin
-  Result := myGetOutFN(myGetAnsiFN(myExpandEnv(Dir)), myGetAnsiFN(Inp), Ext);
+  Result := myGetOutFN(myGetAnsiFN(myExpandEnv(Dir)), Inp, Ext);
 end;
+{$ENDIF}
 
 function myBetween(var s: string; const s1, s2: string): string;
 var

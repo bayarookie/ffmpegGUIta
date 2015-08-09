@@ -23,7 +23,7 @@ type
     fterminal: string;
     ftermopts: string;
     fterm1str: boolean;
-    fcmd: TStringList;
+    cmd: TJob;
     fStatus: string;
     d, e: double;
     fExitStatus: integer;
@@ -55,12 +55,10 @@ begin
   fterminal := frmGUIta.edtxterm.Text;
   ftermopts := frmGUIta.edtxtermopts.Text;
   fterm1str := frmGUIta.chkxterm1str.Checked;
-  fcmd.Clear;
   frmGUIta.SynMemo5.Clear;
   jo := TJob(li.Data);
-  frmGUIta.memJournal.Lines.Add(myDTtoStr(sMyDTformat, Now)
-    + ' - ' + jo.f[0].getval(sMyFilename));
-  fcmd.Text := frmGUIta.myGetCmdFromJo(jo, 1);
+  cmd := TJob.Create;
+  frmGUIta.myGetCmdFromJo(jo, cmd, 1);
   jo.setval('Completed', '2');
   frmGUIta.LVjobs.Refresh;
 end;
@@ -147,25 +145,21 @@ var
   scmd, Buffer, t: string;
   BytesAvailable: DWord;
   BytesRead: longint;
-  i, j: integer;
-  sl: TStringList;
+  i, j, k, l: integer;
 begin
   Synchronize(@DataGet);
-  while (not Terminated) and (fcmd.Count > 0) and (fExitStatus = 0) do
+  //while (not Terminated) and (fcmd.Count > 0) and (fExitStatus = 0) do
+  for l := 0 to High(cmd.f) do
   begin
     fExitStatus := -1;
-    scmd := fcmd[0];
-    fcmd.Delete(0);
-    if scmd = '' then
-    begin
-      fStatus := mes[6] + ': ' + mes[11];
-      Synchronize(@ShowSynMemo);
-      Break;
-    end;
+    scmd := cmd.f[l].getval(sMyFilename);
+    t := '';
+    for k := 0 to High(cmd.f[l].s) do
+      t := t + frmGUIta.myGetStr(cmd.f[l].s[k].sv);
     if fterm_use then
-      fStatus := fterminal + ' ' + ftermopts + ' ' + scmd
+      fStatus := myDTtoStr(sMyDTformat, Now) + ' - ' + fterminal + ' ' + ftermopts + ' ' + scmd + ' ' + t
     else
-      fStatus := scmd;
+      fStatus := myDTtoStr(sMyDTformat, Now) + ' - ' + scmd + ' ' + t;
     Synchronize(@ShowJournal);
     Synchronize(@Showstatus1);
     Synchronize(@ShowSynMemo);
@@ -176,18 +170,21 @@ begin
         pr.Executable := fterminal;
         pr.Parameters.Add(ftermopts);
         if fterm1str then
-          pr.Parameters.Add(scmd)
+          pr.Parameters.Add(frmGUIta.myEscapeStr(scmd) + ' ' + t)
         else
         begin
-          sl := TStringList.Create;
-          process.CommandToList(scmd, sl);
-          for i := 0 to sl.Count - 1 do
-            pr.Parameters.Add(sl[i]);
-          sl.Free;
+          for k := 0 to High(cmd.f[l].s) do
+          for i := 0 to High(cmd.f[l].s[k].sv) do
+            pr.Parameters.Add(cmd.f[l].s[k].sv[i]);
         end;
       end
       else
-        pr.CommandLine := scmd;
+      begin
+        pr.Executable := scmd;
+        for k := 0 to High(cmd.f[l].s) do
+        for i := 0 to High(cmd.f[l].s[k].sv) do
+          pr.Parameters.Add(cmd.f[l].s[k].sv[i]);
+      end;
       pr.Options := [poUsePipes, poStderrToOutPut];
       pr.ShowWindow := swoHIDE;
       pr.Execute;
@@ -208,7 +205,7 @@ begin
             if (i > 0) and (j <> i + 1) then //carrier return, no line feed
             begin
               if (j > i + 1) then j := i;
-              fStatus := Copy(t, 1, i - 1);
+              fStatus := TimeToStr(Now - dt) + ' ' + Copy(t, 1, i - 1);
               Delete(t, 1, Max(i, j));
               Synchronize(@ShowStatus1);
             end else
@@ -219,7 +216,7 @@ begin
               if (i = 0) or (i > j) then i := j;
               fStatus := Copy(t, 1, Min(i, j) - 1);
               Delete(t, 1, Max(i, j));
-              Synchronize(@ShowStatus1);
+              //Synchronize(@ShowStatus1);
               Synchronize(@ShowSynMemo);
             end;
           until i = 0;
@@ -235,6 +232,7 @@ begin
     finally
       pr.Free;
     end;
+    if fExitStatus <> 0 then Break;
   end;
   Synchronize(@DataOut);
 end;
@@ -242,7 +240,6 @@ end;
 constructor TThreadTest.Create(Item: TListItem);
 begin
   FreeOnTerminate := True;
-  fcmd := TStringList.Create;
   li := Item;
   fExitStatus := 0;
   inherited Create(True);
