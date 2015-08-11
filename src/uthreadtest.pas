@@ -142,49 +142,21 @@ end;
 
 procedure TThreadTest.Execute;
 var
-  scmd, Buffer, t: string;
+  Buffer, t: string;
   BytesAvailable: DWord;
   BytesRead: longint;
-  i, j, k, l: integer;
+  i, j, l: integer;
 begin
   Synchronize(@DataGet);
-  //while (not Terminated) and (fcmd.Count > 0) and (fExitStatus = 0) do
   for l := 0 to High(cmd.f) do
   begin
     fExitStatus := -1;
-    scmd := cmd.f[l].getval(sMyFilename);
-    t := '';
-    for k := 0 to High(cmd.f[l].s) do
-      t := t + frmGUIta.myGetStr(cmd.f[l].s[k].sv);
-    if fterm_use then
-      fStatus := myDTtoStr(sMyDTformat, Now) + ' - ' + fterminal + ' ' + ftermopts + ' ' + scmd + ' ' + t
-    else
-      fStatus := myDTtoStr(sMyDTformat, Now) + ' - ' + scmd + ' ' + t;
-    Synchronize(@ShowJournal);
-    Synchronize(@Showstatus1);
-    Synchronize(@ShowSynMemo);
     pr := TProcessUTF8.Create(nil);
     try
-      if fterm_use then
-      begin
-        pr.Executable := fterminal;
-        pr.Parameters.Add(ftermopts);
-        if fterm1str then
-          pr.Parameters.Add(frmGUIta.myEscapeStr(scmd) + ' ' + t)
-        else
-        begin
-          for k := 0 to High(cmd.f[l].s) do
-          for i := 0 to High(cmd.f[l].s[k].sv) do
-            pr.Parameters.Add(cmd.f[l].s[k].sv[i]);
-        end;
-      end
-      else
-      begin
-        pr.Executable := scmd;
-        for k := 0 to High(cmd.f[l].s) do
-        for i := 0 to High(cmd.f[l].s[k].sv) do
-          pr.Parameters.Add(cmd.f[l].s[k].sv[i]);
-      end;
+      fStatus := frmGUIta.myCmdFillPr(cmd.f[l], fterm_use, pr);
+      Synchronize(@ShowJournal);
+      Synchronize(@Showstatus1);
+      Synchronize(@ShowSynMemo);
       pr.Options := [poUsePipes, poStderrToOutPut];
       pr.ShowWindow := swoHIDE;
       pr.Execute;
