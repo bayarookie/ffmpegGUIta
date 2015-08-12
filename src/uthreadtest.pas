@@ -156,49 +156,60 @@ begin
       fStatus := frmGUIta.myCmdFillPr(cmd.f[l], fterm_use, pr);
       Synchronize(@ShowJournal);
       Synchronize(@Showstatus1);
-      Synchronize(@ShowSynMemo);
-      pr.Options := [poUsePipes, poStderrToOutPut];
-      pr.ShowWindow := swoHIDE;
-      pr.Execute;
-      t := '';
-
-      repeat
-        Sleep(2);
-        BytesAvailable := pr.Output.NumBytesAvailable;
-        BytesRead := 0;
-        while BytesAvailable > 0 do
-        begin
-          SetLength(Buffer, BytesAvailable);
-          BytesRead := pr.OutPut.Read(Buffer[1], BytesAvailable);
-          t := t + copy(Buffer, 1, BytesRead);
-          repeat
-            i := Pos(#13, t);
-            j := Pos(#10, t);
-            if (i > 0) and (j <> i + 1) then //carrier return, no line feed
-            begin
-              if (j > i + 1) then j := i;
-              fStatus := TimeToStr(Now - dt) + ' ' + Copy(t, 1, i - 1);
-              Delete(t, 1, Max(i, j));
-              Synchronize(@ShowStatus1);
-            end else
-            if ((i > 0) and (j = i + 1))  //crlf
-            or ((i = 0) and (j > 0))      //lf
-            or ((i > j) and (j > 0)) then //lf, cr
-            begin
-              if (i = 0) or (i > j) then i := j;
-              fStatus := Copy(t, 1, Min(i, j) - 1);
-              Delete(t, 1, Max(i, j));
-              //Synchronize(@ShowStatus1);
-              Synchronize(@ShowSynMemo);
-            end;
-          until i = 0;
-          BytesAvailable := pr.Output.NumBytesAvailable;
-        end;
-      until Terminated or not pr.Running;
-      if (t <> '') then
+      if fterm_use then
       begin
-        fStatus := t;
+        pr.ShowWindow := swoShowNormal;
+        pr.Execute;
+        repeat
+          Sleep(10);
+        until Terminated or not pr.Running;
+      end
+      else
+      begin
         Synchronize(@ShowSynMemo);
+        pr.Options := [poUsePipes, poStderrToOutPut];
+        pr.ShowWindow := swoHIDE;
+        pr.Execute;
+        t := '';
+
+        repeat
+          Sleep(2);
+          BytesAvailable := pr.Output.NumBytesAvailable;
+          BytesRead := 0;
+          while BytesAvailable > 0 do
+          begin
+            SetLength(Buffer, BytesAvailable);
+            BytesRead := pr.OutPut.Read(Buffer[1], BytesAvailable);
+            t := t + copy(Buffer, 1, BytesRead);
+            repeat
+              i := Pos(#13, t);
+              j := Pos(#10, t);
+              if (i > 0) and (j <> i + 1) then //carrier return, no line feed
+              begin
+                if (j > i + 1) then j := i;
+                fStatus := TimeToStr(Now - dt) + ' ' + Copy(t, 1, i - 1);
+                Delete(t, 1, Max(i, j));
+                Synchronize(@ShowStatus1);
+              end else
+              if ((i > 0) and (j = i + 1))  //crlf
+              or ((i = 0) and (j > 0))      //lf
+              or ((i > j) and (j > 0)) then //lf, cr
+              begin
+                if (i = 0) or (i > j) then i := j;
+                fStatus := Copy(t, 1, Min(i, j) - 1);
+                Delete(t, 1, Max(i, j));
+                //Synchronize(@ShowStatus1);
+                Synchronize(@ShowSynMemo);
+              end;
+            until i = 0;
+            BytesAvailable := pr.Output.NumBytesAvailable;
+          end;
+        until Terminated or not pr.Running;
+        if (t <> '') then
+        begin
+          fStatus := t;
+          Synchronize(@ShowSynMemo);
+        end;
       end;
       fExitStatus := pr.ExitStatus;
     finally

@@ -325,6 +325,7 @@ type
     procedure chkPlayer3Change(Sender: TObject);
     procedure chkSynColorChange(Sender: TObject);
     procedure chkMetadataWorkChange(Sender: TObject);
+    procedure chkUseEditedCmdChange(Sender: TObject);
     procedure chkUseMasksChange(Sender: TObject);
     procedure cmbBitrateAChange(Sender: TObject);
     procedure cmbBitrateVChange(Sender: TObject);
@@ -1296,9 +1297,18 @@ var
   end;
 
 begin
-  if (jo.getval(chkUseEditedCmd.Name) = '1') then
+  if (jo.getval(chkUseEditedCmd.Name) = '1') and (mode = 0) then
   begin
-    myCmdFill1(jo.getval(memCmdlines.Name), cmd);
+    //myCmdFill1(jo.getval(memCmdlines.Name), cmd);
+    sl := TStringList.Create;
+    sl.Text := jo.getval(memCmdlines.Name);
+    for i := 0 to sl.Count - 1 do
+    begin
+      l := cmd.AddFile('');
+      k := cmd.f[l].AddStream;
+      cmd.f[l].s[k].addval('1', sl[i]);
+    end;
+    sl.Free;
     Exit;
   end;
   // -ss input, output, test
@@ -1326,7 +1336,6 @@ begin
     myGetss4Compare(jo, rst, rtt);
   end;
   // init vars
-  //si := '';
   fc2 := '';
   fi := '';
   vi := '';
@@ -1355,7 +1364,6 @@ begin
       if (rsi < rst) then
         ssi := sst;
     end;
-    //si := si + IfThen(ssi <> '', ' -ss ' + ssi);
     if ssi <> '' then begin d.addval('', '-ss'); d.addval('', ssi); end;
     sti := jo.f[l].getval(cmbDurationt1.Name);
     if (mode = 1) and (rto = 0) then
@@ -1364,10 +1372,8 @@ begin
       if (rti = 0) or (rti > rtt) then
         sti := stt;
     end;
-    //si := si + IfThen(sti <> '', ' -t ' + sti);
     if sti <> '' then begin d.addval('', '-t'); d.addval('', sti); end;
     s := jo.f[l].getval(cmbAddOptsI.Name);
-    //si := si + IfThen(s <> '', ' ' + s);
     if s <> '' then myaddvals(s, d);
     {$IFDEF MSWINDOWS}
     s := jo.f[l].getval(sMyDOSfname);
@@ -1376,13 +1382,11 @@ begin
     {$ENDIF}
     if LowerCase(ExtractFileExt(s)) = '.vob' then
     begin
-      //si := si + ' -analyzeduration 100M -probesize 100M -i ' + QuotedStr(s)
       d.addval('', '-analyzeduration');
       d.addval('', '100M');
       d.addval('', '-probesize');
       d.addval('', '100M');
     end;
-    //si := si + ' -i ' + QuotedStr(s);
     d.addval('', '-i');
     d.addval('', s);
   end;
@@ -1510,10 +1514,10 @@ begin
       fnoa := myGetOutFNa(ExtractFilePath(fnoa), jo.f[0].getval(sMyDOSfname), ExtractFileExt(fnoa));
       jo.setval(edtOfna.Name, fnoa);
     end;
-    fn1 := ' -y NUL'; // + jo.getval(cmbExt.Name);
+    fn1 := 'NUL';
     {$ELSE}
-    fnoa := fno;
     fn1 := '/dev/null';
+    fnoa := fno;
     {$ENDIF}
     fn2 := fnoa;
   end
@@ -1532,29 +1536,19 @@ begin
     k := cmd.f[l].AddStream;
     for i := 0 to High(d.sv) do
       cmd.f[l].s[k].addval(IntToStr(i), d.sv[i]);
-    sl := TStringList.Create;
-    process.CommandToList(s, sl);
-    for i := 0 to sl.Count - 1 do
-      cmd.f[l].s[k].addval(IntToStr(i), sl[i]);
-    sl.Free;
+    myaddvals(s, cmd.f[l].s[k]);
     cmd.f[l].s[k].addval('fn1', fn1);
     //2nd pass
     s := fi + vi + au + su + ma + sp2 + so; // + fn2
   end
   else
-  begin
     s := fi + vi + au + su + ma + so; // + fn2;
-  end;
   s := myStrReplace(s, jo);
   l := cmd.AddFile(myStrReplace('$ffmpeg'));
   k := cmd.f[l].AddStream;
   for i := 0 to High(d.sv) do
     cmd.f[l].s[k].addval(IntToStr(i), d.sv[i]);
-  sl := TStringList.Create;
-  process.CommandToList(s, sl);
-  for i := 0 to sl.Count - 1 do
-    cmd.f[l].s[k].addval(IntToStr(i), sl[i]);
-  sl.Free;
+  myaddvals(s, cmd.f[l].s[k]);
   cmd.f[l].s[k].addval('fn2', fn2);
 end;
 
@@ -2155,9 +2149,6 @@ var
       else if c[k] is TPanel then
         for i := 0 to TPanel(c[k]).ControlCount - 1 do
           myLng1([TPanel(c[k]).Controls[i]])
-      //else if c[k] is TScrollBox then
-      //  for i := 0 to TScrollBox(c[k]).ControlCount - 1 do
-      //    myLng1([TScrollBox(c[k]).Controls[i]])
       else if c[k] is TTabSheet then
       begin
         with TTabSheet(c[k]) do
@@ -3022,8 +3013,8 @@ begin
   {$ELSE}
   s := jo.f[l].getval(sMyFilename);
   {$ENDIF}
-  cmd.f[0].s[0].addval('4', '-i');
-  cmd.f[0].s[0].addval('5', s);
+  cmd.f[0].s[0].addval('8', '-i');
+  cmd.f[0].s[0].addval('9', s);
   j := -1;
   for i := 0 to High(jo.f[l].s) do
   begin
@@ -3031,19 +3022,22 @@ begin
       inc(j); //count video tracks
     if i = k then Break;
   end;
-  //si := si + ' -frames:v 20 -filter:v:' + IntToStr(j)
-  //+ ' "framestep=60, cropdetect" -an -sn -map 0:' + IntToStr(k) + ' -f avi -';
-  cmd.f[0].s[0].addval('6', '-frames:v');
-  cmd.f[0].s[0].addval('7', '20');
-  cmd.f[0].s[0].addval('8', '-filter:v:' + IntToStr(j)); //video track number
-  cmd.f[0].s[0].addval('9', 'framestep=60, cropdetect');
-  cmd.f[0].s[0].addval('10', '-an');
-  cmd.f[0].s[0].addval('11', '-sn');
-  cmd.f[0].s[0].addval('12', '-map');
-  cmd.f[0].s[0].addval('13', '0:' + IntToStr(k)); //stream number
-  cmd.f[0].s[0].addval('14', '-f');
-  cmd.f[0].s[0].addval('15', 'avi');
-  cmd.f[0].s[0].addval('16', '-');
+  cmd.f[0].s[0].addval('10', '-frames:v');
+  cmd.f[0].s[0].addval('11', '20');
+  cmd.f[0].s[0].addval('12', '-filter:v:' + IntToStr(j)); //video track number
+  cmd.f[0].s[0].addval('13', 'framestep=60, cropdetect');
+  cmd.f[0].s[0].addval('14', '-an');
+  cmd.f[0].s[0].addval('15', '-sn');
+  cmd.f[0].s[0].addval('16', '-map');
+  cmd.f[0].s[0].addval('17', '0:' + IntToStr(k)); //stream number
+  cmd.f[0].s[0].addval('18', '-f');
+  cmd.f[0].s[0].addval('19', 'avi');
+  cmd.f[0].s[0].addval('20', '-y');
+  {$IFDEF MSWINDOWS}
+  cmd.f[0].s[0].addval('21', 'NUL');
+  {$ELSE}
+  cmd.f[0].s[0].addval('21', '/dev/null');
+  {$ENDIF}
   myGetDosOut(cmd, SynMemo2);
   s := SynMemo2.Text;
   sl := TStringList.Create;
@@ -3232,9 +3226,16 @@ begin
 end;
 
 function TfrmGUIta.myEscapeStr(Str: string): string;
-//this code from Double Commander, it needs to upgrade
+{$IFDEF MSWINDOWS}
+begin
+  if Pos(' ', Str) > 0 then
+    Result := '"' + Str + '"'
+  else
+    Result := Str;
+{$ELSE}
+//this code from Double Commander, it needs to be improved
 const
-  NoQuotesSpecialChars = [' ', '"', '''', '(', ')', ':', '&', '!', '$', '*', '?', '=', '`', '\', #10];
+  NoQuotesSpecialChars = [' ', '"', '''', '(', ')', '&', '!', '$', '*', '?', '=', '`', '\', #10];
 var
   StartPos: Integer = 1;
   CurPos: Integer = 1;
@@ -3250,6 +3251,7 @@ begin
     Inc(CurPos);
   end;
   Result := Result + Copy(Str, StartPos, CurPos - StartPos);
+{$ENDIF}
 end;
 
 function TfrmGUIta.myGetStr(a: array of string): string;
@@ -3289,7 +3291,7 @@ begin
   Result := '';
   for l := 0 to High(cmd.f) do
   begin
-    Result := Result + cmd.f[l].getval(sMyFilename) + ' ';
+    Result := Result + myGetStr(cmd.f[l].getval(sMyFilename));
     for k := 0 to High(cmd.f[l].s) do
       Result := Result + myGetStr(cmd.f[l].s[k].sv);
     Result := Result + LineEnding;
@@ -3303,9 +3305,16 @@ var
   sl: TStringList;
 begin
   scmd := fil.getval(sMyFilename);
+  if (scmd = '') then
+  begin
+    if (Length(fil.s) > 0) and (Length(fil.s[0].sv) > 0) then
+      Result := fil.s[0].sv[0];
+    pr.CommandLine := Result;
+    Exit;
+  end;
   t := '';
   for k := 0 to High(fil.s) do
-    t := t + frmGUIta.myGetStr(fil.s[k].sv);
+    t := t + myGetStr(fil.s[k].sv);
   if b then
   begin
     pr.Executable := edtxterm.Text;
@@ -3315,7 +3324,7 @@ begin
       pr.Parameters.Add(sl[i]);
     sl.Free;
     if chkxterm1str.Checked then
-      pr.Parameters.Add(myEscapeStr(scmd) + ' ' + t)
+      pr.Parameters.Add(myGetStr(scmd) + ' ' + t)
     else
     begin
       for k := 0 to High(fil.s) do
@@ -3573,19 +3582,19 @@ begin
   if LVjobs.Selected <> nil then
     jo := TJob(LVjobs.Selected.Data);
   s := myStrReplace(cmbRunCmd.Text, jo);
+  sl := TStringList.Create;
+  process.CommandToList(s, sl);
+  if sl.Count > 0 then
+  begin
+    cmd := TJob.Create;
+    cmd.AddFile(sl[0]);
+    cmd.f[0].AddStream;
+    for i := 1 to sl.Count - 1 do
+      cmd.f[0].s[0].addval(IntToStr(i), sl[i]);
+  end;
+  sl.Free;
   if chkRunInTerm.Checked then
   begin
-    sl := TStringList.Create;
-    process.CommandToList(s, sl);
-    if sl.Count > 0 then
-    begin
-      cmd := TJob.Create;
-      cmd.AddFile(sl[0]);
-      cmd.f[0].AddStream;
-      for i := 1 to sl.Count - 1 do
-        cmd.f[0].s[0].addval(IntToStr(i), sl[i]);
-    end;
-    sl.Free;
     p := TProcessUTF8.Create(nil);
     myCmdFillPr(cmd.f[0], True, p);
     p.Execute;
@@ -3593,7 +3602,7 @@ begin
   end
   else
   if chkRunInMem.Checked then
-    myGetDosOut2(s, SynMemo2)
+    myGetDosOut(cmd, SynMemo2)
   else
   begin
     if (ThreadCmdr <> nil) then
@@ -4475,6 +4484,16 @@ begin
   {$ENDIF}
 end;
 
+procedure TfrmGUIta.chkUseEditedCmdChange(Sender: TObject);
+begin
+  if bUpdFromCode then Exit;
+  xmyChange0(Sender);
+  if chkUseEditedCmd.Checked then
+    xmyChange0(memCmdlines)
+  else
+    TabCmdlineShow(nil);
+end;
+
 procedure TfrmGUIta.chkUseMasksChange(Sender: TObject);
 var
   b: boolean;
@@ -4792,13 +4811,13 @@ begin
     edtxtermopts.Text := '-e';
     chkxterm1str.Checked := True;
   end else
-  if edtxterm.Text = '/usr/bin/x-terminal-emulator' then begin
-    edtxtermopts.Text := '-e';
-    chkxterm1str.Checked := False;
+  if edtxterm.Text = '/usr/bin/konsole' then begin
+    edtxtermopts.Text := '--nofork -e';
+    chkxterm1str.Checked := True;
   end else
   if edtxterm.Text = '/usr/bin/gnome-terminal' then begin
     edtxtermopts.Text := '-x';
-    chkxterm1str.Checked := False;
+    chkxterm1str.Checked := True;
   end;
 end;
 
@@ -4896,6 +4915,7 @@ begin
   cmbExtPlayer.Text := 'wmplayer.exe';
   cmbDirLast.Text := 'C:\';
   edtxterm.Text := 'cmd.exe';
+  edtxterm.Items.Add('cmd.exe');
   edtxtermopts.Text := '/c';
   edtxtermopts.Items.Add('/c');
   edtxtermopts.Items.Add('/k');
@@ -4911,11 +4931,15 @@ begin
   cmbFont.Text := 'Ubuntu';
   edtxterm.Text := '/bin/sh';
   edtxtermopts.Text := '-c';
+  edtxterm.Items.Add('/bin/sh');
   edtxtermopts.Items.Add('-c');
-  edtxtermopts.Items.Add('-k');
+  edtxterm.Items.Add('/usr/bin/xterm');
   edtxtermopts.Items.Add('-e');
+  edtxterm.Items.Add('/usr/bin/konsole');
+  edtxtermopts.Items.Add('--nofork -e');
+  edtxtermopts.Items.Add('--nofork --hold -e');
+  edtxterm.Items.Add('/usr/bin/gnome-terminal');
   edtxtermopts.Items.Add('-x');
-  edtxtermopts.Items.Add('--hold -e');
   chkxterm1str.Checked := True;
   {$ENDIF}
   bUpdFromCode := False;
@@ -5713,13 +5737,22 @@ begin
   else
   begin
     memCmdlines.Clear;
-    s := '';
     for l := 0 to High(cmd.f) do
     begin
-      s := s + cmd.f[l].getval(sMyFilename) + ' ';
-      for k := 0 to High(cmd.f[l].s) do
-        s := s + myGetStr(cmd.f[l].s[k].sv);
-      memCmdlines.Lines.Add(s);
+      s := myGetStr(cmd.f[l].getval(sMyFilename));
+      //if True then //for debug
+      //begin
+      //  memCmdlines.Lines.Add(s);
+      //  for k := 0 to High(cmd.f[l].s) do
+      //  for i := 0 to High(cmd.f[l].s[k].sv) do
+      //    memCmdlines.Lines.Add(cmd.f[l].s[k].sv[i]);
+      //end
+      //else
+      //begin
+        for k := 0 to High(cmd.f[l].s) do
+          s := s + myGetStr(cmd.f[l].s[k].sv);
+        memCmdlines.Lines.Add(s);
+      //end;
     end;
   end;
   bUpdFromCode := False;

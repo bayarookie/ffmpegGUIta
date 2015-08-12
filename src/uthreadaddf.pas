@@ -62,6 +62,7 @@ begin
       filenamew := jo.f[l].getval(sMyFilename);
       filename := myGetAnsiFN(filenamew);
       s := LowerCase(ExtractFileExt(filename));
+      fpar.Add('-hide_banner');
       fpar.Add('-show_format');
       fpar.Add('-show_streams');
       if s = '.vob' then
@@ -360,7 +361,7 @@ begin
         //pr.CommandLine := scmd;
         pr.Executable := fcmd;
         pr.Parameters.AddStrings(fpar);
-        pr.Options := [poUsePipes{$IFDEF MSWINDOWS}, poStderrToOutPut{$ENDIF}]; //without stderr - infinite run
+        pr.Options := [poUsePipes, poStderrToOutPut];
         pr.ShowWindow := swoHIDE;
         pr.Execute;
         fcmd := '';
