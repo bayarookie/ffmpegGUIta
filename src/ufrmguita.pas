@@ -475,7 +475,7 @@ type
     procedure myGetFileStreamNums(s: string; var l, k: integer);
     function myGetProfile(fn: string): string;
     function myGetLngFromFNs(jo: TJob; l: integer): string;
-    function myEscapeStr(Str: string): string;
+    function myQuoteStr(Str: string): string;
     function myGetStr(a: array of string): string;
     procedure myCmdFill1(cmdline: string; var cmd: TJob);
     function myCmdExtr(cmd: TJob): string;
@@ -1114,11 +1114,11 @@ end;
 procedure TfrmGUIta.myGetCmdFromJo(jo: TJob; var cmd: TJob; mode: integer = 0);
 var
   i, k, l, cf, cv, ca, cs, ct, cd: integer;
-  c, d: TCont;
+  c, si, fi: TCont;
   rd,
   rsi, rso, rst, rti, rto, rtt: double;
   ssi, sso, sst, sti, sto, stt,
-  s, co, ty, fc2, fi, fn, fb, ni, vi, au, su, ma,
+  s, co, ty, fc2, fn, fb, ni, vi, au, su, ma,
   so, tmp, f1p, sp1, sp2, fn1, fn2, fno, fnoa: string;
   bfi: boolean;
   sl: TStringList;
@@ -1136,7 +1136,12 @@ var
         if not bfi then
         begin
           s := myGetFilter(jo, c);
-          fi := fi + IfThen(s <> '', ' -filter:v:' + ni + ' "' + s + '"');
+          //fi := fi + IfThen(s <> '', ' -filter:v:' + ni + ' "' + s + '"');
+          if s <> '' then
+          begin
+            fi.addval('v', '-filter:v:' + ni);
+            fi.addval('v', s);
+          end;
         end;
         s := c.getval(cmbBitrateV.Name);
         if s <> '' then
@@ -1150,7 +1155,10 @@ var
           vi := vi + IfThen(s <> '', ' -preset ' + s);
           s := c.getval(cmbx264tune.Name);
           vi := vi + IfThen(s <> '', ' -tune ' + s);
-          f1p := IfThen(c.getval(chkx264Pass1fast.Name) = '1', ' -fastfirstpass 1');
+          if (c.getval(chkx264Pass1fast.Name) = '1') then
+            f1p := ' -fastfirstpass 1'
+          else
+            f1p := ' -fastfirstpass 0';
         end;
         if (c.getval(cmbPass.Name) = '2') then
         begin
@@ -1201,7 +1209,12 @@ var
         if not bfi then
         begin
           s := myGetFilter(jo, c);
-          fi := fi + IfThen(s <> '', ' -filter:a:' + ni + ' "' + s + '"');
+          //fi := fi + IfThen(s <> '', ' -filter:a:' + ni + ' "' + s + '"');
+          if s <> '' then
+          begin
+            fi.addval('a', '-filter:a:' + ni);
+            fi.addval('a', s);
+          end;
         end;
         s := c.getval(cmbBitrateA.Name);
         if s <> '' then
@@ -1296,6 +1309,22 @@ var
     sl.Free;
   end;
 
+  procedure my2(s, outfn: string);
+  var
+    i: integer;
+  begin
+    l := cmd.AddFile(myStrReplace('$ffmpeg'));
+    k := cmd.f[l].AddStream;
+    for i := 0 to High(si.sv) do
+      cmd.f[l].s[k].addval(IntToStr(i), si.sv[i]); //inputs
+    for i := 0 to High(fi.sv) do
+      cmd.f[l].s[k].addval(IntToStr(i), fi.sv[i]); //filters
+    //s := vi + au + su + ma + sp1 + so;
+    s := myStrReplace(s, jo);
+    myaddvals(s, cmd.f[l].s[k]);
+    cmd.f[l].s[k].addval('outfn', outfn);
+  end;
+
 begin
   if (jo.getval(chkUseEditedCmd.Name) = '1') and (mode = 0) then
   begin
@@ -1337,7 +1366,6 @@ begin
   end;
   // init vars
   fc2 := '';
-  fi := '';
   vi := '';
   au := '';
   su := '';
@@ -1353,7 +1381,8 @@ begin
   cd := -1;
   fn := '';
   fb := '-';
-  d := TCont.Create;
+  si := TCont.Create; //inputs
+  fi := TCont.Create; //filters
   // input params
   for l := 0 to High(jo.f) do
   begin
@@ -1364,7 +1393,7 @@ begin
       if (rsi < rst) then
         ssi := sst;
     end;
-    if ssi <> '' then begin d.addval('', '-ss'); d.addval('', ssi); end;
+    if ssi <> '' then begin si.addval('', '-ss'); si.addval('', ssi); end;
     sti := jo.f[l].getval(cmbDurationt1.Name);
     if (mode = 1) and (rto = 0) then
     begin
@@ -1372,9 +1401,9 @@ begin
       if (rti = 0) or (rti > rtt) then
         sti := stt;
     end;
-    if sti <> '' then begin d.addval('', '-t'); d.addval('', sti); end;
+    if sti <> '' then begin si.addval('', '-t'); si.addval('', sti); end;
     s := jo.f[l].getval(cmbAddOptsI.Name);
-    if s <> '' then myaddvals(s, d);
+    if s <> '' then myaddvals(s, si);
     {$IFDEF MSWINDOWS}
     s := jo.f[l].getval(sMyDOSfname);
     {$ELSE}
@@ -1382,20 +1411,21 @@ begin
     {$ENDIF}
     if LowerCase(ExtractFileExt(s)) = '.vob' then
     begin
-      d.addval('', '-analyzeduration');
-      d.addval('', '100M');
-      d.addval('', '-probesize');
-      d.addval('', '100M');
+      si.addval('', '-analyzeduration');
+      si.addval('', '100M');
+      si.addval('', '-probesize');
+      si.addval('', '100M');
     end;
-    d.addval('', '-i');
-    d.addval('', s);
+    si.addval('', '-i');
+    si.addval('', s);
   end;
   bfi := (jo.getval(chkFilterComplex.Name) = '1')
-  or (jo.getval(chkConcat.Name) = '1');
+      or (jo.getval(chkConcat.Name) = '1');
   // --- if concat ---
   if (jo.getval(chkConcat.Name) = '1') then
   begin
-    fi := ' -filter_complex "';
+    //fi := ' -filter_complex "';
+    fi.addval('c', '-filter_complex');
     for l := 0 to High(jo.f) do
     for k := 0 to High(jo.f[l].s) do
     begin
@@ -1410,7 +1440,8 @@ begin
         ty := c.getval('codec_type');
         if ty = 'video' then
         begin
-          fi := fi + '[' + fn + ':' + ni + '] ';
+          //fi := fi + '[' + fn + ':' + ni + '] ';
+          fi.addval('c', '[' + fn + ':' + ni + ']');
           if fn = '0' then
           begin
             s := '[v' + ni + ']';
@@ -1421,7 +1452,8 @@ begin
         end
         else if ty = 'audio' then
         begin
-          fi := fi + '[' + fn + ':' + ni + '] ';
+          //fi := fi + '[' + fn + ':' + ni + '] ';
+          fi.addval('c', '[' + fn + ':' + ni + ']');
           if fn = '0' then
           begin
             s := '[a' + ni + ']';
@@ -1432,8 +1464,11 @@ begin
         end;
       end;
     end;
-    fi := fi + 'concat=n=' + IntToStr(cf) + ':v=' + IntToStr(cv + 1) +
-      ':a=' + IntToStr(ca + 1) + fc2 + '"';
+    //fi := fi + 'concat=n=' + IntToStr(cf) + ':v=' + IntToStr(cv + 1) +
+    //  ':a=' + IntToStr(ca + 1) + fc2 + '"';
+    fi.addval('c', 'concat=n=' + IntToStr(cf) + ':v=' + IntToStr(cv + 1) +
+      ':a=' + IntToStr(ca + 1));
+    myaddvals(fc2, fi);
   end
   else
   // --- mix mux ---
@@ -1441,7 +1476,9 @@ begin
     if (jo.getval(chkFilterComplex.Name) = '1') then
     begin
       s := jo.getval(cmbFilterComplex.Name);
-      if s <> '' then fi := ' -filter_complex "' + s + '"';
+      //if s <> '' then fi := ' -filter_complex "' + s + '"';
+      fi.addval('c', '-filter_complex');
+      fi.addval('c', s);
     end;
     // map and params for every track
     for i := 0 to High(jo.m) do
@@ -1529,27 +1566,11 @@ begin
   // final
   if (sp1 <> '') and (mode <> 2) then
   begin
-    //1st pass
-    s := fi + vi + au + su + ma + sp1 + so; // + fn1 + LineEnding
-    s := myStrReplace(s, jo);
-    l := cmd.AddFile(myStrReplace('$ffmpeg'));
-    k := cmd.f[l].AddStream;
-    for i := 0 to High(d.sv) do
-      cmd.f[l].s[k].addval(IntToStr(i), d.sv[i]);
-    myaddvals(s, cmd.f[l].s[k]);
-    cmd.f[l].s[k].addval('fn1', fn1);
-    //2nd pass
-    s := fi + vi + au + su + ma + sp2 + so; // + fn2
-  end
-  else
-    s := fi + vi + au + su + ma + so; // + fn2;
-  s := myStrReplace(s, jo);
-  l := cmd.AddFile(myStrReplace('$ffmpeg'));
-  k := cmd.f[l].AddStream;
-  for i := 0 to High(d.sv) do
-    cmd.f[l].s[k].addval(IntToStr(i), d.sv[i]);
-  myaddvals(s, cmd.f[l].s[k]);
-  cmd.f[l].s[k].addval('fn2', fn2);
+    s := vi + au + su + ma + sp1 + so; //1st pass
+    my2(s, fn1);
+  end;
+  s := vi + au + su + ma + sp2 + so;   //2nd pass or cmdline
+  my2(s, fn2);
 end;
 
 function TfrmGUIta.myGetDosOut(cmd: TJob; mem: TSynMemo): integer;
@@ -3225,33 +3246,24 @@ begin
     Result := Trim(Copy(a, Length(v) + 2, Length(a)));
 end;
 
-function TfrmGUIta.myEscapeStr(Str: string): string;
-{$IFDEF MSWINDOWS}
+function TfrmGUIta.myQuoteStr(Str: string): string;
 begin
   if Pos(' ', Str) > 0 then
-    Result := '"' + Str + '"'
+  begin
+    if Pos('"', Str) > 0 then
+    begin
+      if Pos('''', Str) > 0 then
+      begin
+        Result := AnsiQuotedStr(Str, '''');
+      end
+      else
+        Result := '''' + Str + '''';
+    end
+    else
+      Result := '"' + Str + '"';
+  end
   else
     Result := Str;
-{$ELSE}
-//this code from Double Commander, it needs to be improved
-const
-  NoQuotesSpecialChars = [' ', '"', '''', '(', ')', '&', '!', '$', '*', '?', '=', '`', '\', #10];
-var
-  StartPos: Integer = 1;
-  CurPos: Integer = 1;
-begin
-  Result := '';
-  while CurPos <= Length(Str) do
-  begin
-    if Str[CurPos] in NoQuotesSpecialChars then
-    begin
-      Result := Result + Copy(Str, StartPos, CurPos - StartPos) + '\';
-      StartPos := CurPos;
-    end;
-    Inc(CurPos);
-  end;
-  Result := Result + Copy(Str, StartPos, CurPos - StartPos);
-{$ENDIF}
 end;
 
 function TfrmGUIta.myGetStr(a: array of string): string;
@@ -3260,7 +3272,7 @@ var
 begin
   Result := '';
   for i := 0 to High(a) do
-    Result := Result + myEscapeStr(a[i]) + ' ';
+    Result := Result + myQuoteStr(a[i]) + ' ';
 end;
 
 procedure TfrmGUIta.myCmdFill1(cmdline: string; var cmd: TJob);
@@ -3308,8 +3320,17 @@ begin
   if (scmd = '') then
   begin
     if (Length(fil.s) > 0) and (Length(fil.s[0].sv) > 0) then
-      Result := fil.s[0].sv[0];
-    pr.CommandLine := Result;
+      t := fil.s[0].sv[0];
+    if b then
+    begin
+      pr.CommandLine := edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + t;
+      Result := myDTtoStr(sMyDTformat, Now) + ' - ' + edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + t;
+    end
+    else
+    begin
+      pr.CommandLine := t;
+      Result := myDTtoStr(sMyDTformat, Now) + ' - ' + t;
+    end;
     Exit;
   end;
   t := '';
@@ -5721,6 +5742,7 @@ end;
 procedure TfrmGUIta.TabCmdlineShow(Sender: TObject);
 var
   jo, cmd: TJob;
+  //i: integer;
   k, l: integer;
   s: string;
 begin
@@ -5730,30 +5752,16 @@ begin
   chkUseEditedCmd.Checked := (jo.getval(chkUseEditedCmd.Name) = '1');
   cmd := TJob.Create;
   myGetCmdFromJo(jo, cmd);
+  memCmdlines.Clear;
   if chkUseEditedCmd.Checked then
-  begin
-    memCmdlines.Text := jo.getval(memCmdlines.Name);
-  end
+    memCmdlines.Text := jo.getval(memCmdlines.Name)
   else
+  for l := 0 to High(cmd.f) do
   begin
-    memCmdlines.Clear;
-    for l := 0 to High(cmd.f) do
-    begin
-      s := myGetStr(cmd.f[l].getval(sMyFilename));
-      //if True then //for debug
-      //begin
-      //  memCmdlines.Lines.Add(s);
-      //  for k := 0 to High(cmd.f[l].s) do
-      //  for i := 0 to High(cmd.f[l].s[k].sv) do
-      //    memCmdlines.Lines.Add(cmd.f[l].s[k].sv[i]);
-      //end
-      //else
-      //begin
-        for k := 0 to High(cmd.f[l].s) do
-          s := s + myGetStr(cmd.f[l].s[k].sv);
-        memCmdlines.Lines.Add(s);
-      //end;
-    end;
+    s := myGetStr(cmd.f[l].getval(sMyFilename));
+    for k := 0 to High(cmd.f[l].s) do
+      s := s + myGetStr(cmd.f[l].s[k].sv);
+    memCmdlines.Lines.Add(s);
   end;
   bUpdFromCode := False;
 end;
