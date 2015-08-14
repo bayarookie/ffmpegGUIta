@@ -1152,13 +1152,13 @@ var
         if (co = 'libx264') or (co = 'libx264rgb') or (co = 'libx265') then
         begin
           s := c.getval(cmbx264preset.Name);
-          vi := vi + IfThen(s <> '', ' -preset ' + s);
+          vi := vi + IfThen(s <> '', ' -preset:v:' + ni + ' ' + s);
           s := c.getval(cmbx264tune.Name);
-          vi := vi + IfThen(s <> '', ' -tune ' + s);
+          vi := vi + IfThen(s <> '', ' -tune:v:' + ni + ' ' + s);
           if (c.getval(chkx264Pass1fast.Name) = '1') then
-            f1p := ' -fastfirstpass 1'
+            f1p := ' -fastfirstpass:v:' + ni + ' 1'
           else
-            f1p := ' -fastfirstpass 0';
+            f1p := ' -fastfirstpass:v:' + ni + ' 0';
         end;
         if (c.getval(cmbPass.Name) = '2') then
         begin
@@ -1169,9 +1169,9 @@ var
               Exit;
             tmp := AppendPathDelim(tmp);
           end;
-          s := ' -passlogfile "' + tmp + 'ff-tmp' + jo.getval('index') + '"';
-          sp1 := ' -pass 1' + s + f1p;
-          sp2 := ' -pass 2' + s;
+          s := ' -passlogfile:v:' + ni + ' "' + tmp + 'ff-tmp' + jo.getval('index') + ni + '"';
+          sp1 := sp1 + ' -pass:v:' + ni + ' 1' + s + f1p;
+          sp2 := sp2 + ' -pass:v:' + ni + ' 2' + s;
         end;
         s := c.getval(cmbAddOptsV.Name);
         vi := vi + IfThen(s <> '', ' ' + s);
@@ -1537,7 +1537,7 @@ begin
   so := so + ' -y';
   // output filename
   fno := jo.getval(edtOfn.Name);
-  if (fno <> '') and (mode <> 2) then //if (mode=2) - play through pipe
+  if (fno <> '') and (mode <> 2) then
   begin
     if FileExistsUTF8(fno) then
     begin
@@ -1561,15 +1561,16 @@ begin
   else
   begin
     fn1 := '-';
-    fn2 := '-';
+    fn2 := '-'; //if (mode=2) - play through pipe - ffmpeg -i input -f format - | ffplay -
   end;
   // final
   if (sp1 <> '') and (mode <> 2) then
   begin
-    s := vi + au + su + ma + sp1 + so; //1st pass
+    s := ' -c:a pcm_s16le -ar:a 4000 -ac:a 1'; //1st pass audio for better synchronisation
+    s := vi + s + su + ma + sp1 + so; //1st pass
     my2(s, fn1);
   end;
-  s := vi + au + su + ma + sp2 + so;   //2nd pass or cmdline
+  s := vi + au + su + ma + sp2 + so;  //2nd pass or 1 pass
   my2(s, fn2);
 end;
 
