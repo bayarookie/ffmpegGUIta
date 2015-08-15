@@ -1031,8 +1031,25 @@ end;
 
 function TfrmGUIta.myGetFilter(jo: TJob; v: TCont; all: boolean = True): string;
 var
-  s: string;
   i: integer;
+
+  function my0(s: string): string;
+  var
+    i: integer;
+    c, d: string;
+  begin
+    Result := '';
+    d := '';
+    for i := 1 to Length(s) do
+    begin
+      c := s[i];
+      if (c = ',') and (d <>'\') then
+        Result := Result + '\,'
+      else
+        Result := Result + c;
+      d := c;
+    end;
+  end;
 
   procedure my1(c: TComboBox);
   var
@@ -1041,52 +1058,59 @@ var
     t := v.getval(c.Name);
     n := LowerCase(Copy(c.Name, 4, Length(c.Name)));
     if t <> '' then
-      s := IfThen(s <> '', s + ', ') + n + '=' + t;
+      Result := IfThen(Result <> '', Result + ',') + n + '=' + my0(t);
   end;
+
   procedure my2(r: string);
   var
-    p, q: string;
-    i: integer;
+    p, q, b: string;
+    i, j: integer;
   begin
     if r = '' then
       Exit;
+    r := my0(r);
     i := High(jo.f);
     while i > -2 do
     begin
-      if i < 0 then
+      if i < 0 then //for backward compatibility
       begin
-        q := '$input';
-        {$IFDEF MSWINDOWS}
-        p := jo.f[0].getval(sMyDOSfname);
-        {$ELSE}
-        p := jo.f[0].getval(sMyFilename);
-        {$ENDIF}
+        q := '''$input''';
+        b := '$input';
+        j := 0;
       end
       else
       begin
-        q := '$inpu' + IntToStr(i);
-        {$IFDEF MSWINDOWS}
-        p := jo.f[i].getval(sMyDOSfname);
-        {$ELSE}
-        p := jo.f[i].getval(sMyFilename);
-        {$ENDIF}
+        q := '''$inpu' + IntToStr(i) + '''';
+        b := '$inpu' + IntToStr(i);
+        j := i;
       end;
-      if Pos(q, r) > 0 then
+      if (Pos(q, r) > 0) or (Pos(b, r) > 0) then
       begin
+        {$IFDEF MSWINDOWS}
+        p := jo.f[j].getval(sMyDOSfname);
+        {$ELSE}
+        p := jo.f[j].getval(sMyFilename);
+        {$ENDIF}
         p := StringReplace(p, '\', '/', [rfReplaceAll]);
-        p := StringReplace(p, ':', '\:', [rfReplaceAll]);
+        p := StringReplace(p, ',', '\,', [rfReplaceAll]);
+        p := StringReplace(p, ':', '\\\:', [rfReplaceAll]);
         p := StringReplace(p, '[', '\[', [rfReplaceAll]);
         p := StringReplace(p, ']', '\]', [rfReplaceAll]);
+        p := StringReplace(p, '(', '\(', [rfReplaceAll]);
+        p := StringReplace(p, ')', '\)', [rfReplaceAll]);
         p := StringReplace(p, '''', '\\\''', [rfReplaceAll]);
-        r := StringReplace(r, q, p, [rfReplaceAll]);
+        if (Pos(q, r) > 0) then
+          r := StringReplace(r, q, p, [rfReplaceAll])
+        else
+          r := StringReplace(r, b, p, [rfReplaceAll]);
       end;
       dec(i);
     end;
-    s := IfThen(s <> '', s + ', ') + r;
+    Result := IfThen(Result <> '', Result + ',') + r;
   end;
 
 begin
-  s := '';
+  Result := '';
   my1(cmbCrop);
   my1(cmbScale);
   my1(cmbPad);
@@ -1094,12 +1118,12 @@ begin
     my1(cmbhqdn3d);
   i := StrToIntDef(v.getval(cmbRotate.Name), 7);
   if i in [0..6] then
-    s := IfThen(s <> '', s + ', ');
+    Result := IfThen(Result <> '', Result + ',');
   case i of
-    0..3: s := s + 'transpose=' + IntToStr(i);
-    4: s := s + 'hflip';
-    5: s := s + 'vflip';
-    6: s := s + 'hflip, vflip';
+    0..3: Result := Result + 'transpose=' + IntToStr(i);
+    4: Result := Result + 'hflip';
+    5: Result := Result + 'vflip';
+    6: Result := Result + 'hflip, vflip';
     7: ;
     else
       if chkDebug.Checked then
@@ -1108,7 +1132,6 @@ begin
   my1(cmbSetDAR);
   my2(v.getval(cmbFiltersV.Name));
   my2(v.getval(cmbFiltersA.Name));
-  Result := s;
 end;
 
 procedure TfrmGUIta.myGetCmdFromJo(jo: TJob; var cmd: TJob; mode: integer = 0);
@@ -1326,9 +1349,9 @@ var
   end;
 
 begin
+  //mode, 0 = convert, 1 = test, 2 = play, 3 = show cmdline
   if (jo.getval(chkUseEditedCmd.Name) = '1') and (mode = 0) then
   begin
-    //myCmdFill1(jo.getval(memCmdlines.Name), cmd);
     sl := TStringList.Create;
     sl.Text := jo.getval(memCmdlines.Name);
     for i := 0 to sl.Count - 1 do
@@ -1539,22 +1562,22 @@ begin
   fno := jo.getval(edtOfn.Name);
   if (fno <> '') and (mode <> 2) then
   begin
-    if FileExistsUTF8(fno) then
+    if FileExistsUTF8(fno) and (mode <> 3) then
     begin
       fno := myGetOutFN(ExtractFilePath(fno), jo.f[0].getval(sMyFilename),  ExtractFileExt(fno));
       jo.setval(edtOfn.Name, fno);
     end;
     {$IFDEF MSWINDOWS}
     fnoa := jo.getval(edtOfna.Name); //short filename
-    if FileExistsUTF8(fnoa) then
+    if FileExistsUTF8(fnoa) and (mode <> 3) then
     begin
       fnoa := myGetOutFNa(ExtractFilePath(fnoa), jo.f[0].getval(sMyDOSfname), ExtractFileExt(fnoa));
       jo.setval(edtOfna.Name, fnoa);
     end;
     fn1 := 'NUL';
     {$ELSE}
-    fn1 := '/dev/null';
     fnoa := fno;
+    fn1 := '/dev/null';
     {$ENDIF}
     fn2 := fnoa;
   end
@@ -5752,7 +5775,7 @@ begin
   jo := TJob(LVjobs.Selected.Data);
   chkUseEditedCmd.Checked := (jo.getval(chkUseEditedCmd.Name) = '1');
   cmd := TJob.Create;
-  myGetCmdFromJo(jo, cmd);
+  myGetCmdFromJo(jo, cmd, 3);
   memCmdlines.Clear;
   if chkUseEditedCmd.Checked then
     memCmdlines.Text := jo.getval(memCmdlines.Name)
