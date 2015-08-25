@@ -72,6 +72,7 @@ type
     btnAddScreenGrab: TButton;
     btnSaveSets: TButton;
     btnReset: TButton;
+    chkDirOutStruct: TCheckBox;
     chkCreateDosFN: TCheckBox;
     chkCreateSymLink: TCheckBox;
     chkStopIfError: TCheckBox;
@@ -343,6 +344,7 @@ type
     procedure cmbProfileChange(Sender: TObject);
     procedure cmbProfileGetItems(Sender: TObject);
     procedure cmbRunCmdGetItems(Sender: TObject);
+    procedure edtDirOutChange(Sender: TObject);
     procedure edtffmpegChange(Sender: TObject);
     procedure edtffmpegGetItems(Sender: TObject);
     procedure edtOfnChange(Sender: TObject);
@@ -480,6 +482,7 @@ type
     procedure myCmdFill1(cmdline: string; var cmd: TJob);
     function myCmdExtr(cmd: TJob): string;
     function myCmdFillPr(fil: TFil; b: boolean; var pr: TProcessUTF8): string;
+    procedure myShowCaption(s: string);
   end;
 
 const
@@ -489,7 +492,7 @@ var
   frmGUIta: TfrmGUIta;
   sCap, sDirApp, sInidir, sInifile, sLngfile: string;
   fs: TFormatSettings;
-  mes: array [0..31] of string;
+  mes: array [0..32] of string;
   tAutoStart: TTimer;
   bUpdFromCode: boolean;
   aThrs: array of TThreadConv;
@@ -500,6 +503,7 @@ var
   sdiv: string = '--------------------------------------------------------------------------------';
   DuraAll: double;
   DuraAl2: integer;
+  DuraJob: string;
   Files2Add: TList;
   Counter: integer;
   myUnik: TUniqueInstance;
@@ -727,13 +731,13 @@ end;
 procedure TfrmGUIta.myAddFiles(params: TStrings);
 var
   i, j: integer;
-  s, t, e, o: string;
+  s, t, o, d: string;
   ST: TStringList;
   procedure my1(fn: string);
   var
     jo: TJob;
     i, j: integer;
-    s: string;
+    s, e: string;
     sl: TStringList;
     Ini: TIniFile;
   begin
@@ -762,6 +766,8 @@ var
       s := Trim(edtDirOut.Text)
     else
       s := ExtractFilePath(fn);
+    if chkDirOutStruct.Checked then
+      s := AppendPathDelim(s) + Copy(ExtractFilePath(fn), Length(d) + 1, Length(fn));
     e := jo.getval(cmbExt.Name);
     jo.setval(edtOfn.Name, myGetOutFN(s, fn, e));
     //SetLength(jo.f, 1);
@@ -794,6 +800,7 @@ begin
   for i := 0 to params.Count - 1 do
   begin
     s := params[i];
+    d := ExtractFilePath(s);
     if DirectoryExistsUTF8(s) then
     begin
       ST := TStringList.Create;
@@ -1562,6 +1569,11 @@ begin
   fno := jo.getval(edtOfn.Name);
   if (fno <> '') and (mode <> 2) then
   begin
+    if not DirectoryExistsUTF8(ExtractFileDir(fno)) then
+    begin
+      if not ForceDirectoriesUTF8(ExtractFileDir(fno)) then
+        myError(-1, mes[10] + ': ' + ExtractFileDir(fno));
+    end;
     if FileExistsUTF8(fno) and (mode <> 3) then
     begin
       fno := myGetOutFN(ExtractFilePath(fno), jo.f[0].getval(sMyFilename),  ExtractFileExt(fno));
@@ -2186,11 +2198,20 @@ var
             my2(s2, Name, Hint)
       else if c[k] is TListView then
         with TListView(c[k]) do
+        begin
           for i := 0 to Columns.Count - 1 do
             if bRead then
               Column[i].Caption := Ini.ReadString(Name, IntToStr(i), Column[i].Caption)
             else
-              Ini.WriteString(Name, IntToStr(i), Column[i].Caption)
+              Ini.WriteString(Name, IntToStr(i), Column[i].Caption);
+          if bRead then
+          begin
+            Hint := my1(s2, Name, Hint);
+            ShowHint := Hint <> '';
+          end
+          else
+            my2(s2, Name, Hint);
+        end
       else if c[k] is TPanel then
         for i := 0 to TPanel(c[k]).ControlCount - 1 do
           myLng1([TPanel(c[k]).Controls[i]])
@@ -2266,6 +2287,7 @@ begin
     mes[29] := 'All files';
     mes[30] := 'Process';
     mes[31] := 'terminated';
+    mes[32] := 'Job';
   end;
   Ini := TIniFile.Create(UTF8ToSys(s1));
   Ini.StripQuotes := False;
@@ -3388,6 +3410,15 @@ begin
   end;
 end;
 
+procedure TfrmGUIta.myShowCaption(s: string);
+begin
+  frmGUIta.Caption := sCap
+    + IfThen(DuraAll > 0, ', ' + mes[21] + ' = ' + myRealToTimeStr(DuraAll))
+    + IfThen(DuraAl2 > 0, ', ' + mes[27] + ' = ' + IntToStr(DuraAl2))
+    + IfThen(DuraJob <> '', ', ' + mes[32] + ' = ' + DuraJob)
+    + IfThen(s <> '', ', ' + s);
+end;
+
 //------------------------------------------------------------------------------
 
 procedure TfrmGUIta.btnAddFilesClick(Sender: TObject);
@@ -3485,8 +3516,9 @@ begin
     li.SubItems.Add('0');
     li.SubItems.Add('0');
     inc(DuraAl2);
-    frmGUIta.Caption := sCap + ' - ' + mes[21] + ' = ' + myRealToTimeStr(DuraAll)
-      + ', ' + mes[27] + ' = ' + IntToStr(DuraAl2);
+    myShowCaption('');
+    //frmGUIta.Caption := sCap + ' - ' + mes[21] + ' = ' + myRealToTimeStr(DuraAll)
+    //  + ', ' + mes[27] + ' = ' + IntToStr(DuraAl2);
     li.SubItems.Add('');
     li.SubItems.Add('');
     li.Data := Pointer(jo);
@@ -4783,6 +4815,12 @@ begin
     myAdd2cmb(cmbRunCmd, cCmdIni.sk[i]);
 end;
 
+procedure TfrmGUIta.edtDirOutChange(Sender: TObject);
+begin
+  xmyCheckDir(Sender);
+  chkDirOutStruct.Enabled := edtDirOut.Text <> '';
+end;
+
 procedure TfrmGUIta.edtffmpegChange(Sender: TObject);
 var
   s: string;
@@ -5061,7 +5099,7 @@ end;
 procedure TfrmGUIta.FormDropFiles(Sender: TObject; const FileNames: array of string);
 var
   i: integer;
-  SL, ST: TStringList;
+  ST: TStringList;
   p: TPoint;
   wc: TWinControl;
   w: word;
@@ -5093,17 +5131,17 @@ begin
   ST := TStringList.Create;
   try
     for i := Low(FileNames) to High(FileNames) do
-      if DirectoryExistsUTF8(FileNames[i]) then
-      begin
-        SL := TStringList.Create;
-        if myGetFileList(FileNames[i], myGetExts, SL, True) then
-        begin
-          SL.Sort;
-          ST.AddStrings(SL);
-        end;
-        SL.Free;
-      end
-      else
+      //if DirectoryExistsUTF8(FileNames[i]) then
+      //begin
+      //  SL := TStringList.Create;
+      //  if myGetFileList(FileNames[i], myGetExts, SL, True) then
+      //  begin
+      //    SL.Sort;
+      //    ST.AddStrings(SL);
+      //  end;
+      //  SL.Free;
+      //end
+      //else
         ST.Add(FileNames[i]);
     if ST.Count > 0 then
       case w of
@@ -5324,8 +5362,9 @@ begin
       DuraAll := DuraAll + myTimeStrToReal(jo.f[0].getval('duration'));
       inc(DuraAl2);
     end;
-  frmGUIta.Caption := sCap + ' - ' + mes[21] + ' = ' + myRealToTimeStr(DuraAll)
-    + ', ' + mes[27] + ' = ' + IntToStr(DuraAl2);
+  myShowCaption('');
+  //frmGUIta.Caption := sCap + ' - ' + mes[21] + ' = ' + myRealToTimeStr(DuraAll)
+  //  + ', ' + mes[27] + ' = ' + IntToStr(DuraAl2);
 end;
 
 procedure TfrmGUIta.LVjobsKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
@@ -5672,7 +5711,7 @@ var
   i: integer;
   s: string;
 begin
-  i := (Sender as TThreadConv).num;
+  i := (Sender as TThreadConv).NumOfThread;
   if (i >= Low(aThrs)) and (i <= High(aThrs)) then
     aThrs[i] := nil;
   s := IntToStr(i + 1) + ': ' + mes[30] + ' ' + mes[31];

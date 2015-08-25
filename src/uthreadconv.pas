@@ -37,7 +37,8 @@ type
     procedure Execute; override;
   public
     pr: TProcessUTF8;
-    num: integer;
+    NumOfThread: integer;
+    NumOfJob: string;
     constructor Create(threadnum: integer);
   end;
 
@@ -52,13 +53,14 @@ var
   i: integer;
 begin
   dt := Now;
-  fmemo := aMems[num];
+  fmemo := aMems[NumOfThread];
   fterm_use := frmGUIta.chkxtermconv.Checked;
   fterminal := frmGUIta.edtxterm.Text;
   ftermopts := frmGUIta.edtxtermopts.Text;
   fterm1str := frmGUIta.chkxterm1str.Checked;
   fStopIfError := frmGUIta.chkStopIfError.Checked;
   SetLength(cmd.f, 0);
+  DuraJob := '';
   for i := 0 to frmGUIta.LVjobs.Items.Count - 1 do
   begin
     if frmGUIta.LVjobs.Items[i].Checked then
@@ -69,6 +71,9 @@ begin
       frmGUIta.myGetCmdFromJo(jo, cmd);
       jo.setval(sMyCompleted, '2');
       frmGUIta.LVjobs.Refresh;
+      DuraJob := frmGUIta.LVjobs.Items[i].Caption;
+      frmGUIta.myShowCaption('');
+      NumOfJob := DuraJob;
       Break;
     end;
   end;
@@ -110,8 +115,8 @@ begin
       Break;
     end;
   end;
-  s := IntToStr(num + 1) + ': ' + myDTtoStr(sMyDTformat, Now) + ' '
-    + mes[5] + ' ' + TimeToStr(Now - dt);
+  s := IntToStr(NumOfThread + 1) + '-' + NumOfJob + ': ' + myDTtoStr(sMyDTformat, Now)
+    + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
   if fExitStatus <> 0 then
   begin
     s := s + ' - ' + mes[6] + ': ' + IntToStr(fExitStatus);
@@ -135,12 +140,12 @@ end;
 
 procedure TThreadConv.ShowJournal;
 begin
-  frmGUIta.memJournal.Lines.Add(fStatus);
+  frmGUIta.memJournal.Lines.Add(IntToStr(NumOfThread + 1) + '-' + NumOfJob + ': ' + fStatus);
 end;
 
 procedure TThreadConv.ShowStatus1;
 begin
-  frmGUIta.StatusBar1.SimpleText := fStatus;
+  frmGUIta.StatusBar1.SimpleText := IntToStr(NumOfThread + 1) + '-' + NumOfJob + ': ' + fStatus;
 end;
 
 procedure TThreadConv.ShowSynMemo;
@@ -203,7 +208,7 @@ begin
                 begin
                   if (j > i + 1) then
                     j := i;
-                  fStatus := IntToStr(num + 1) + ': ' + TimeToStr(Now - dt) + ' ' + Copy(t, 1, i - 1);
+                  fStatus := TimeToStr(Now - dt) + ' ' + Copy(t, 1, i - 1);
                   Delete(t, 1, Max(i, j));
                   Synchronize(@ShowStatus1);
                 end
@@ -245,7 +250,7 @@ constructor TThreadConv.Create(threadnum: integer);
 begin
   FreeOnTerminate := True;
   cmd := TJob.Create;
-  num := threadnum;
+  NumOfThread := threadnum;
   fExitStatus := 0;
   inherited Create(True);
 end;
