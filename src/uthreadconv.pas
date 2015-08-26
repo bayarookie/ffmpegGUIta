@@ -72,8 +72,9 @@ begin
       jo.setval(sMyCompleted, '2');
       frmGUIta.LVjobs.Refresh;
       DuraJob := frmGUIta.LVjobs.Items[i].Caption;
-      frmGUIta.myShowCaption('');
       NumOfJob := DuraJob;
+      //frmGUIta.myShowCaption('');
+      frmGUIta.LVjobsItemChecked(nil, nil);
       Break;
     end;
   end;

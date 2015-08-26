@@ -137,11 +137,6 @@ begin
     sl.Text := myBetween(s, '[STREAM]', '[/STREAM]');
     if (sl.Text = '') then
       Break;
-    //k := Length(jo.f[filenum].s);
-    //SetLength(jo.f[filenum].s, k + 1);
-    //SetLength(jo.m, Length(jo.m) + 1); //add for map tracks
-    //jo.m[High(jo.m)] := IntToStr(filenum) + ':' + IntToStr(k);
-    //jo.f[filenum].s[k] := TCont.Create;
     k := jo.f[filenum].AddStream;
     jo.AddMap(IntToStr(filenum) + ':' + IntToStr(k));
     for i := 0 to sl.Count - 1 do
@@ -358,7 +353,6 @@ begin
       pr := TProcessUTF8.Create(nil);
       try
         //pr.CurrentDirectory := fdir;
-        //pr.CommandLine := scmd;
         pr.Executable := fcmd;
         pr.Parameters.AddStrings(fpar);
         pr.Options := [poUsePipes, poStderrToOutPut];
