@@ -1570,8 +1570,8 @@ begin
   // final
   if (sp1 <> '') and (mode <> 2) then
   begin
-    s := ' -c:a pcm_s16le -ar:a 4000 -ac:a 1'; //1st pass audio for better synchronisation
-    s := vi + s + su + ma + sp1 + so; //1st pass
+    //didnt work on mp4; s := ' -c:a pcm_s16le -ar:a 4000 -ac:a 1'; //1st pass audio for better synchronisation
+    s := vi + au + su + ma + sp1 + so; //1st pass
     my2(s, fn1);
   end;
   s := vi + au + su + ma + sp2 + so;  //2nd pass or 1 pass
@@ -5391,7 +5391,7 @@ begin
   end;
   Sender.Canvas.Brush.Color := b;
   Sender.Canvas.Font.Color := c;
-  if SubItem = 2 then
+  if (Item.SubItems.Count > 0) and (SubItem = 2) then
   begin
     mRect := Item.DisplayRect(drBounds);
     for i := SubItem - 1 downto 0 do
@@ -5683,6 +5683,8 @@ begin
   btnStart.Enabled := True;
   btnSuspend.Enabled := False;
   btnStop.Enabled := False;
+  DuraJob := '';
+  myShowCaption('');
 end;
 
 procedure TfrmGUIta.onTestTerminate(Sender: TObject);

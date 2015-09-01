@@ -557,7 +557,7 @@ begin
     j := 0;
     while i > 0 do
     begin
-      i := PosEx('(', s, i + 1);
+      i := PosEx(' (', s, i + 1);
       if (i > 0) and (i + 1 < Length(s)) then
         j := i;
     end;
@@ -565,7 +565,7 @@ begin
     begin
       i := StrToIntDef(Copy(s, j + 1, Length(s) - j - 1), 0);
       if (i > 0) and (i < 1000) then
-        s := Copy(s, 1, j - 2);
+        s := Copy(s, 1, j - 1);
     end;
   end;
   i := 0;

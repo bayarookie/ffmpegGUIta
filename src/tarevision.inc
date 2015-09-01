@@ -1,2 +1,2 @@
 // Created by Svn2RevisionInc
-const taRevision = '105';
+const taRevision = '106';
