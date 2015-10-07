@@ -1,117 +1,244 @@
 object frmGrab: TfrmGrab
-  Left = 289
-  Height = 240
-  Top = 191
-  Width = 320
+  Left = 306
+  Height = 438
+  Top = 114
+  Width = 600
   BorderStyle = bsDialog
   Caption = 'frmGrab'
-  ClientHeight = 240
-  ClientWidth = 320
+  ClientHeight = 438
+  ClientWidth = 600
   Constraints.MinHeight = 240
   Constraints.MinWidth = 320
   KeyPreview = True
   Position = poMainFormCenter
-  LCLVersion = '1.2.6.0'
+  LCLVersion = '1.4.2.0'
   object ComboBox1: TComboBox
-    Left = 50
-    Height = 20
+    Left = 60
+    Height = 21
     Hint = '-i'
-    Top = 21
-    Width = 96
+    Top = 8
+    Width = 528
+    Anchors = [akTop, akLeft, akRight]
     DropDownCount = 20
     ItemHeight = 0
-    ItemIndex = 0
     Items.Strings = (
+      ':0'
       ':0.0'
+      ':0.0+0,0'
     )
     TabOrder = 0
-    Text = ':0.0'
   end
   object ComboBox2: TComboBox
-    Left = 50
-    Height = 20
-    Top = 48
-    Width = 248
+    Left = 60
+    Height = 21
+    Top = 38
+    Width = 528
     Anchors = [akTop, akLeft, akRight]
     DropDownCount = 20
     ItemHeight = 0
-    ItemIndex = 0
     Items.Strings = (
+      '-f x11grab -video_size 1024x768 -framerate 25'
       '-f x11grab -video_size 1280x720 -framerate 25'
+      '-f x11grab -video_size 1280x800 -framerate 25'
+      '-f x11grab -video_size 1920x1080 -framerate 25'
     )
     TabOrder = 1
-    Text = '-f x11grab -video_size 1280x720 -framerate 25'
   end
-  object ComboBox3: TComboBox
-    Left = 50
-    Height = 20
+  object ComboBox5: TComboBox
+    Left = 60
+    Height = 21
     Hint = '-i'
-    Top = 77
-    Width = 96
-    DropDownCount = 20
-    ItemHeight = 0
-    ItemIndex = 0
-    Items.Strings = (
-      'default'
-      'hw:0,0'
-    )
-    TabOrder = 2
-    Text = 'default'
-  end
-  object ComboBox4: TComboBox
-    Left = 50
-    Height = 20
-    Top = 104
-    Width = 248
+    Top = 128
+    Width = 528
     Anchors = [akTop, akLeft, akRight]
     DropDownCount = 20
     ItemHeight = 0
-    ItemIndex = 0
     Items.Strings = (
-      '-f pulse'
-      '-f alsa'
+      'hw:0,0'
+      'default'
+      'alsa_output.pci-0000_00_1b.0.analog-stereo.monitor'
+      'noechosource'
     )
-    TabOrder = 3
-    Text = '-f pulse'
+    OnSelect = ComboBox5Select
+    TabOrder = 4
+  end
+  object ComboBox6: TComboBox
+    Left = 60
+    Height = 21
+    Top = 158
+    Width = 528
+    Anchors = [akTop, akLeft, akRight]
+    DropDownCount = 20
+    ItemHeight = 0
+    Items.Strings = (
+      '-f alsa'
+      '-f pulse'
+      '-f pulse -ac 2 -ar 44100'
+      '-f pulse -ac 1 -ar 32000'
+    )
+    TabOrder = 5
   end
   object BitBtn1: TBitBtn
-    Left = 18
+    Left = 8
     Height = 30
-    Top = 185
-    Width = 75
+    Top = 398
+    Width = 90
     Anchors = [akLeft, akBottom]
     Default = True
     DefaultCaption = True
     Kind = bkOK
     ModalResult = 1
-    TabOrder = 4
+    TabOrder = 12
   end
   object BitBtn2: TBitBtn
-    Left = 228
+    Left = 500
     Height = 30
-    Top = 185
-    Width = 75
+    Top = 398
+    Width = 90
     Anchors = [akRight, akBottom]
     Cancel = True
     DefaultCaption = True
     Kind = bkCancel
     ModalResult = 2
-    TabOrder = 5
+    TabOrder = 13
   end
   object Label1: TLabel
     Left = 8
-    Height = 11
-    Top = 23
-    Width = 28
+    Height = 15
+    Top = 8
+    Width = 43
     Caption = 'video -i'
     ParentColor = False
   end
-  object Label2: TLabel
+  object Label3: TLabel
     Left = 8
-    Height = 11
-    Top = 79
-    Width = 29
+    Height = 15
+    Top = 128
+    Width = 44
     Caption = 'audio -i'
     ParentColor = False
+  end
+  object Label4: TLabel
+    Left = 8
+    Height = 15
+    Top = 188
+    Width = 44
+    Caption = 'audio -i'
+    ParentColor = False
+  end
+  object ComboBox7: TComboBox
+    Left = 60
+    Height = 21
+    Hint = '-i'
+    Top = 188
+    Width = 528
+    Anchors = [akTop, akLeft, akRight]
+    DropDownCount = 20
+    ItemHeight = 0
+    OnSelect = ComboBox7Select
+    TabOrder = 6
+  end
+  object ComboBox8: TComboBox
+    Left = 60
+    Height = 21
+    Top = 218
+    Width = 528
+    Anchors = [akTop, akLeft, akRight]
+    DropDownCount = 20
+    ItemHeight = 0
+    TabOrder = 7
+  end
+  object chkMixVideo: TCheckBox
+    Left = 8
+    Height = 20
+    Top = 248
+    Width = 580
+    Anchors = [akTop, akLeft, akRight]
+    AutoSize = False
+    Caption = 'mix video'
+    Checked = True
+    OnChange = chkMixVideoChange
+    State = cbChecked
+    TabOrder = 8
+  end
+  object cmbFilterComplex: TComboBox
+    Left = 8
+    Height = 21
+    Top = 308
+    Width = 580
+    Anchors = [akTop, akLeft, akRight]
+    ItemHeight = 0
+    Items.Strings = (
+      ''
+      '[0:v][0:s]overlay'
+      '[0:v]crop=720:368:0:60[v];[0:s]crop=720:368:0:60[s];[v][s]overlay'
+      'split[a][b]; [a]pad=iw*2:ih[src]; [b]deshake[filt]; [src][filt]overlay=w'
+      'nullsrc=size=200x100 [background]; [0:v] setpts=PTS-STARTPTS, scale=100x100 [left]; [1:v] setpts=PTS-STARTPTS, scale=100x100 [right]; [background][left] overlay=shortest=1 [background+left]; [background+left][right] overlay=shortest=1:x=100'
+    )
+    TabOrder = 10
+  end
+  object lblAddOptsO: TLabel
+    Left = 8
+    Height = 15
+    Top = 344
+    Width = 194
+    Caption = 'additional options for output file'
+    ParentColor = False
+  end
+  object cmbAddOptsO: TComboBox
+    Left = 8
+    Height = 21
+    Top = 368
+    Width = 580
+    Anchors = [akTop, akLeft, akRight]
+    ItemHeight = 0
+    TabOrder = 11
+  end
+  object ComboBox3: TComboBox
+    Left = 60
+    Height = 21
+    Hint = '-i'
+    Top = 68
+    Width = 528
+    Anchors = [akTop, akLeft, akRight]
+    DropDownCount = 20
+    ItemHeight = 0
+    Items.Strings = (
+      ':0'
+      ':0.0'
+      ':0.0+0,0'
+    )
+    TabOrder = 2
+  end
+  object ComboBox4: TComboBox
+    Left = 60
+    Height = 21
+    Top = 98
+    Width = 528
+    Anchors = [akTop, akLeft, akRight]
+    DropDownCount = 20
+    ItemHeight = 0
+    TabOrder = 3
+  end
+  object Label2: TLabel
+    Left = 8
+    Height = 15
+    Top = 68
+    Width = 43
+    Caption = 'video -i'
+    ParentColor = False
+  end
+  object chkMixAudio: TCheckBox
+    Left = 8
+    Height = 20
+    Top = 278
+    Width = 580
+    Anchors = [akTop, akLeft, akRight]
+    AutoSize = False
+    Caption = 'mix audio'
+    Checked = True
+    OnChange = chkMixVideoChange
+    State = cbChecked
+    TabOrder = 9
   end
 end

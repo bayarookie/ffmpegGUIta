@@ -290,8 +290,7 @@ begin
     li.SubItems.Add(s);
     DuraAll := DuraAll + r;
     inc(DuraAl2);
-    frmGUIta.Caption := sCap + ' - ' + mes[21] + ' = ' + myRealToTimeStr(DuraAll)
-      + ', ' + mes[27] + ' = ' + IntToStr(DuraAl2);
+    frmGUIta.myShowCaption('');
     frmGUIta.myGetCaptions(jo, v, a, s);
     li.SubItems.Add(v);
     li.SubItems.Add(a);

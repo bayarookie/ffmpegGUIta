@@ -47,8 +47,8 @@ type
     btnLanguage: TButton;
     btnMaskAdd: TButton;
     btnMaskDel: TButton;
-    btnMaskReset: TButton;
     btnMaskEdit: TButton;
+    btnMaskReset: TButton;
     btnMediaInfo1: TButton;
     btnMediaInfo2: TButton;
     btnPlayOut: TButton;
@@ -57,6 +57,8 @@ type
     btnLogSave: TButton;
     btnLogClear: TButton;
     btnPlayIn: TButton;
+    btnReset: TButton;
+    btnSaveSets: TButton;
     btnTest: TButton;
     btnStop: TButton;
     btnStart: TButton;
@@ -70,38 +72,37 @@ type
     btnCrop: TButton;
     btnAddFileSplit: TButton;
     btnAddScreenGrab: TButton;
-    btnSaveSets: TButton;
-    btnReset: TButton;
-    chkDirOutStruct: TCheckBox;
-    chkCreateDosFN: TCheckBox;
+    btnAddTrack1: TButton;
     chkCreateSymLink: TCheckBox;
-    chkStopIfError: TCheckBox;
-    chkMetadataWork: TCheckBox;
-    chkxtermconv: TCheckBox;
-    chkMetadataClear: TCheckBox;
-    chkMetadataGet: TCheckBox;
-    chkSaveOnExit: TCheckBox;
+    chkCreateDosFN: TCheckBox;
     chk1instance: TCheckBox;
     chkAddTracks: TCheckBox;
     chkDebug: TCheckBox;
+    chkDirOutStruct: TCheckBox;
     chkLangA1: TCheckBox;
     chkLangA2: TCheckBox;
     chkLangS1: TCheckBox;
     chkLangS2: TCheckBox;
+    chkMetadataGet: TCheckBox;
     chkPlayer2: TCheckBox;
     chkPlayer3: TCheckBox;
     chkPlayInTerm: TCheckBox;
-    chkxterm1str: TCheckBox;
     chkSaveFormPos: TCheckBox;
+    chkMetadataWork: TCheckBox;
+    chkSaveOnExit: TCheckBox;
+    chkStopIfError: TCheckBox;
     chkSynColor: TCheckBox;
+    chkUseMasks: TCheckBox;
+    chkMetadataClear: TCheckBox;
     chkUseEditedCmd: TCheckBox;
     chkConcat: TCheckBox;
     chkFilterComplex: TCheckBox;
     chkRunInMem: TCheckBox;
     chkRunInTerm: TCheckBox;
     chkOEM: TCheckBox;
-    chkUseMasks: TCheckBox;
     chkx264Pass1fast: TCheckBox;
+    chkxterm1str: TCheckBox;
+    chkxtermconv: TCheckBox;
     cmbAddOptsS: TComboBox;
     cmbAddOptsI: TComboBox;
     cmbAddOptsO: TComboBox;
@@ -139,11 +140,11 @@ type
     cmbRunCmd: TComboBox;
     cmbScale: TComboBox;
     cmbSRate: TComboBox;
-    cmbTestDurationss: TComboBox;
-    cmbTestDurationt: TComboBox;
     cmbTagTitleV: TComboBox;
     cmbTagTitleA: TComboBox;
     cmbTagTitleS: TComboBox;
+    cmbTestDurationss: TComboBox;
+    cmbTestDurationt: TComboBox;
     cmbx264preset: TComboBox;
     cmbx264tune: TComboBox;
     cmbDurationt2: TComboBox;
@@ -151,12 +152,12 @@ type
     cmbFilterComplex: TComboBox;
     cmbTagTitleOut: TComboBox;
     cmbTagLangV: TComboBox;
+    edtBitrateA: TLabeledEdit;
     edtDirOut: TComboBox;
     edtDirTmp: TComboBox;
     edtffmpeg: TComboBox;
     edtffplay: TComboBox;
     edtffprobe: TComboBox;
-    edtBitrateA: TLabeledEdit;
     edtFileExts: TComboBox;
     edtMediaInfo: TComboBox;
     edtOfn: TLabeledEdit;
@@ -165,14 +166,7 @@ type
     ImageList1: TImageList;
     edtBitrateV: TLabeledEdit;
     edtOfna: TLabeledEdit;
-    lblTagLangV: TLabel;
     lblCpuCount: TLabel;
-    lblAddOptsS: TLabel;
-    lblAddOptsV: TLabel;
-    lblAddOptsA: TLabel;
-    lblTagLangA: TLabel;
-    lblTagLangS: TLabel;
-    lblTagTitleOut: TLabel;
     lblDirLast: TLabel;
     lblDirOut: TLabel;
     lblDirTmp: TLabel;
@@ -180,6 +174,13 @@ type
     lblffplay: TLabel;
     lblffprobe: TLabel;
     lblMediaInfo: TLabel;
+    lblTagLangV: TLabel;
+    lblAddOptsS: TLabel;
+    lblAddOptsV: TLabel;
+    lblAddOptsA: TLabel;
+    lblTagLangA: TLabel;
+    lblTagLangS: TLabel;
+    lblTagTitleOut: TLabel;
     lblAddOptsI: TLabel;
     lblDurationss1: TLabel;
     lblDurationss2: TLabel;
@@ -207,10 +208,10 @@ type
     lblRotate: TLabel;
     lblScale: TLabel;
     lblSRate: TLabel;
-    lblTestStartDurationTime: TLabel;
     lblTagTitleV: TLabel;
     lblTagTitleA: TLabel;
     lblTagTitleS: TLabel;
+    lblTestStartDurationTime: TLabel;
     lblx264preset: TLabel;
     lblx264tune: TLabel;
     lblxterm: TLabel;
@@ -236,27 +237,73 @@ type
     PageControl1: TPageControl;
     PageControl3: TPageControl;
     PageControl2: TPageControl;
+    PageControl4: TPageControl;
     Panel1: TPanel;
     Panel10: TPanel;
     Panel11: TPanel;
-    Panel12: TPanel;
-    Panel13: TPanel;
-    Panel14: TPanel;
-    Panel15: TPanel;
-    Panel16: TPanel;
+    PanelGenLinks: TPanel;
+    PanelMasks: TPanel;
+    Panel18: TPanel;
+    Panel19: TPanel;
     Panel2: TPanel;
+    Panel20: TPanel;
+    Panel21: TPanel;
+    Panel22: TPanel;
+    Panel23: TPanel;
+    Panel24: TPanel;
+    Panel25: TPanel;
+    Panel26: TPanel;
+    Panel27: TPanel;
+    Panel28: TPanel;
+    Panel29: TPanel;
     Panel3: TPanel;
+    Panel30: TPanel;
+    Panel31: TPanel;
+    Panel32: TPanel;
+    Panel33: TPanel;
+    Panel34: TPanel;
+    Panel35: TPanel;
+    Panel36: TPanel;
+    Panel37: TPanel;
+    Panel38: TPanel;
+    Panel39: TPanel;
     Panel4: TPanel;
+    Panel40: TPanel;
+    Panel41: TPanel;
+    Panel42: TPanel;
+    Panel43: TPanel;
+    Panel44: TPanel;
+    Panel45: TPanel;
+    Panel46: TPanel;
+    Panel47: TPanel;
+    Panel48: TPanel;
+    Panel49: TPanel;
     Panel5: TPanel;
+    Panel50: TPanel;
+    Panel51: TPanel;
+    Panel52: TPanel;
+    Panel53: TPanel;
+    Panel54: TPanel;
+    Panel55: TPanel;
+    Panel56: TPanel;
+    Panel57: TPanel;
+    Panel58: TPanel;
+    Panel59: TPanel;
     Panel6: TPanel;
+    Panel60: TPanel;
+    Panel61: TPanel;
+    Panel62: TPanel;
+    Panel63: TPanel;
+    Panel64: TPanel;
+    Panel65: TPanel;
     Panel7: TPanel;
-    Panel8: TPanel;
+    PanelPathes: TPanel;
     Panel9: TPanel;
     PopupMenu1: TPopupMenu;
     PopupMenu2: TPopupMenu;
     PopupMenu3: TPopupMenu;
-    spnCpuCount: TSpinEdit;
     Splitter1: TSplitter;
+    spnCpuCount: TSpinEdit;
     spnKoefA: TSpinEdit;
     spnKoefV: TSpinEdit;
     StatusBar1: TStatusBar;
@@ -276,7 +323,9 @@ type
     TabConsole4: TTabSheet;
     TabCmdline: TTabSheet;
     TabInput: TTabSheet;
-    TabDefSets: TTabSheet;
+    TabSets: TTabSheet;
+    TabSets1: TTabSheet;
+    TabSets2: TTabSheet;
     TabVideo: TTabSheet;
     TabAudio: TTabSheet;
     TabSubtitle: TTabSheet;
@@ -284,6 +333,7 @@ type
     procedure btnAddPauseClick(Sender: TObject);
     procedure btnAddScreenGrabClick(Sender: TObject);
     procedure btnAddStopClick(Sender: TObject);
+    procedure btnAddTrack1Click(Sender: TObject);
     procedure btnCompareClick(Sender: TObject);
     procedure btnCmdStopClick(Sender: TObject);
     procedure btnCmdRunClick(Sender: TObject);
@@ -438,6 +488,7 @@ type
     procedure myFillEnc;
     procedure myFillFmt;
     //procedure myFillx264Tune;
+    procedure myFillPactl(sf, si: TStrings);
     function myCantUpd(i: integer = 0): boolean;
     function myAutoCrop(jo: TJob; l, k: integer): string;
     procedure myGetClipboardFileNames(files: TStrings; test: boolean = False);
@@ -519,7 +570,7 @@ var
 
 implementation
 
-uses ubyUtils, ufrmsplash, ufrmcrop, ufrmgrab;
+uses ubyUtils, ufrmsplash, ufrmcrop, ufrmgrab, ufrmtrack;
 
 {$R *.lfm}
 
@@ -626,7 +677,8 @@ begin
   Ini := TIniFile.Create(UTF8ToSys(sInifile));
   Ini.StripQuotes := False;
   s := 'Main';
-  mySets1(Ini, s, [TabDefSets], bRead);
+  mySets1(Ini, s, [TabSets1], bRead);
+  mySets1(Ini, s, [TabSets2], bRead);
   if not chkUseMasks.Checked then
     mySets1(Ini, s, [cmbProfile], bRead);
   mySets4(Ini, bRead);
@@ -1568,9 +1620,9 @@ begin
     fn2 := '-'; //if (mode=2) - play through pipe - ffmpeg -i input -f format - | ffplay -
   end;
   // final
+  if Pos('-map', so) > 0 then ma := '';
   if (sp1 <> '') and (mode <> 2) then
   begin
-    //didnt work on mp4; s := ' -c:a pcm_s16le -ar:a 4000 -ac:a 1'; //1st pass audio for better synchronisation
     s := vi + au + su + ma + sp1 + so; //1st pass
     my2(s, fn1);
   end;
@@ -2218,9 +2270,6 @@ var
   end;
 
 begin
-  s1 := AppendPathDelim(sInidir) + cmbLanguage.Text;
-  if bRead and not FileExistsUTF8(s1) then
-    Exit;
   if bRead then
   begin
     mes[0] := 'Video files';
@@ -2257,12 +2306,15 @@ begin
     mes[31] := 'terminated';
     mes[32] := 'Job';
   end;
+  s1 := AppendPathDelim(sInidir) + cmbLanguage.Text;
+  if bRead and (not FileExistsUTF8(s1) or (cmbLanguage.Text = 'Default.lng')) then
+    Exit;
   Ini := TIniFile.Create(UTF8ToSys(s1));
   Ini.StripQuotes := False;
   s1 := 'Captions';
   s2 := 'Hints';
   s3 := 'Messages';
-  myLng5([PageControl1, PageControl2, PageControl3]);
+  myLng5([PageControl1, PageControl2, PageControl3, PageControl4]);
   myLng4([PopupMenu1, PopupMenu2, PopupMenu3]);
   for i := Low(mes) to High(mes) do
     if bRead then
@@ -2832,6 +2884,64 @@ begin
         else
           ;
       end;
+  end;
+end;
+
+procedure TfrmGUIta.myFillPactl(sf, si: TStrings);
+var
+  s, t, u: string;
+  i, j: integer;
+  cmd: TJob;
+begin
+  cmd := TJob.Create;
+  cmd.AddFile('pactl');
+  cmd.f[0].AddStream;
+  cmd.f[0].s[0].addval('1', 'list');
+  cmd.f[0].s[0].addval('2', 'sources');
+  SynMemo2.Lines.Clear;
+  if myGetDosOut(cmd, SynMemo2) <> 0 then Exit;
+  sf.Clear;
+  si.Clear;
+  i := 0;
+  while i < SynMemo2.Lines.Count do
+  begin
+    s := SynMemo2.Lines[i];
+    if (Length(s) > 1) and (s[Length(s)-1] = '#') then //recode it
+    begin
+      inc(i, 2);
+      if i < SynMemo2.Lines.Count then
+      begin
+        s := SynMemo2.Lines[i];
+        j := Pos(':', s);
+        if j > 0 then
+        begin
+          si.Add(Copy(s, j + 2, Length(s)));
+          inc(i, 3);
+          if i < SynMemo2.Lines.Count then
+          begin
+            s := SynMemo2.Lines[i];
+            j := Pos(':', s);
+            if j > 0 then
+            begin
+              s := Copy(s, j + 2, Length(s));
+              j := Pos(' ', s);
+              if j > 0 then
+              begin
+                s := Copy(s, j + 1, Length(s));
+                t := Copy(s, 1, 1);
+                j := Pos(' ', s);
+                if j > 0 then
+                begin
+                  u := Copy(s, j + 1, 5); //recode  it
+                  sf.Add('-f pulse -ac ' + t + ' -ar ' + u);
+                end;
+              end;
+            end;
+          end;
+        end;
+      end;
+    end;
+    inc(i);
   end;
 end;
 
@@ -3431,6 +3541,9 @@ begin
 end;
 
 procedure TfrmGUIta.btnAddScreenGrabClick(Sender: TObject);
+{$IFDEF MSWINDOWS}
+begin
+{$ELSE}
 var
   jo: TJob;
   s: string;
@@ -3439,36 +3552,79 @@ var
 begin
   Application.CreateForm(TfrmGrab, frmG);
   frmG.Caption := btnAddScreenGrab.Caption;
+  frmG.ComboBox1.Text := ':0.0';
+  frmG.ComboBox2.Text := '-f x11grab -framerate 30 -video_size '
+  + IntToStr(Screen.Width) + 'x'+ IntToStr(Screen.Height);
+  //ffprobe -f v4l2 -list_formats all /dev/video0
+  //[video4linux2,v4l2 @ 0xb05026a0] Raw       :     yuyv422 :     YUV 4:2:2 (YUYV) : 640x480 352x288 320x240 176x144 160x120
+  frmG.ComboBox3.Text := '/dev/video0';
+  frmG.ComboBox4.Text := '-f v4l2 -framerate 30 -video_size 160x120';
+  //pactl list sources
+  myFillPactl(frmG.ComboBox6.Items, frmG.ComboBox5.Items);
+  frmG.ComboBox8.Items.Clear;
+  frmG.ComboBox8.Items.AddStrings(frmG.ComboBox6.Items);
+  frmG.ComboBox7.Items.Clear;
+  frmG.ComboBox7.Items.AddStrings(frmG.ComboBox5.Items);
+  frmG.ComboBox5.Text := 'alsa_output.pci-0000_00_1b.0.analog-stereo.monitor';
+  frmG.ComboBox6.Text := '-f pulse -ac 2 -ar 44100';
+  frmG.ComboBox7.Text := 'noechosource';
+  frmG.ComboBox8.Text := '-f pulse -ac 1 -ar 32000';
+  frmG.chkMixVideoChange(nil);
   if frmG.ShowModal = mrOK then
   begin
     jo := TJob.Create;
     Inc(Counter);
     jo.setval('index', IntToStr(Counter));
     jo.setval(sMyCompleted, '0');
+    if Trim(edtDirOut.Text) <> '' then
+      s := Trim(edtDirOut.Text)
+    else
+      s := Trim(edtDirTmp.Text);
+    jo.setval(edtOfn.Name, myGetOutFN(s, 'screengrab', '.mkv'));
+    jo.setval(chkFilterComplex.Name, IfThen(frmG.cmbFilterComplex.Text <> '', '1', '0'));
+    jo.setval(cmbFilterComplex.Name, frmG.cmbFilterComplex.Text);
+    jo.setval(cmbAddOptsO.Name, frmG.cmbAddOptsO.Text);
+    //add files
     jo.AddFile(frmG.ComboBox1.Text);
     jo.f[0].setval(cmbAddOptsI.Name, frmG.ComboBox2.Text);
     jo.f[0].setval(sMyffprobe, '1');
     jo.AddFile(frmG.ComboBox3.Text);
     jo.f[1].setval(cmbAddOptsI.Name, frmG.ComboBox4.Text);
     jo.f[1].setval(sMyffprobe, '1');
-    if Trim(edtDirOut.Text) <> '' then
-      s := Trim(edtDirOut.Text)
-    else
-      s := edtDirTmp.Text;
-    jo.setval(edtOfn.Name, myGetOutFN(s, 'screengrab', '.mpg'));
+    jo.AddFile(frmG.ComboBox5.Text);
+    jo.f[2].setval(cmbAddOptsI.Name, frmG.ComboBox6.Text);
+    jo.f[2].setval(sMyffprobe, '1');
+    jo.AddFile(frmG.ComboBox7.Text);
+    jo.f[3].setval(cmbAddOptsI.Name, frmG.ComboBox8.Text);
+    jo.f[3].setval(sMyffprobe, '1');
+    //add tracks
     SetLength(jo.f[0].s, 1);
     jo.f[0].s[0] := TCont.Create;
     jo.f[0].s[0].setval('codec_type', 'video');
     jo.f[0].s[0].setval('Checked', '1');
-    jo.f[0].s[0].setval('TAG:title', 'screengrab');
+    jo.f[0].s[0].setval('TAG:title', 'video source 1');
     SetLength(jo.f[1].s, 1);
     jo.f[1].s[0] := TCont.Create;
-    jo.f[1].s[0].setval('codec_type', 'audio');
+    jo.f[1].s[0].setval('codec_type', 'video');
     jo.f[1].s[0].setval('Checked', '1');
-    jo.f[1].s[0].setval('TAG:title', 'audiograb');
-    SetLength(jo.m, 2);
+    jo.f[1].s[0].setval('TAG:title', 'video source 2');
+    SetLength(jo.f[2].s, 1);
+    jo.f[2].s[0] := TCont.Create;
+    jo.f[2].s[0].setval('codec_type', 'audio');
+    jo.f[2].s[0].setval('Checked', '1');
+    jo.f[2].s[0].setval('TAG:title', 'audio source 1');
+    SetLength(jo.f[3].s, 1);
+    jo.f[3].s[0] := TCont.Create;
+    jo.f[3].s[0].setval('codec_type', 'audio');
+    jo.f[3].s[0].setval('Checked', '1');
+    jo.f[3].s[0].setval('TAG:title', 'audio source 2');
+    //add sorting
+    SetLength(jo.m, 4);
     jo.m[0] := '0:0';
     jo.m[1] := '1:0';
+    jo.m[2] := '2:0';
+    jo.m[3] := '3:0';
+    //to listview
     li := LVjobs.Items.Add;
     li.Checked := True;
     li.Caption := IntToStr(Counter);
@@ -3476,15 +3632,16 @@ begin
     li.SubItems.Add('0');
     li.SubItems.Add('0');
     li.SubItems.Add('0');
-    inc(DuraAl2);
-    myShowCaption('');
     li.SubItems.Add('');
     li.SubItems.Add('');
     li.Data := Pointer(jo);
     if (LVjobs.Items.Count = 1) then
       LVjobs.Items[0].Selected := True;
+    inc(DuraAl2);
+    myShowCaption('');
   end;
   frmGrab.Free;
+  {$ENDIF}
 end;
 
 procedure TfrmGUIta.btnAddStopClick(Sender: TObject);
@@ -3499,6 +3656,33 @@ begin
       ThreadAddF.Resume;
     {$ENDIF}
   end;
+end;
+
+procedure TfrmGUIta.btnAddTrack1Click(Sender: TObject);
+var
+  frmT: TfrmTrack;
+  jo: TJob;
+  i: integer;
+begin
+  if LVjobs.Selected = nil then
+    Exit;
+  Application.CreateForm(TfrmTrack, frmT);
+  frmT.Caption := btnAddTrack1.Caption;
+  if frmT.ShowModal = mrOK then
+  begin
+    jo := TJob(LVjobs.Selected.Data);
+    i := jo.AddFile(frmT.ComboBox1.Text);
+    jo.f[i].setval(cmbAddOptsI.Name, frmT.ComboBox2.Text);
+    jo.f[i].setval(sMyffprobe, '1');
+    SetLength(jo.f[i].s, 1);
+    jo.f[i].s[0] := TCont.Create;
+    jo.f[i].s[0].setval('codec_type', frmT.ComboBox3.Text);
+    jo.f[i].s[0].setval('Checked', '1');
+    SetLength(jo.m, Length(jo.m) + 1);
+    jo.m[High(jo.m)] := IntToStr(i) + ':0';
+    LVjobsSelectItem(Sender, LVjobs.Selected, True);
+  end;
+  frmT.Free;
 end;
 
 procedure TfrmGUIta.btnCompareClick(Sender: TObject);
@@ -4195,13 +4379,21 @@ end;
 procedure TfrmGUIta.myDefaultSets;
 var
   i: integer;
+  procedure my1(c: TComponent);
+  var
+    i: integer;
+  begin
+    if (c is TComboBox) or (c is TCheckBox) then
+      cDefaultSets.setval(c.Name, myGet2(c))
+    else if c is TPanel then
+      for i := 0 to TPanel(c).ControlCount - 1 do
+        my1(TPanel(c).Controls[i]);
+  end;
 begin
-  for i := 0 to Panel13.ControlCount - 1 do
-    cDefaultSets.setval(Panel13.Controls[i].Name, myGet2(Panel13.Controls[i]));
-  for i := 0 to Panel15.ControlCount - 1 do
-    cDefaultSets.setval(Panel15.Controls[i].Name, myGet2(Panel15.Controls[i]));
-  for i := 0 to TabDefSets.ControlCount - 1 do
-    cDefaultSets.setval(TabDefSets.Controls[i].Name, myGet2(TabDefSets.Controls[i]));
+  for i := 0 to TabSets1.ControlCount - 1 do
+    my1(TabSets1.Controls[i]);
+  for i := 0 to TabSets2.ControlCount - 1 do
+    cDefaultSets.setval(TabSets2.Controls[i].Name, myGet2(TabSets2.Controls[i]));
   cDefaultSets.setval(chkMetadataWork.Name, myGet2(chkMetadataWork));
   cDefaultSets.setval(chkMetadataClear.Name, myGet2(chkMetadataClear));
   cDefaultSets.setval(chkConcat.Name, myGet2(chkConcat));
@@ -4212,13 +4404,21 @@ end;
 procedure TfrmGUIta.btnResetClick(Sender: TObject);
 var
   i: integer;
+  procedure my2(c: TComponent);
+  var
+    i: integer;
+  begin
+    if (c is TComboBox) or (c is TCheckBox) then
+      mySet2(c, cDefaultSets.getval(c.Name))
+    else if c is TPanel then
+      for i := 0 to TPanel(c).ControlCount - 1 do
+        my2(TPanel(c).Controls[i]);
+  end;
 begin
-  for i := 0 to Panel13.ControlCount - 1 do
-    mySet2(Panel13.Controls[i], cDefaultSets.getval(Panel13.Controls[i].Name));
-  for i := 0 to Panel15.ControlCount - 1 do
-    mySet2(Panel15.Controls[i], cDefaultSets.getval(Panel15.Controls[i].Name));
-  for i := 0 to TabDefSets.ControlCount - 1 do
-    mySet2(TabDefSets.Controls[i], cDefaultSets.getval(TabDefSets.Controls[i].Name));
+  for i := 0 to TabSets1.ControlCount - 1 do
+    my2(TabSets1.Controls[i]);
+  for i := 0 to TabSets2.ControlCount - 1 do
+    mySet2(TabSets2.Controls[i], cDefaultSets.getval(TabSets2.Controls[i].Name));
 end;
 
 procedure TfrmGUIta.btnSaveSetsClick(Sender: TObject);
@@ -4855,6 +5055,10 @@ begin
   if edtxterm.Text = '/usr/bin/gnome-terminal' then begin
     edtxtermopts.Text := '-x';
     chkxterm1str.Checked := True;
+  end else
+  if edtxterm.Text = '/usr/bin/xfce4-terminal' then begin
+    edtxtermopts.Text := '-x';
+    chkxterm1str.Checked := True;
   end;
 end;
 
@@ -4921,10 +5125,12 @@ begin
   else
     sInidir := GetAppConfigDirUTF8(False, True);
   sInifile := AppendPathDelim(sInidir) + ExtractFileNameOnly(s) + '.cfg';
+  memJournal.Lines.Add(sInifile);
   b := FileExistsUTF8(sInifile);
   //hide some unused components
   {$IFDEF MSWINDOWS}
   btnAddScreenGrab.Visible := False; //not tested
+  btnAddTrack1.Visible := False;
   {$ELSE}
   btnAddFilesAsAvs1.Visible := False;
   btnAddFilesAsAvs2.Visible := False;
@@ -4966,17 +5172,52 @@ begin
   cmbExtPlayer.Text := 'mplayer';
   cmbDirLast.Text := '$HOME';
   cmbFont.Text := 'Ubuntu';
-  edtxterm.Text := '/bin/sh';
-  edtxtermopts.Text := '-c';
-  edtxterm.Items.Add('/bin/sh');
-  edtxtermopts.Items.Add('-c');
-  edtxterm.Items.Add('/usr/bin/xterm');
-  edtxtermopts.Items.Add('-e');
-  edtxterm.Items.Add('/usr/bin/konsole');
-  edtxtermopts.Items.Add('--nofork -e');
-  edtxtermopts.Items.Add('--nofork --hold -e');
-  edtxterm.Items.Add('/usr/bin/gnome-terminal');
-  edtxtermopts.Items.Add('-x');
+  if FileExistsUTF8('/bin/sh') then
+  begin
+    edtxterm.Text := '/bin/sh';
+    edtxtermopts.Text := '-c';
+    edtxterm.Items.Add('/bin/sh');
+    edtxtermopts.Items.Add('-c');
+  end;
+  if FileExistsUTF8('/usr/bin/xterm') then
+  begin
+    edtxterm.Items.Add('/usr/bin/xterm');
+    edtxtermopts.Items.Add('-e');
+  end;
+  //s := GetEnvironmentVariable('XDG_CURRENT_DESKTOP');
+  //if s = 'KDE' then
+  if FileExistsUTF8('/usr/bin/konsole') then
+  begin
+    edtxterm.Text := '/usr/bin/konsole';
+    edtxtermopts.Text := '--nofork -e';
+    edtxterm.Items.Add('/usr/bin/konsole');
+    edtxtermopts.Items.Add('--nofork -e');
+    edtxtermopts.Items.Add('--nofork --hold -e');
+  end;
+  //else if (s = 'GNOME') or (s = 'X-Cinnamon') then
+  if FileExistsUTF8('/usr/bin/gnome-terminal') then
+  begin
+    edtxterm.Text := '/usr/bin/gnome-terminal';
+    edtxtermopts.Text := '-x';
+    edtxterm.Items.Add('/usr/bin/gnome-terminal');
+    edtxtermopts.Items.Add('-x');
+  end;
+  //else if s = 'XFCE' then
+  if FileExistsUTF8('/usr/bin/xfce4-terminal') then
+  begin
+    edtxterm.Text := '/usr/bin/xfce4-terminal';
+    edtxtermopts.Text := '-x';
+    edtxterm.Items.Add('/usr/bin/xfce4-terminal');
+    edtxtermopts.Items.Add('-x');
+  end;
+  //else if s = 'LXDE' then
+  if FileExistsUTF8('/usr/bin/lxterminal') then
+  begin
+    edtxterm.Text := '/usr/bin/lxterminal';
+    edtxtermopts.Text := '-e';
+    edtxterm.Items.Add('/usr/bin/lxterminal');
+    edtxtermopts.Items.Add('-e');
+  end;
   chkxterm1str.Checked := True;
   {$ENDIF}
   bUpdFromCode := False;
