@@ -90,7 +90,7 @@ end;
 procedure TThreadAddF.DataOut;
 var
   s, v, a, lng, styp: string;
-  i, j, k, iv, ia, ia2: integer;
+  i, k, iv, ia, ia2: integer;
   r: double;
   sl: TStringList;
   Ini: TIniFile;
@@ -113,24 +113,20 @@ begin
   s := jo.getval(frmGUIta.cmbProfile.Name);
   s := myGetAnsiFN(AppendPathDelim(sInidir) + s);
   Ini := TIniFile.Create(UTF8ToSys(s));
-  //fill output sets from ini
-  Ini.ReadSection('1', sl);
+  //fill output sets from profile.ini
+  Ini.ReadSectionValues('1', sl);
   for i := 0 to sl.Count - 1 do
-    jo.setval(sl[i], Ini.ReadString('1', sl[i], ''));
+    jo.setpair(sl[i]);
   s := frmGUIta.SynMemo6.Text;
   //information about the container format of the input multimedia stream
   sl.Text := myBetween(s, '[FORMAT]', '[/FORMAT]');
   for i := 0 to sl.Count - 1 do
-  begin
-    j := Pos('=', sl[i]);
-    if j > 0 then
-      jo.f[filenum].setval(Copy(sl[i], 1, j - 1), Copy(sl[i], j + 1, Length(sl[i])));
-  end;
+    jo.f[filenum].setpair(sl[i]);
   jo.f[filenum].setval('----------', '---------------------------------------------------------------------');
-  //fill input sets from ini
-  Ini.ReadSection('input', sl);
+  //fill input sets from profile.ini
+  Ini.ReadSectionValues('input', sl);
   for i := 0 to sl.Count - 1 do
-    jo.f[filenum].setval(sl[i], Ini.ReadString('input', sl[i], ''));
+    jo.f[filenum].setpair(sl[i]);
   //enumerate streams
   s := frmGUIta.SynMemo6.Text;
   repeat
@@ -140,20 +136,16 @@ begin
     k := jo.f[filenum].AddStream;
     jo.AddMap(IntToStr(filenum) + ':' + IntToStr(k));
     for i := 0 to sl.Count - 1 do
-    begin
-      j := Pos('=', sl[i]);
-      if j > 0 then
-        jo.f[filenum].s[k].setval(Copy(sl[i], 1, j - 1), Copy(sl[i], j + 1, Length(sl[i])));
-    end;
+      jo.f[filenum].s[k].setpair(sl[i]);
     if (jo.f[filenum].s[k].getval('codec_name') = 'unknown') then
       Continue;
     jo.f[filenum].s[k].setval('----------', '---------------------------------------------------------------------');
-    //fill stream sets from ini
+    //fill stream sets from profile.ini
     styp := jo.f[filenum].s[k].getval('codec_type');
     sl.Clear;
-    Ini.ReadSection(styp, sl);
+    Ini.ReadSectionValues(styp, sl);
     for i := 0 to sl.Count - 1 do
-      jo.f[filenum].s[k].setval(sl[i], Ini.ReadString(styp, sl[i], ''));
+      jo.f[filenum].s[k].setpair(sl[i]);
     //to check, or not to check, that is a question
     bp := sl.Count > 0;
     if (styp = 'video') then

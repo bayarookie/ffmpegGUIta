@@ -7,14 +7,14 @@
 
 
 Для работы нужны в windows:
-ffmpeg.exe, ffprobe.exe, ffplay.exe 2.7.2 - http://ffmpeg.zeranoe.com/builds/
+ffmpeg.exe, ffprobe.exe, ffplay.exe 2.8 - http://ffmpeg.zeranoe.com/builds/
 mediainfo.exe или mediainfo.dll - http://sourceforge.net/projects/mediainfo/files/binary/mediainfo-gui/
 Дополнительно, но не обязательно, можно использовать:
 Avisynth - http://sourceforge.net/projects/avisynth2/
 плагин для Avisynth - https://github.com/ffms/ffms2
 
 Для работы нужны в linux:
-ffmpeg, ffprobe, ffplay 2.7.2 - https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media - ppa:mc3man/trusty-media
+ffmpeg, ffprobe, ffplay 2.8 - https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media - ppa:mc3man/trusty-media
 
 Ключи:
 -o:"D:\Путь\к папке\назначения"

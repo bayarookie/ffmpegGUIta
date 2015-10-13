@@ -490,7 +490,7 @@ begin
   //if Pos('?', wfn) > 0 then
   if not (FileExistsUTF8(wfn) or DirectoryExistsUTF8(wfn)) then
   begin
-    frmGUIta.myError(9, 'incorrect filename? - ' + wfn);
+    //frmGUIta.myError(9, 'incorrect filename? - ' + wfn);
     Exit;
   end;
   //ffmpeg tickets: #4697 https://trac.ffmpeg.org/ticket/4697 and #819 https://trac.ffmpeg.org/ticket/819
@@ -545,29 +545,29 @@ end;
 
 function myGetOutFN(Dir, Inp, Ext: string): string;
 var
-  i, j: integer;
+  i: integer;
   s: string;
 begin
+  s := ChangeFileExt(ExtractFileName(Inp), '');
+  //if (Length(s) > 0) and (s[Length(s)] = ')') then
+  //begin
+  //  i := 1;
+  //  j := 0;
+  //  while i > 0 do
+  //  begin
+  //    i := PosEx(' (', s, i + 1);
+  //    if (i > 0) and (i + 1 < Length(s)) then
+  //      j := i;
+  //  end;
+  //  if j > 0 then
+  //  begin
+  //    i := StrToIntDef(Copy(s, j + 2, Length(s) - j - 2), 0);
+  //    if (i > 0) and (i < 1000) then
+  //      s := Copy(s, 1, j - 1);
+  //  end;
+  //end;
   if Dir <> '' then
-    s := IncludeTrailingPathDelimiter(myExpandEnv(Dir));
-  s := s + ChangeFileExt(ExtractFileName(Inp), '');
-  if (Length(s) > 0) and (s[Length(s)] = ')') then
-  begin
-    i := 1;
-    j := 0;
-    while i > 0 do
-    begin
-      i := PosEx(' (', s, i + 1);
-      if (i > 0) and (i + 1 < Length(s)) then
-        j := i;
-    end;
-    if j > 0 then
-    begin
-      i := StrToIntDef(Copy(s, j + 1, Length(s) - j - 1), 0);
-      if (i > 0) and (i < 1000) then
-        s := Copy(s, 1, j - 1);
-    end;
-  end;
+    s := IncludeTrailingPathDelimiter(myExpandEnv(Dir)) + s;
   i := 0;
   Result := s + Ext;
   while FileExistsUTF8(myExpandEnv(Result)) do

@@ -18,6 +18,7 @@ type
     function addval(key, Value: string): integer;
     function getval(key: string): string;
     procedure setval(key, Value: string);
+    procedure setpair(pair: string);
   end;
 
   { TFil }
@@ -78,6 +79,15 @@ begin
     Exit;
   end;
   addval(key, Value);
+end;
+
+procedure TCont.setpair(pair: string);
+var
+  j: integer;
+begin
+  j := Pos('=', pair);
+  if j > 0 then
+    setval(Copy(pair, 1, j - 1), Copy(pair, j + 1, Length(pair)));
 end;
 
 { TFil }

@@ -73,6 +73,8 @@ type
     btnAddFileSplit: TButton;
     btnAddScreenGrab: TButton;
     btnAddTrack1: TButton;
+    chkSGmixaudio: TCheckBox;
+    chkSGmixvideo: TCheckBox;
     chkCreateSymLink: TCheckBox;
     chkCreateDosFN: TCheckBox;
     chk1instance: TCheckBox;
@@ -90,6 +92,10 @@ type
     chkSaveFormPos: TCheckBox;
     chkMetadataWork: TCheckBox;
     chkSaveOnExit: TCheckBox;
+    chkSGsource1: TCheckBox;
+    chkSGsource2: TCheckBox;
+    chkSGsource3: TCheckBox;
+    chkSGsource0: TCheckBox;
     chkStopIfError: TCheckBox;
     chkSynColor: TCheckBox;
     chkUseMasks: TCheckBox;
@@ -122,6 +128,14 @@ type
     cmbLangS: TComboBox;
     cmbLangsList: TComboBox;
     cmbLanguage: TComboBox;
+    cmbSGopts1: TComboBox;
+    cmbSGopts2: TComboBox;
+    cmbSGopts3: TComboBox;
+    cmbSGopts0: TComboBox;
+    cmbSGsource1: TComboBox;
+    cmbSGsource2: TComboBox;
+    cmbSGsource3: TComboBox;
+    cmbSGsource0: TComboBox;
     cmbTagLangA: TComboBox;
     cmbTagLangS: TComboBox;
     cmbSetDAR: TComboBox;
@@ -152,6 +166,10 @@ type
     cmbFilterComplex: TComboBox;
     cmbTagTitleOut: TComboBox;
     cmbTagLangV: TComboBox;
+    cmbSGfiltercomplex: TComboBox;
+    cmbSGaddoptsO: TComboBox;
+    cmbSGoutput: TComboBox;
+    cmbSGoutext: TComboBox;
     edtBitrateA: TLabeledEdit;
     edtDirOut: TComboBox;
     edtDirTmp: TComboBox;
@@ -166,6 +184,9 @@ type
     ImageList1: TImageList;
     edtBitrateV: TLabeledEdit;
     edtOfna: TLabeledEdit;
+    lblSGoutput: TLabel;
+    lblSGaddoptsO: TLabel;
+    lblSGfiltercomplex: TLabel;
     lblCpuCount: TLabel;
     lblDirLast: TLabel;
     lblDirOut: TLabel;
@@ -326,6 +347,7 @@ type
     TabSets: TTabSheet;
     TabSets1: TTabSheet;
     TabSets2: TTabSheet;
+    TabScreenGrab: TTabSheet;
     TabVideo: TTabSheet;
     TabAudio: TTabSheet;
     TabSubtitle: TTabSheet;
@@ -374,6 +396,7 @@ type
     procedure chkLangS2Change(Sender: TObject);
     procedure chkPlayer2Change(Sender: TObject);
     procedure chkPlayer3Change(Sender: TObject);
+    procedure chkSGmixvideoChange(Sender: TObject);
     procedure chkSynColorChange(Sender: TObject);
     procedure chkMetadataWorkChange(Sender: TObject);
     procedure chkUseEditedCmdChange(Sender: TObject);
@@ -394,6 +417,8 @@ type
     procedure cmbProfileChange(Sender: TObject);
     procedure cmbProfileGetItems(Sender: TObject);
     procedure cmbRunCmdGetItems(Sender: TObject);
+    procedure cmbSGsource2GetItems(Sender: TObject);
+    procedure cmbSGsource3GetItems(Sender: TObject);
     procedure edtDirOutChange(Sender: TObject);
     procedure edtffmpegChange(Sender: TObject);
     procedure edtffmpegGetItems(Sender: TObject);
@@ -488,7 +513,7 @@ type
     procedure myFillEnc;
     procedure myFillFmt;
     //procedure myFillx264Tune;
-    procedure myFillPactl(sf, si: TStrings);
+    procedure myFillSGin(sf, si: TStrings; ct: string);
     function myCantUpd(i: integer = 0): boolean;
     function myAutoCrop(jo: TJob; l, k: integer): string;
     procedure myGetClipboardFileNames(files: TStrings; test: boolean = False);
@@ -534,6 +559,7 @@ type
     function myCmdExtr(cmd: TJob): string;
     function myCmdFillPr(fil: TFil; b: boolean; var pr: TProcessUTF8): string;
     procedure myShowCaption(s: string);
+    procedure myFillJo(jo: TJob; op, fn: string);
   end;
 
 const
@@ -562,15 +588,18 @@ var
   cCmdIni: TCont;
   iTabCount: integer;
   sMyDTformat: string = 'yyyy-mm-dd hh:nn:ss';
-  sMyFilename: string = 'my_filename';
-  sMyDOSfname: string = 'my_dosfname';
-  sMyffprobe: string = 'my_ffprobe';
-  sMyCompleted: string = 'my_Completed';
-  sMyChecked: string = 'my_Checked';
+  sMyFilename: string = 'my_filename'; //input source filename
+  {$IFDEF MSWINDOWS}
+  sMyDOSfname: string = 'my_dosfname'; //input source msdos 8.3 filename
+  {$ENDIF}
+  sMyBakfname: string = 'my_bakfname'; //backup filename for generating filenames with counter: "output filename (1).ext"
+  sMyffprobe: string = 'my_ffprobe';   //0 - get streams info, 1 - do not get
+  sMyCompleted: string = 'my_Completed';//0 - job added, 1 - completed, 2 - in progress, 3 - error
+  sMyChecked: string = 'my_Checked';   //0 - do not convert, 1 - in queue
 
 implementation
 
-uses ubyUtils, ufrmsplash, ufrmcrop, ufrmgrab, ufrmtrack;
+uses ubyUtils, ufrmsplash, ufrmcrop, ufrmtrack;
 
 {$R *.lfm}
 
@@ -677,8 +706,7 @@ begin
   Ini := TIniFile.Create(UTF8ToSys(sInifile));
   Ini.StripQuotes := False;
   s := 'Main';
-  mySets1(Ini, s, [TabSets1], bRead);
-  mySets1(Ini, s, [TabSets2], bRead);
+  mySets1(Ini, s, [TabSets1, TabSets2, TabScreenGrab], bRead);
   if not chkUseMasks.Checked then
     mySets1(Ini, s, [cmbProfile], bRead);
   mySets4(Ini, bRead);
@@ -826,6 +854,7 @@ var
     {$IFDEF MSWINDOWS}
     jo.setval(edtOfna.Name, myGetOutFNa(s, jo.f[0].getval(sMyDOSfname), e));
     {$ENDIF}
+    jo.setval(sMyBakfname, ExtractFileName(fn));
     if chkAddTracks.Checked then
     begin
       sl := TStringList.Create;
@@ -1597,7 +1626,7 @@ begin
     end;
     if FileExistsUTF8(fno) and (mode <> 3) then
     begin
-      fno := myGetOutFN(ExtractFilePath(fno), jo.f[0].getval(sMyFilename),  ExtractFileExt(fno));
+      fno := myGetOutFN(ExtractFilePath(fno), jo.getval(sMyBakfname),  ExtractFileExt(fno));
       jo.setval(edtOfn.Name, fno);
     end;
     {$IFDEF MSWINDOWS}
@@ -1694,6 +1723,8 @@ begin
     end;
     if Result <> 0 then Break;
   end;
+  if chkDebug.Checked then
+    memJournal.Lines.Add('exit code: ' + IntToStr(Result));
 end;
 
 function TfrmGUIta.myGetDosOut2(cmd: string; mem: TSynMemo): integer;
@@ -2887,18 +2918,47 @@ begin
   end;
 end;
 
-procedure TfrmGUIta.myFillPactl(sf, si: TStrings);
+procedure TfrmGUIta.myFillSGin(sf, si: TStrings; ct: string);
 var
   s, t, u: string;
   i, j: integer;
   cmd: TJob;
 begin
   cmd := TJob.Create;
+  {$IFDEF MSWINDOWS}
+  cmd.AddFile(myStrReplace('$ffmpeg'));
+  cmd.f[0].AddStream;
+  cmd.f[0].s[0].addval('1', '-hide_banner');
+  cmd.f[0].s[0].addval('2', '-list_devices');
+  cmd.f[0].s[0].addval('3', 'true');
+  cmd.f[0].s[0].addval('4', '-f');
+  cmd.f[0].s[0].addval('5', 'dshow');
+  cmd.f[0].s[0].addval('6', '-i');
+  cmd.f[0].s[0].addval('7', 'NUL');
+  if myGetDosOut(cmd, SynMemo2) > 1 then Exit;
+  sf.Clear;
+  si.Clear;
+  i := 0;
+  while i < SynMemo2.Lines.Count do
+  begin
+    s := SynMemo2.Lines[i];
+    if Copy(s, 20, 24) = 'DirectShow video devices' then
+      t := 'video';
+    if Copy(s, 20, 24) = 'DirectShow audio devices' then
+      t := 'audio';
+    if (Copy(s, 21, 1) = '"') and (t = ct) then
+    begin
+      s := Copy(s, 21, Length(s));
+      si.Add(ct + '=' + s);
+      sf.Add('-f dshow');
+    end;
+    inc(i);
+  end;
+  {$ELSE}
   cmd.AddFile('pactl');
   cmd.f[0].AddStream;
   cmd.f[0].s[0].addval('1', 'list');
   cmd.f[0].s[0].addval('2', 'sources');
-  SynMemo2.Lines.Clear;
   if myGetDosOut(cmd, SynMemo2) <> 0 then Exit;
   sf.Clear;
   si.Clear;
@@ -2943,6 +3003,7 @@ begin
     end;
     inc(i);
   end;
+  {$ENDIF}
 end;
 
 function TfrmGUIta.myCantUpd(i: integer = 0): boolean;
@@ -3495,6 +3556,44 @@ begin
     + IfThen(s <> '', ', ' + s);
 end;
 
+procedure TfrmGUIta.myFillJo(jo: TJob; op, fn: string);
+var
+  i, k, l: integer;
+  s: string;
+  cmd: TJob;
+  sl: TStringList;
+begin
+  cmd := TJob.Create;
+  cmd.AddFile(myStrReplace('$ffprobe'));
+  cmd.f[0].AddStream;
+  cmd.f[0].s[0].addval('1', '-hide_banner');
+  //cmd.f[0].s[0].addval('2', '-show_format');
+  cmd.f[0].s[0].addval('3', '-show_streams');
+  sl := TStringList.Create;
+  process.CommandToList(op, sl);
+  for i := 0 to sl.Count - 1 do
+    cmd.f[0].s[0].addval(IntToStr(i), sl[i]);
+  sl.Free;
+  cmd.f[0].s[0].addval('5', fn);
+  if myGetDosOut(cmd, SynMemo2) <> 0 then Exit;
+  l := jo.AddFile(fn);
+  jo.f[l].setval(sMyffprobe, '1');
+  jo.f[l].setval(cmbAddOptsI.Name, op);
+  s := SynMemo2.Text;
+  sl := TStringList.Create;
+  repeat
+    sl.Text := myBetween(s, '[STREAM]', '[/STREAM]');
+    if (sl.Text = '') then
+      Break;
+    k := jo.f[l].AddStream;
+    jo.f[l].s[k].setval('Checked', '1');
+    for i := 0 to sl.Count - 1 do
+      jo.f[l].s[k].setpair(sl[i]);
+    jo.AddMap(IntToStr(l) + ':' + IntToStr(k));
+  until s = '';
+  sl.Free;
+end;
+
 //------------------------------------------------------------------------------
 
 procedure TfrmGUIta.btnAddFilesClick(Sender: TObject);
@@ -3541,36 +3640,12 @@ begin
 end;
 
 procedure TfrmGUIta.btnAddScreenGrabClick(Sender: TObject);
-{$IFDEF MSWINDOWS}
-begin
-{$ELSE}
 var
   jo: TJob;
-  s: string;
+  v, a, s: string;
   li: TListItem;
-  frmG: TfrmGrab;
 begin
-  Application.CreateForm(TfrmGrab, frmG);
-  frmG.Caption := btnAddScreenGrab.Caption;
-  frmG.ComboBox1.Text := ':0.0';
-  frmG.ComboBox2.Text := '-f x11grab -framerate 30 -video_size '
-  + IntToStr(Screen.Width) + 'x'+ IntToStr(Screen.Height);
-  //ffprobe -f v4l2 -list_formats all /dev/video0
-  //[video4linux2,v4l2 @ 0xb05026a0] Raw       :     yuyv422 :     YUV 4:2:2 (YUYV) : 640x480 352x288 320x240 176x144 160x120
-  frmG.ComboBox3.Text := '/dev/video0';
-  frmG.ComboBox4.Text := '-f v4l2 -framerate 30 -video_size 160x120';
-  //pactl list sources
-  myFillPactl(frmG.ComboBox6.Items, frmG.ComboBox5.Items);
-  frmG.ComboBox8.Items.Clear;
-  frmG.ComboBox8.Items.AddStrings(frmG.ComboBox6.Items);
-  frmG.ComboBox7.Items.Clear;
-  frmG.ComboBox7.Items.AddStrings(frmG.ComboBox5.Items);
-  frmG.ComboBox5.Text := 'alsa_output.pci-0000_00_1b.0.analog-stereo.monitor';
-  frmG.ComboBox6.Text := '-f pulse -ac 2 -ar 44100';
-  frmG.ComboBox7.Text := 'noechosource';
-  frmG.ComboBox8.Text := '-f pulse -ac 1 -ar 32000';
-  frmG.chkMixVideoChange(nil);
-  if frmG.ShowModal = mrOK then
+  if MessageDlg(btnAddScreenGrab.Caption, mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
     jo := TJob.Create;
     Inc(Counter);
@@ -3580,50 +3655,23 @@ begin
       s := Trim(edtDirOut.Text)
     else
       s := Trim(edtDirTmp.Text);
-    jo.setval(edtOfn.Name, myGetOutFN(s, 'screengrab', '.mkv'));
-    jo.setval(chkFilterComplex.Name, IfThen(frmG.cmbFilterComplex.Text <> '', '1', '0'));
-    jo.setval(cmbFilterComplex.Name, frmG.cmbFilterComplex.Text);
-    jo.setval(cmbAddOptsO.Name, frmG.cmbAddOptsO.Text);
-    //add files
-    jo.AddFile(frmG.ComboBox1.Text);
-    jo.f[0].setval(cmbAddOptsI.Name, frmG.ComboBox2.Text);
-    jo.f[0].setval(sMyffprobe, '1');
-    jo.AddFile(frmG.ComboBox3.Text);
-    jo.f[1].setval(cmbAddOptsI.Name, frmG.ComboBox4.Text);
-    jo.f[1].setval(sMyffprobe, '1');
-    jo.AddFile(frmG.ComboBox5.Text);
-    jo.f[2].setval(cmbAddOptsI.Name, frmG.ComboBox6.Text);
-    jo.f[2].setval(sMyffprobe, '1');
-    jo.AddFile(frmG.ComboBox7.Text);
-    jo.f[3].setval(cmbAddOptsI.Name, frmG.ComboBox8.Text);
-    jo.f[3].setval(sMyffprobe, '1');
-    //add tracks
-    SetLength(jo.f[0].s, 1);
-    jo.f[0].s[0] := TCont.Create;
-    jo.f[0].s[0].setval('codec_type', 'video');
-    jo.f[0].s[0].setval('Checked', '1');
-    jo.f[0].s[0].setval('TAG:title', 'video source 1');
-    SetLength(jo.f[1].s, 1);
-    jo.f[1].s[0] := TCont.Create;
-    jo.f[1].s[0].setval('codec_type', 'video');
-    jo.f[1].s[0].setval('Checked', '1');
-    jo.f[1].s[0].setval('TAG:title', 'video source 2');
-    SetLength(jo.f[2].s, 1);
-    jo.f[2].s[0] := TCont.Create;
-    jo.f[2].s[0].setval('codec_type', 'audio');
-    jo.f[2].s[0].setval('Checked', '1');
-    jo.f[2].s[0].setval('TAG:title', 'audio source 1');
-    SetLength(jo.f[3].s, 1);
-    jo.f[3].s[0] := TCont.Create;
-    jo.f[3].s[0].setval('codec_type', 'audio');
-    jo.f[3].s[0].setval('Checked', '1');
-    jo.f[3].s[0].setval('TAG:title', 'audio source 2');
-    //add sorting
-    SetLength(jo.m, 4);
-    jo.m[0] := '0:0';
-    jo.m[1] := '1:0';
-    jo.m[2] := '2:0';
-    jo.m[3] := '3:0';
+    jo.setval(edtOfn.Name, myGetOutFN(s, cmbSGoutput.Text, cmbSGoutext.Text));
+    {$IFDEF MSWINDOWS}
+    jo.setval(edtOfna.Name, myGetOutFNa(s, cmbSGoutput.Text, cmbSGoutext.Text));
+    {$ENDIF}
+    jo.setval(sMyBakfname, cmbSGoutput.Text + cmbSGoutext.Text);
+    jo.setval(chkFilterComplex.Name, IfThen(cmbSGfiltercomplex.Text <> '', '1', '0'));
+    jo.setval(cmbFilterComplex.Name, cmbSGfiltercomplex.Text);
+    jo.setval(cmbAddOptsO.Name, cmbSGaddoptsO.Text);
+    //add files and tracks
+    if chkSGsource0.Checked then
+      myFillJo(jo, cmbSGopts0.Text, cmbSGsource0.Text);
+    if chkSGsource1.Checked then
+      myFillJo(jo, cmbSGopts1.Text, cmbSGsource1.Text);
+    if chkSGsource2.Checked then
+      myFillJo(jo, cmbSGopts2.Text, cmbSGsource2.Text);
+    if chkSGsource3.Checked then
+      myFillJo(jo, cmbSGopts3.Text, cmbSGsource3.Text);
     //to listview
     li := LVjobs.Items.Add;
     li.Checked := True;
@@ -3632,16 +3680,15 @@ begin
     li.SubItems.Add('0');
     li.SubItems.Add('0');
     li.SubItems.Add('0');
-    li.SubItems.Add('');
-    li.SubItems.Add('');
+    frmGUIta.myGetCaptions(jo, v, a, s);
+    li.SubItems.Add(v);
+    li.SubItems.Add(a);
     li.Data := Pointer(jo);
     if (LVjobs.Items.Count = 1) then
       LVjobs.Items[0].Selected := True;
     inc(DuraAl2);
     myShowCaption('');
   end;
-  frmGrab.Free;
-  {$ENDIF}
 end;
 
 procedure TfrmGUIta.btnAddStopClick(Sender: TObject);
@@ -3800,8 +3847,12 @@ var
   p: TProcessUTF8;
 begin
   if LVjobs.Selected <> nil then
+  begin
     jo := TJob(LVjobs.Selected.Data);
-  s := myStrReplace(cmbRunCmd.Text, jo);
+    s := myStrReplace(cmbRunCmd.Text, jo);
+  end
+  else
+    s := myStrReplace(cmbRunCmd.Text);
   sl := TStringList.Create;
   process.CommandToList(s, sl);
   if sl.Count > 0 then
@@ -4394,6 +4445,8 @@ begin
     my1(TabSets1.Controls[i]);
   for i := 0 to TabSets2.ControlCount - 1 do
     cDefaultSets.setval(TabSets2.Controls[i].Name, myGet2(TabSets2.Controls[i]));
+  for i := 0 to TabScreenGrab.ControlCount - 1 do
+    cDefaultSets.setval(TabScreenGrab.Controls[i].Name, myGet2(TabScreenGrab.Controls[i]));
   cDefaultSets.setval(chkMetadataWork.Name, myGet2(chkMetadataWork));
   cDefaultSets.setval(chkMetadataClear.Name, myGet2(chkMetadataClear));
   cDefaultSets.setval(chkConcat.Name, myGet2(chkConcat));
@@ -4419,6 +4472,8 @@ begin
     my2(TabSets1.Controls[i]);
   for i := 0 to TabSets2.ControlCount - 1 do
     mySet2(TabSets2.Controls[i], cDefaultSets.getval(TabSets2.Controls[i].Name));
+  for i := 0 to TabScreenGrab.ControlCount - 1 do
+    mySet2(TabScreenGrab.Controls[i], cDefaultSets.getval(TabScreenGrab.Controls[i].Name));
 end;
 
 procedure TfrmGUIta.btnSaveSetsClick(Sender: TObject);
@@ -4475,14 +4530,21 @@ end;
 
 procedure TfrmGUIta.btnStopClick(Sender: TObject);
 var
-  i: integer;
+  i, j: integer;
 begin
   for i := Low(aThrs) to High(aThrs) do
   begin
     if (aThrs[i] <> nil) then
     begin
       aThrs[i].pr.Input.WriteAnsiString('q'); //if ffmpeg
-      Sleep(1000);
+      j := 0;
+      while aThrs[i].pr.Running and (j < 200) do
+      begin
+        Sleep(10);
+        inc(j);
+      end;
+      if chkDebug.Checked then
+        memJournal.Lines.Add('q - stop convert, wait ~ ' + IntToStr(j * 10) + 'ms');
       aThrs[i].Terminate;
       if aThrs[i].pr <> nil then
         aThrs[i].pr.Terminate(-2);
@@ -4560,12 +4622,21 @@ begin
 end;
 
 procedure TfrmGUIta.btnTestStopClick(Sender: TObject);
+var
+  j: integer;
 begin
   if ThreadTest <> nil then
   begin
     if ThreadTest.pr.Input <> nil then
       ThreadTest.pr.Input.WriteAnsiString('q');
-    Sleep(1000);
+    j := 0;
+    while ThreadTest.pr.Running and (j < 200) do
+    begin
+      Sleep(10);
+      inc(j);
+    end;
+    if chkDebug.Checked then
+      memJournal.Lines.Add('q - stop test convert, wait ~ ' + IntToStr(j * 10) + 'ms');
     ThreadTest.Terminate;
     if ThreadTest.pr <> nil then
       ThreadTest.pr.Terminate(-2);
@@ -4658,6 +4729,45 @@ begin
   if chkPlayer3.Checked then
     chkPlayer2.Checked := False;
   cmbExtPlayer.Enabled := chkPlayer3.Checked;
+end;
+
+procedure TfrmGUIta.chkSGmixvideoChange(Sender: TObject);
+var
+  f, m: string;
+  bv: boolean;
+  i: integer;
+begin
+  f := '';
+  m := '';
+  bv := chkSGmixvideo.Checked and chkSGsource0.Checked and chkSGsource1.Checked;
+  if bv then
+  begin
+    f := '[0][1]overlay=main_w-overlay_w-2:main_h-overlay_h-2[v]';
+    m := ' -map [v]';
+  end;
+  if chkSGmixaudio.Checked and chkSGsource2.Checked and chkSGsource3.Checked then
+  begin
+    if f <> '' then
+    begin
+      f := f + ', [2][3]amix=inputs=2[a]';
+      m := m + ' -map [a]';
+    end
+    else
+    begin
+      f := f + 'amix=inputs=2';
+    end;
+  end
+  else if bv then
+  begin
+    if chkSGsource2.Checked or (not chkSGsource2.Checked and chkSGsource3.Checked) then
+      m := m + ' -map 2:0';
+    if chkSGsource2.Checked and chkSGsource3.Checked then
+      m := m + ' -map 3:0';
+  end;
+  cmbSGfiltercomplex.Text := f;
+  for i := 0 to cmbSGaddoptsO.Items.Count - 1 do
+    if Copy(cmbSGaddoptsO.Text, 1, 12) = Copy(cmbSGaddoptsO.Items[i], 1, 12) then
+      cmbSGaddoptsO.Text := cmbSGaddoptsO.Items[i] + m;
 end;
 
 procedure TfrmGUIta.chkSynColorChange(Sender: TObject);
@@ -4969,6 +5079,16 @@ begin
     myAdd2cmb(cmbRunCmd, cCmdIni.sk[i]);
 end;
 
+procedure TfrmGUIta.cmbSGsource2GetItems(Sender: TObject);
+begin
+  myFillSGin(cmbSGopts2.Items, cmbSGsource2.Items, 'audio');
+end;
+
+procedure TfrmGUIta.cmbSGsource3GetItems(Sender: TObject);
+begin
+  myFillSGin(cmbSGopts3.Items, cmbSGsource3.Items, 'audio');
+end;
+
 procedure TfrmGUIta.edtDirOutChange(Sender: TObject);
 begin
   xmyCheckDir(Sender);
@@ -5032,6 +5152,7 @@ begin
     cmbExtChange(cmbExt);
   end;
   xmyChange0(cmbFormat);
+  TJob(LVjobs.Selected.Data).setval(sMyBakfname, ExtractFileName(edtOfn.Text));
 end;
 
 procedure TfrmGUIta.edtxtermSelect(Sender: TObject);
@@ -5129,8 +5250,6 @@ begin
   b := FileExistsUTF8(sInifile);
   //hide some unused components
   {$IFDEF MSWINDOWS}
-  btnAddScreenGrab.Visible := False; //not tested
-  btnAddTrack1.Visible := False;
   {$ELSE}
   btnAddFilesAsAvs1.Visible := False;
   btnAddFilesAsAvs2.Visible := False;
@@ -5162,6 +5281,22 @@ begin
   edtxtermopts.Text := '/c';
   edtxtermopts.Items.Add('/c');
   edtxtermopts.Items.Add('/k');
+  //screen grab
+  cmbSGsource0.Text := 'video="screen-capture-recorder"';
+  cmbSGopts0.Text := '-f dshow';
+  chkSGsource1.Checked := False;
+  cmbSGsource1.Text := '';
+  cmbSGopts1.Text := '';
+  chkSGsource2.Checked := False;
+  cmbSGsource2.Text := '';
+  cmbSGopts2.Text := '';
+  cmbSGsource3.Text := 'audio="virtual-audio-capturer"';
+  cmbSGopts3.Text := '-f dshow';
+  chkSGmixvideo.Checked := False;
+  chkSGmixaudio.Checked := False;
+  cmbSGfiltercomplex.Text := '';
+  cmbSGaddoptsO.Text := '-c:v libvpx -b:v 3M -quality realtime -deadline realtime -c:a libvorbis -b:a 320k';
+  cmbSGoutext.Text := '.webm';
   {$ELSE}
   edtffmpeg.Text := 'ffmpeg';
   edtffplay.Text := 'ffplay';
@@ -5219,6 +5354,19 @@ begin
     edtxtermopts.Items.Add('-e');
   end;
   chkxterm1str.Checked := True;
+  //screen grab
+  cmbSGsource0.Text := ':0.0';
+  cmbSGopts0.Text := '-f x11grab -framerate 30 -video_size '
+  + IntToStr(Screen.Width) + 'x'+ IntToStr(Screen.Height);
+  cmbSGsource1.Text := '/dev/video0';
+  cmbSGopts1.Text := '-f v4l2 -framerate 30 -video_size 160x120';
+  cmbSGsource2.Text := 'alsa_output.pci-0000_00_1b.0.analog-stereo.monitor';
+  cmbSGopts2.Text := '-f pulse -ac 2 -ar 44100';
+  cmbSGsource3.Text := 'noechosource';
+  cmbSGopts3.Text := '-f pulse -ac 1 -ar 32000';
+  cmbSGfiltercomplex.Text := '[0][1]overlay=main_w-overlay_w-2:main_h-overlay_h-2[v], [2][3]amix=inputs=2[a]';
+  cmbSGaddoptsO.Text := '-c:v libvpx -b:v 3M -quality realtime -deadline realtime -c:a libvorbis -b:a 320k -map [v] -map [a]';
+  cmbSGoutext.Text := '.webm';
   {$ENDIF}
   bUpdFromCode := False;
   chkSynColor.Checked := myWindowColorIsDark;
@@ -5258,6 +5406,44 @@ begin
     cmbProfileGetItems(nil);
     if cmbProfile.Items.Count > 0 then
       cmbProfile.ItemIndex := 0;
+    //screen grab
+    myFillSGin(cmbSGopts2.Items, cmbSGsource2.Items, 'audio');
+    cmbSGsource3.Items.Clear;
+    cmbSGsource3.Items.AddStrings(cmbSGsource2.Items);
+    cmbSGopts3.Items.Clear;
+    cmbSGopts3.Items.AddStrings(cmbSGopts2.Items);
+    {$IFDEF MSWINDOWS}
+    myFillSGin(cmbSGopts0.Items, cmbSGsource0.Items, 'video');
+    if cmbSGsource0.Items.Count > 0 then
+      cmbSGsource0.ItemIndex := 0;
+    if cmbSGopts0.Items.Count > 0 then
+      cmbSGopts0.ItemIndex := 0;
+    if cmbSGsource2.Items.Count > 0 then
+      cmbSGsource2.ItemIndex := 0;
+    if cmbSGopts2.Items.Count > 0 then
+      cmbSGopts2.ItemIndex := 0;
+    if cmbSGsource3.Items.Count > 1 then
+      cmbSGsource3.ItemIndex := 1;
+    if cmbSGopts3.Items.Count > 1 then
+      cmbSGopts3.ItemIndex := 1;
+    {$ELSE}
+    //ffprobe -list_formats all -f v4l2 /dev/video0
+    //[video4linux2,v4l2 @ 0xb05026a0] Raw       :     yuyv422 :     YUV 4:2:2 (YUYV) : 640x480 352x288 320x240 176x144 160x120
+    chkSGsource1.Checked := FileExistsUTF8('/dev/video0');
+    //pactl list sources
+    i := cmbSGsource2.Items.IndexOf('alsa_output.pci-0000_00_1b.0.analog-stereo.monitor');
+    if i >= 0 then
+    begin
+      cmbSGsource2.ItemIndex := i;
+      cmbSGopts2.ItemIndex := i;
+    end;
+    i := cmbSGsource3.Items.IndexOf('noechosource');
+    if i >= 0 then
+    begin
+      cmbSGsource3.ItemIndex := i;
+      cmbSGopts3.ItemIndex := i;
+    end;
+    {$ENDIF}
   end;
   frmGUIta.Font.Name := cmbFont.Text;
   //load language
@@ -5840,6 +6026,7 @@ begin
 end;
 
 procedure TfrmGUIta.mnuEditAvsClick(Sender: TObject);
+{$IFDEF MSWINDOWS}
 var
   s: string;
 begin
@@ -5848,6 +6035,9 @@ begin
   s := TJob(LVjobs.Selected.Data).f[0].getval(sMyDOSfname);
   if LowerCase(ExtractFileExt(s)) = '.avs' then
     myOpenDoc(s);
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfrmGUIta.mnuOpenClick(Sender: TObject);
