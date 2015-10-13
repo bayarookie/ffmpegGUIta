@@ -526,7 +526,7 @@ type
     procedure mySets(bRead: boolean);
     procedure myFormPosLoad(Form: TForm; Ini: TIniFile);
     procedure myFormPosSave(Form: TForm; Ini: TIniFile);
-    procedure myLanguage(bRead: boolean);
+    procedure myLanguage(bRead: boolean; bDefault: boolean = False);
   public
     { public declarations }
     procedure myError(i: integer; s: string);
@@ -2142,7 +2142,7 @@ begin
     end;
 end;
 
-procedure TfrmGUIta.myLanguage(bRead: boolean);
+procedure TfrmGUIta.myLanguage(bRead: boolean; bDefault: boolean = False);
 var
   Ini: TIniFile;
   s1, s2, s3: string;
@@ -2338,7 +2338,8 @@ begin
     mes[32] := 'Job';
   end;
   s1 := AppendPathDelim(sInidir) + cmbLanguage.Text;
-  if bRead and (not FileExistsUTF8(s1) or (cmbLanguage.Text = 'Default.lng')) then
+  if bRead and (not FileExistsUTF8(s1)
+  or (bDefault and (cmbLanguage.Text = 'Default.lng'))) then
     Exit;
   Ini := TIniFile.Create(UTF8ToSys(s1));
   Ini.StripQuotes := False;
@@ -5447,7 +5448,7 @@ begin
   end;
   frmGUIta.Font.Name := cmbFont.Text;
   //load language
-  myLanguage(True);
+  myLanguage(True, True);
   //if masks empty then set defaults
   if LVmasks.Items.Count = 0 then
     btnMaskResetClick(nil);
