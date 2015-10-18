@@ -32,6 +32,7 @@ procedure myOpenDoc(Path: string);
 function myCompareInt(List: TStringList; Index1, Index2: integer): integer;
 function myGetLocaleLanguage: string;
 function myDTtoStr(FormatStr: string; DateTime: TDateTime): string;
+function myGetDigits(s: string): string;
 
 implementation
 
@@ -697,6 +698,23 @@ end;
 function myDTtoStr(FormatStr: string; DateTime: TDateTime): string;
 begin
   DateTimeToString(Result, FormatStr, DateTime);
+end;
+
+function myGetDigits(s: string): string;
+var
+  i: integer;
+begin
+  Result := '';
+  i := 0;
+  while i < Length(s) do
+  begin
+    inc(i);
+    case s[i] of
+      '0','1','2','3','4','5','6','7','8','9': Result := Result + s[i];
+    else
+      Exit;
+    end;
+  end;
 end;
 
 end.

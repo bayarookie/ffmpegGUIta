@@ -417,6 +417,8 @@ type
     procedure cmbProfileChange(Sender: TObject);
     procedure cmbProfileGetItems(Sender: TObject);
     procedure cmbRunCmdGetItems(Sender: TObject);
+    procedure cmbSGsource0GetItems(Sender: TObject);
+    procedure cmbSGsource1GetItems(Sender: TObject);
     procedure cmbSGsource2GetItems(Sender: TObject);
     procedure cmbSGsource3GetItems(Sender: TObject);
     procedure edtDirOutChange(Sender: TObject);
@@ -2956,53 +2958,104 @@ begin
     inc(i);
   end;
   {$ELSE}
-  cmd.AddFile('pactl');
-  cmd.f[0].AddStream;
-  cmd.f[0].s[0].addval('1', 'list');
-  cmd.f[0].s[0].addval('2', 'sources');
-  if myGetDosOut(cmd, SynMemo2) <> 0 then Exit;
-  sf.Clear;
-  si.Clear;
-  i := 0;
-  while i < SynMemo2.Lines.Count do
+  if ct = 'video' then
   begin
-    s := SynMemo2.Lines[i];
-    if (Length(s) > 1) and (s[Length(s)-1] = '#') then //recode it
+    sf.Clear;
+    si.Clear;
+    si.Add(':0.0');
+    sf.Add('-f x11grab -framerate 30 -video_size '
+    + IntToStr(Screen.Width) + 'x'+ IntToStr(Screen.Height));
+    if FileExistsUTF8('/dev/video0') then
     begin
-      inc(i, 2);
-      if i < SynMemo2.Lines.Count then
+      cmd.AddFile(myStrReplace('$ffprobe'));
+      cmd.f[0].AddStream;
+      cmd.f[0].s[0].addval('1', '-hide_banner');
+      cmd.f[0].s[0].addval('2', '-list_formats');
+      cmd.f[0].s[0].addval('3', 'all');
+      cmd.f[0].s[0].addval('4', '-f');
+      cmd.f[0].s[0].addval('5', 'v4l2');
+      cmd.f[0].s[0].addval('6', '/dev/video0');
+      if myGetDosOut(cmd, SynMemo2) > 1 then Exit;
+      i := 0;
+      //ffprobe -list_formats all -f v4l2 /dev/video0
+      //[video4linux2,v4l2 @ 0xb05026a0] Raw       :     yuyv422 :     YUV 4:2:2 (YUYV) : 640x480 352x288 320x240 176x144 160x120
+      while i < SynMemo2.Lines.Count do
       begin
         s := SynMemo2.Lines[i];
-        j := Pos(':', s);
-        if j > 0 then
+        if Pos('[video4linux2', s) = 1 then
         begin
-          si.Add(Copy(s, j + 2, Length(s)));
-          inc(i, 3);
-          if i < SynMemo2.Lines.Count then
+          si.Add('/dev/video0');
+          j := Pos(':', s);
+          while j > 0 do
           begin
-            s := SynMemo2.Lines[i];
+            s := Copy(s, j + 1, Length(s));
             j := Pos(':', s);
+          end;
+          j := Pos(' ', s);
+          while j > 0 do
+          begin
+            s := Copy(s, j + 1, Length(s));
+            j := Pos(' ', s);
             if j > 0 then
+              sf.Add('-f v4l2 -framerate 30 -video_size ' + Copy(s, 1, j - 1))
+            else
+              sf.Add('-f v4l2 -framerate 30 -video_size ' + s);
+          end;
+        end;
+        inc(i);
+      end;
+    end;
+  end else
+  if ct = 'audio' then
+  begin
+    cmd.AddFile('pactl');
+    cmd.f[0].AddStream;
+    cmd.f[0].s[0].addval('1', 'list');
+    cmd.f[0].s[0].addval('2', 'sources');
+    if myGetDosOut(cmd, SynMemo2) <> 0 then Exit;
+    sf.Clear;
+    si.Clear;
+    i := 0;
+    while i < SynMemo2.Lines.Count do
+    begin
+      s := SynMemo2.Lines[i];
+      if (Length(s) > 1) and (s[Length(s)-1] = '#') then //recode it
+      begin
+        inc(i, 2);
+        if i < SynMemo2.Lines.Count then
+        begin
+          s := SynMemo2.Lines[i];
+          j := Pos(':', s);
+          if j > 0 then
+          begin
+            u := Copy(s, j + 2, Length(s)); //filename
+            inc(i, 3);
+            if i < SynMemo2.Lines.Count then
             begin
-              s := Copy(s, j + 2, Length(s));
-              j := Pos(' ', s);
+              s := SynMemo2.Lines[i];
+              j := Pos(':', s);
               if j > 0 then
               begin
-                s := Copy(s, j + 1, Length(s));
-                t := Copy(s, 1, 1);
+                s := Copy(s, j + 2, Length(s));
                 j := Pos(' ', s);
                 if j > 0 then
                 begin
-                  u := Copy(s, j + 1, 5); //recode  it
-                  sf.Add('-f pulse -ac ' + t + ' -ar ' + u);
+                  s := Copy(s, j + 1, Length(s));
+                  t := Copy(s, 1, 1);
+                  j := Pos(' ', s);
+                  if j > 0 then
+                  begin
+                    si.Add(u);
+                    sf.Add('-f pulse -ac ' + t + ' -ar ' + myGetDigits(Copy(s, j + 1, 15)));
+                  end;
                 end;
               end;
             end;
           end;
         end;
       end;
+      inc(i);
     end;
-    inc(i);
   end;
   {$ENDIF}
 end;
@@ -5080,6 +5133,16 @@ begin
     myAdd2cmb(cmbRunCmd, cCmdIni.sk[i]);
 end;
 
+procedure TfrmGUIta.cmbSGsource0GetItems(Sender: TObject);
+begin
+  myFillSGin(cmbSGopts0.Items, cmbSGsource0.Items, 'video');
+end;
+
+procedure TfrmGUIta.cmbSGsource1GetItems(Sender: TObject);
+begin
+  myFillSGin(cmbSGopts1.Items, cmbSGsource1.Items, 'video');
+end;
+
 procedure TfrmGUIta.cmbSGsource2GetItems(Sender: TObject);
 begin
   myFillSGin(cmbSGopts2.Items, cmbSGsource2.Items, 'audio');
@@ -5428,8 +5491,7 @@ begin
     if cmbSGopts3.Items.Count > 1 then
       cmbSGopts3.ItemIndex := 1;
     {$ELSE}
-    //ffprobe -list_formats all -f v4l2 /dev/video0
-    //[video4linux2,v4l2 @ 0xb05026a0] Raw       :     yuyv422 :     YUV 4:2:2 (YUYV) : 640x480 352x288 320x240 176x144 160x120
+    myFillSGin(cmbSGopts0.Items, cmbSGsource0.Items, 'video');
     chkSGsource1.Checked := FileExistsUTF8('/dev/video0');
     //pactl list sources
     i := cmbSGsource2.Items.IndexOf('alsa_output.pci-0000_00_1b.0.analog-stereo.monitor');
@@ -5452,7 +5514,7 @@ begin
   //if masks empty then set defaults
   if LVmasks.Items.Count = 0 then
     btnMaskResetClick(nil);
-  //process count for one thread formats: png xvid etc
+  //process count for single thread formats: png xvid etc
   if spnCpuCount.Value = 0 then
     spnCpuCount.Value := cpucount.GetLogicalCpuCount;
   SetLength(aThrs, spnCpuCount.Value);
