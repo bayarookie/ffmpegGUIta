@@ -29,6 +29,16 @@ uses
 
 type
 
+  { TmyStr }
+
+  TmyStr = class
+  private
+    FValue: string;
+  public
+    constructor Create(AValue: string);
+    property Value: string read FValue write FValue;
+  end;
+
   { TfrmGUIta }
 
   TfrmGUIta = class(TForm)
@@ -128,10 +138,6 @@ type
     cmbLangS: TComboBox;
     cmbLangsList: TComboBox;
     cmbLanguage: TComboBox;
-    cmbSGopts1: TComboBox;
-    cmbSGopts2: TComboBox;
-    cmbSGopts3: TComboBox;
-    cmbSGopts0: TComboBox;
     cmbSGsource1: TComboBox;
     cmbSGsource2: TComboBox;
     cmbSGsource3: TComboBox;
@@ -418,9 +424,7 @@ type
     procedure cmbProfileGetItems(Sender: TObject);
     procedure cmbRunCmdGetItems(Sender: TObject);
     procedure cmbSGsource0GetItems(Sender: TObject);
-    procedure cmbSGsource1GetItems(Sender: TObject);
     procedure cmbSGsource2GetItems(Sender: TObject);
-    procedure cmbSGsource3GetItems(Sender: TObject);
     procedure edtDirOutChange(Sender: TObject);
     procedure edtffmpegChange(Sender: TObject);
     procedure edtffmpegGetItems(Sender: TObject);
@@ -499,7 +503,7 @@ type
     procedure myAddFileSplit(files: TStrings);
     procedure myAddFilesPlus(li: TListItem; files: TStrings);
     procedure myAddFileStart;
-    procedure myFindFiles(dir: string; c: array of TObject; bSet2: boolean = True);
+    procedure myFindFiles(dir, exe: string; c: TComboBox; bSet2: boolean = True);
     procedure myFindPlayers(bSet2: boolean);
     function myGetFileList(const Path, Mask: string; List: TStrings;
       subdir: boolean = False; fullpath: boolean = True): boolean;
@@ -515,7 +519,6 @@ type
     procedure myFillEnc;
     procedure myFillFmt;
     //procedure myFillx264Tune;
-    procedure myFillSGin(sf, si: TStrings; ct: string);
     function myCantUpd(i: integer = 0): boolean;
     function myAutoCrop(jo: TJob; l, k: integer): string;
     procedure myGetClipboardFileNames(files: TStrings; test: boolean = False);
@@ -561,7 +564,8 @@ type
     function myCmdExtr(cmd: TJob): string;
     function myCmdFillPr(fil: TFil; b: boolean; var pr: TProcessUTF8): string;
     procedure myShowCaption(s: string);
-    procedure myFillJo(jo: TJob; op, fn: string);
+    procedure myFillSGin(si: TStrings; ct: string);
+    procedure myFillJo(jo: TJob; p: string);
   end;
 
 const
@@ -602,6 +606,11 @@ var
 implementation
 
 uses ubyUtils, ufrmsplash, ufrmcrop, ufrmtrack;
+
+constructor TmyStr.Create(AValue: string);
+begin
+  Value := AValue;
+end;
 
 {$R *.lfm}
 
@@ -1772,41 +1781,19 @@ begin
   end;
 end;
 
-procedure TfrmGUIta.myFindFiles(dir: string; c: array of TObject; bSet2: boolean = True);
+procedure TfrmGUIta.myFindFiles(dir, exe: string; c: TComboBox; bSet2: boolean = True);
 var
   SL: TStringList;
-  i, j: integer;
-  s: string;
+  j: integer;
 begin
   SL := TStringList.Create;
-  {$IFDEF MSWINDOWS}
-  if myGetFileList(dir, '*.exe', SL, True) then
-  for i := 0 to High(c) do
-  if (c[i] is TComboBox) then
-  begin
-    s := LowerCase(Copy(TComboBox(c[i]).Name, 4, 100)) + '.exe';
+  if FileExistsUTF8(myExpandFN(exe)) then
+    myAdd2cmb(c, exe);
+  if myGetFileList(dir, exe, SL, True) then
     for j := 0 to SL.Count - 1 do
-      if s = LowerCase(ExtractFileName(SL[j])) then
-        TComboBox(c[i]).Items.Add(myUnExpandFN(SL[j]));
-    if bSet2 and (TComboBox(c[i]).Items.Count > 0) then
-      TComboBox(c[i]).ItemIndex := TComboBox(c[i]).Items.Count - 1;
-  end;
-  {$ELSE}
-  for i := 0 to High(c) do
-    if (c[i] is TComboBox) then
-    begin
-      s := myGet2(c[i]);
-      if FileExistsUTF8(myExpandFN(ExtractFileName(s))) then
-        TComboBox(c[i]).Items.Add(ExtractFileName(s));
-      if myGetFileList(dir, ExtractFileName(s), SL, True) then
-        for j := 0 to SL.Count - 1 do
-          myAdd2cmb(TComboBox(c[i]), myUnExpandFN(SL[j]));
-      if FileExistsUTF8(myExpandFN(s)) then
-        myAdd2cmb(TComboBox(c[i]), s);
-      if bSet2 and (TComboBox(c[i]).Items.Count > 0) then
-        TComboBox(c[i]).ItemIndex := 0;
-    end;
-  {$ENDIF}
+      myAdd2cmb(c, myUnExpandFN(SL[j]));
+  if bSet2 and (c.Items.Count > 0) then
+    c.ItemIndex := c.Items.Count - 1;
   SL.Free;
 end;
 
@@ -2921,14 +2908,15 @@ begin
   end;
 end;
 
-procedure TfrmGUIta.myFillSGin(sf, si: TStrings; ct: string);
+procedure TfrmGUIta.myFillSGin(si: TStrings; ct: string);
 var
   s, t, u: string;
   i, j: integer;
   cmd: TJob;
 begin
-  cmd := TJob.Create;
+  si.Clear;
   {$IFDEF MSWINDOWS}
+  cmd := TJob.Create;
   cmd.AddFile(myStrReplace('$ffmpeg'));
   cmd.f[0].AddStream;
   cmd.f[0].s[0].addval('1', '-hide_banner');
@@ -2938,35 +2926,34 @@ begin
   cmd.f[0].s[0].addval('5', 'dshow');
   cmd.f[0].s[0].addval('6', '-i');
   cmd.f[0].s[0].addval('7', 'NUL');
-  if myGetDosOut(cmd, SynMemo2) > 1 then Exit;
-  sf.Clear;
-  si.Clear;
+  j := myGetDosOut(cmd, SynMemo2);
+  cmd.Free;
+  if j > 1 then Exit;
   i := 0;
   while i < SynMemo2.Lines.Count do
   begin
     s := SynMemo2.Lines[i];
-    if Copy(s, 20, 24) = 'DirectShow video devices' then
+    if Pos('DirectShow video devices', s) > 0 then
       t := 'video';
-    if Copy(s, 20, 24) = 'DirectShow audio devices' then
+    if Pos('DirectShow audio devices', s) > 0 then
       t := 'audio';
-    if (Copy(s, 21, 1) = '"') and (t = ct) then
+    j := Pos('  "', s);
+    if (j > 0) and ((ct = t) or (ct = '')) then
     begin
-      s := Copy(s, 21, Length(s));
-      si.Add(ct + '=' + s);
-      sf.Add('-f dshow');
+      u := t + '=' + Copy(s, j + 2, Length(s));
+      si.Add('-f dshow -i ' + u);
     end;
     inc(i);
   end;
   {$ELSE}
-  if ct = 'video' then
+  if (ct = 'video') or (ct = '') then
   begin
-    sf.Clear;
-    si.Clear;
-    si.Add(':0.0');
-    sf.Add('-f x11grab -framerate 30 -video_size '
-    + IntToStr(Screen.Width) + 'x'+ IntToStr(Screen.Height));
+    si.Add('-f x11grab -framerate 30 -video_size '
+    + IntToStr(Screen.Width) + 'x'+ IntToStr(Screen.Height)
+    + ' -i ' + GetEnvironmentVariableUTF8('DISPLAY'));
     if FileExistsUTF8('/dev/video0') then
     begin
+      cmd := TJob.Create;
       cmd.AddFile(myStrReplace('$ffprobe'));
       cmd.f[0].AddStream;
       cmd.f[0].s[0].addval('1', '-hide_banner');
@@ -2975,7 +2962,9 @@ begin
       cmd.f[0].s[0].addval('4', '-f');
       cmd.f[0].s[0].addval('5', 'v4l2');
       cmd.f[0].s[0].addval('6', '/dev/video0');
-      if myGetDosOut(cmd, SynMemo2) > 1 then Exit;
+      j := myGetDosOut(cmd, SynMemo2);
+      cmd.Free;
+      if j > 1 then Exit;
       i := 0;
       //ffprobe -list_formats all -f v4l2 /dev/video0
       //[video4linux2,v4l2 @ 0xb05026a0] Raw       :     yuyv422 :     YUV 4:2:2 (YUYV) : 640x480 352x288 320x240 176x144 160x120
@@ -2984,7 +2973,6 @@ begin
         s := SynMemo2.Lines[i];
         if Pos('[video4linux2', s) = 1 then
         begin
-          si.Add('/dev/video0');
           j := Pos(':', s);
           while j > 0 do
           begin
@@ -2997,43 +2985,45 @@ begin
             s := Copy(s, j + 1, Length(s));
             j := Pos(' ', s);
             if j > 0 then
-              sf.Add('-f v4l2 -framerate 30 -video_size ' + Copy(s, 1, j - 1))
+              t := Copy(s, 1, j - 1)
             else
-              sf.Add('-f v4l2 -framerate 30 -video_size ' + s);
+              t := s;
+            si.Add('-f v4l2 -framerate 30 -video_size ' + t + ' -i /dev/video0');
           end;
         end;
         inc(i);
       end;
     end;
-  end else
-  if ct = 'audio' then
+  end;
+  if (ct = 'audio') or (ct = '') then
   begin
+    cmd := TJob.Create;
     cmd.AddFile('pactl');
     cmd.f[0].AddStream;
     cmd.f[0].s[0].addval('1', 'list');
     cmd.f[0].s[0].addval('2', 'sources');
-    if myGetDosOut(cmd, SynMemo2) <> 0 then Exit;
-    sf.Clear;
-    si.Clear;
+    j := myGetDosOut(cmd, SynMemo2);
+    cmd.Free;
+    if j <> 0 then Exit;
     i := 0;
     while i < SynMemo2.Lines.Count do
     begin
       s := SynMemo2.Lines[i];
-      if (Length(s) > 1) and (s[Length(s)-1] = '#') then //recode it
+      if Pos('#', s) > 2 then //Источник #2
       begin
         inc(i, 2);
         if i < SynMemo2.Lines.Count then
         begin
           s := SynMemo2.Lines[i];
-          j := Pos(':', s);
+          j := Pos(':', s); //Имя: alsa_input.pci-0000_00_1b.0.analog-stereo
           if j > 0 then
           begin
-            u := Copy(s, j + 2, Length(s)); //filename
+            u := Copy(s, j + 2, Length(s)); //filename := alsa_input.pci-0000_00_1b.0.analog-stereo
             inc(i, 3);
             if i < SynMemo2.Lines.Count then
             begin
               s := SynMemo2.Lines[i];
-              j := Pos(':', s);
+              j := Pos(':', s); //Спецификация сэмплов: s16le 2ch 48000Гц
               if j > 0 then
               begin
                 s := Copy(s, j + 2, Length(s));
@@ -3041,12 +3031,12 @@ begin
                 if j > 0 then
                 begin
                   s := Copy(s, j + 1, Length(s));
-                  t := Copy(s, 1, 1);
+                  t := myGetDigits(s);
                   j := Pos(' ', s);
                   if j > 0 then
                   begin
-                    si.Add(u);
-                    sf.Add('-f pulse -ac ' + t + ' -ar ' + myGetDigits(Copy(s, j + 1, 15)));
+                    s := Copy(s, j + 1, Length(s));
+                    si.Add('-f pulse -ac ' + t + ' -ar ' + myGetDigits(s) + ' -i ' + u);
                   end;
                 end;
               end;
@@ -3610,13 +3600,29 @@ begin
     + IfThen(s <> '', ', ' + s);
 end;
 
-procedure TfrmGUIta.myFillJo(jo: TJob; op, fn: string);
+procedure TfrmGUIta.myFillJo(jo: TJob; p: string);
 var
   i, k, l: integer;
-  s: string;
+  s, op, fn: string;
   cmd: TJob;
   sl: TStringList;
 begin
+  i := Pos(' -i ', p);
+  if i > 0 then
+  begin
+    op := Copy(p, 1, i - 1);
+    fn := Copy(p, i + 4, Length(p));
+  end
+  else
+  begin
+    myError(1, 'Input parameter " -i " not found in string: ' + p);
+    Exit;
+  end;
+  if Trim(fn) = '' then
+  begin
+    myError(2, 'Filename not found in string: ' + p);
+    Exit;
+  end;
   cmd := TJob.Create;
   cmd.AddFile(myStrReplace('$ffprobe'));
   cmd.f[0].AddStream;
@@ -3624,11 +3630,10 @@ begin
   //cmd.f[0].s[0].addval('2', '-show_format');
   cmd.f[0].s[0].addval('3', '-show_streams');
   sl := TStringList.Create;
-  process.CommandToList(op, sl);
+  process.CommandToList(p, sl);
   for i := 0 to sl.Count - 1 do
     cmd.f[0].s[0].addval(IntToStr(i), sl[i]);
   sl.Free;
-  cmd.f[0].s[0].addval('5', fn);
   if myGetDosOut(cmd, SynMemo2) <> 0 then Exit;
   l := jo.AddFile(fn);
   jo.f[l].setval(sMyffprobe, '1');
@@ -3719,13 +3724,13 @@ begin
     jo.setval(cmbAddOptsO.Name, cmbSGaddoptsO.Text);
     //add files and tracks
     if chkSGsource0.Checked then
-      myFillJo(jo, cmbSGopts0.Text, cmbSGsource0.Text);
+      myFillJo(jo, cmbSGsource0.Text);
     if chkSGsource1.Checked then
-      myFillJo(jo, cmbSGopts1.Text, cmbSGsource1.Text);
+      myFillJo(jo, cmbSGsource1.Text);
     if chkSGsource2.Checked then
-      myFillJo(jo, cmbSGopts2.Text, cmbSGsource2.Text);
+      myFillJo(jo, cmbSGsource2.Text);
     if chkSGsource3.Checked then
-      myFillJo(jo, cmbSGopts3.Text, cmbSGsource3.Text);
+      myFillJo(jo, cmbSGsource3.Text);
     //to listview
     li := LVjobs.Items.Add;
     li.Checked := True;
@@ -3763,7 +3768,6 @@ procedure TfrmGUIta.btnAddTrack1Click(Sender: TObject);
 var
   frmT: TfrmTrack;
   jo: TJob;
-  i: integer;
 begin
   if LVjobs.Selected = nil then
     Exit;
@@ -3772,15 +3776,7 @@ begin
   if frmT.ShowModal = mrOK then
   begin
     jo := TJob(LVjobs.Selected.Data);
-    i := jo.AddFile(frmT.ComboBox1.Text);
-    jo.f[i].setval(cmbAddOptsI.Name, frmT.ComboBox2.Text);
-    jo.f[i].setval(sMyffprobe, '1');
-    SetLength(jo.f[i].s, 1);
-    jo.f[i].s[0] := TCont.Create;
-    jo.f[i].s[0].setval('codec_type', frmT.ComboBox3.Text);
-    jo.f[i].s[0].setval('Checked', '1');
-    SetLength(jo.m, Length(jo.m) + 1);
-    jo.m[High(jo.m)] := IntToStr(i) + ':0';
+    myFillJo(jo, frmT.ComboBox1.Text);
     LVjobsSelectItem(Sender, LVjobs.Selected, True);
   end;
   frmT.Free;
@@ -5003,8 +4999,11 @@ end;
 
 procedure TfrmGUIta.cmbExtSelect(Sender: TObject);
 begin
-  cmbFormat.ItemIndex := cmbExt.ItemIndex;
-  xmyChange0(cmbFormat);
+  if cmbFormat.Items.Count >= cmbExt.ItemIndex + 1 then
+  begin
+    cmbFormat.ItemIndex := cmbExt.ItemIndex;
+    xmyChange0(cmbFormat);
+  end;
 end;
 
 procedure TfrmGUIta.cmbFontGetItems(Sender: TObject);
@@ -5029,8 +5028,11 @@ end;
 
 procedure TfrmGUIta.cmbFormatSelect(Sender: TObject);
 begin
-  cmbExt.ItemIndex := cmbFormat.ItemIndex;
-  cmbExtChange(Sender);
+  if cmbExt.Items.Count >= cmbFormat.ItemIndex + 1 then
+  begin
+    cmbExt.ItemIndex := cmbFormat.ItemIndex;
+    cmbExtChange(Sender);
+  end;
 end;
 
 procedure TfrmGUIta.cmbLanguageChange(Sender: TObject);
@@ -5135,22 +5137,12 @@ end;
 
 procedure TfrmGUIta.cmbSGsource0GetItems(Sender: TObject);
 begin
-  myFillSGin(cmbSGopts0.Items, cmbSGsource0.Items, 'video');
-end;
-
-procedure TfrmGUIta.cmbSGsource1GetItems(Sender: TObject);
-begin
-  myFillSGin(cmbSGopts1.Items, cmbSGsource1.Items, 'video');
+  myFillSGin(TComboBox(Sender).Items, 'video');
 end;
 
 procedure TfrmGUIta.cmbSGsource2GetItems(Sender: TObject);
 begin
-  myFillSGin(cmbSGopts2.Items, cmbSGsource2.Items, 'audio');
-end;
-
-procedure TfrmGUIta.cmbSGsource3GetItems(Sender: TObject);
-begin
-  myFillSGin(cmbSGopts3.Items, cmbSGsource3.Items, 'audio');
+  myFillSGin(TComboBox(Sender).Items, 'audio');
 end;
 
 procedure TfrmGUIta.edtDirOutChange(Sender: TObject);
@@ -5179,10 +5171,16 @@ begin
   if TComboBox(Sender).Items.Count = 0 then
   begin
     s := sDirApp;
+    {$IFDEF MSWINDOWS}
+    t := Copy(TComboBox(Sender).Name, 4, 100) + GetExeExt;
+    {$ELSE}
     t := Copy(TComboBox(Sender).Name, 4, 100);
-    if not InputQuery(mes[20] + ' ' + t, mes[28], s) then
-      Exit;
-    myFindFiles(s, [Sender], False);
+    if Sender = edtMediaInfo then //bad code
+      t := 'mediainfo-gui';
+    {$ENDIF}
+    //if not InputQuery(mes[20] + ' ' + t, mes[28], s) then
+    //  Exit;
+    myFindFiles(s, t, TComboBox(Sender), False);
   end;
 end;
 
@@ -5346,16 +5344,12 @@ begin
   edtxtermopts.Items.Add('/c');
   edtxtermopts.Items.Add('/k');
   //screen grab
-  cmbSGsource0.Text := 'video="screen-capture-recorder"';
-  cmbSGopts0.Text := '-f dshow';
+  cmbSGsource0.Text := '-f dshow -i video="screen-capture-recorder"';
   chkSGsource1.Checked := False;
   cmbSGsource1.Text := '';
-  cmbSGopts1.Text := '';
   chkSGsource2.Checked := False;
   cmbSGsource2.Text := '';
-  cmbSGopts2.Text := '';
-  cmbSGsource3.Text := 'audio="virtual-audio-capturer"';
-  cmbSGopts3.Text := '-f dshow';
+  cmbSGsource3.Text := '-f dshow -i audio="virtual-audio-capturer"';
   chkSGmixvideo.Checked := False;
   chkSGmixaudio.Checked := False;
   cmbSGfiltercomplex.Text := '';
@@ -5419,15 +5413,12 @@ begin
   end;
   chkxterm1str.Checked := True;
   //screen grab
-  cmbSGsource0.Text := ':0.0';
-  cmbSGopts0.Text := '-f x11grab -framerate 30 -video_size '
-  + IntToStr(Screen.Width) + 'x'+ IntToStr(Screen.Height);
-  cmbSGsource1.Text := '/dev/video0';
-  cmbSGopts1.Text := '-f v4l2 -framerate 30 -video_size 160x120';
-  cmbSGsource2.Text := 'alsa_output.pci-0000_00_1b.0.analog-stereo.monitor';
-  cmbSGopts2.Text := '-f pulse -ac 2 -ar 44100';
-  cmbSGsource3.Text := 'noechosource';
-  cmbSGopts3.Text := '-f pulse -ac 1 -ar 32000';
+  cmbSGsource0.Text := '-f x11grab -framerate 30 -video_size '
+  + IntToStr(Screen.Width) + 'x'+ IntToStr(Screen.Height)
+  + ' -i ' + GetEnvironmentVariableUTF8('DISPLAY');
+  cmbSGsource1.Text := '-f v4l2 -framerate 30 -video_size 160x120 -i /dev/video0';
+  cmbSGsource2.Text := '-f pulse -ac 2 -ar 44100 -i alsa_output.pci-0000_00_1b.0.analog-stereo.monitor';
+  cmbSGsource3.Text := '-f pulse -ac 2 -ar 48000 -i alsa_input.pci-0000_00_1b.0.analog-stereo';
   cmbSGfiltercomplex.Text := '[0][1]overlay=main_w-overlay_w-2:main_h-overlay_h-2[v], [2][3]amix=inputs=2[a]';
   cmbSGaddoptsO.Text := '-c:v libvpx -b:v 3M -quality realtime -deadline realtime -c:a libvorbis -b:a 320k -map [v] -map [a]';
   cmbSGoutext.Text := '.webm';
@@ -5458,11 +5449,19 @@ begin
   begin
     mySets(True); //load settings from config file
     chk1instanceChange(nil);
+    //load language
+    myLanguage(True, True);
   end
   else //if config file doesnt exists then assign some sets
   begin
     chk1instanceChange(nil);
-    myFindFiles(sDirApp, [edtffmpeg, edtffprobe, edtffplay, edtMediaInfo]);
+    //load language
+    myLanguage(True, True);
+    //
+    myFindFiles(sDirApp, edtffmpeg.Text, edtffmpeg);
+    myFindFiles(sDirApp, edtffprobe.Text, edtffprobe);
+    myFindFiles(sDirApp, edtffplay.Text, edtffplay);
+    myFindFiles(sDirApp, edtMediaInfo.Text, edtMediaInfo);
     {$IFDEF MSWINDOWS}
     myFindMediaInfo;
     {$ENDIF}
@@ -5470,47 +5469,47 @@ begin
     cmbProfileGetItems(nil);
     if cmbProfile.Items.Count > 0 then
       cmbProfile.ItemIndex := 0;
-    //screen grab
-    myFillSGin(cmbSGopts2.Items, cmbSGsource2.Items, 'audio');
+    //screen grab, fill items
+    myFillSGin(cmbSGsource0.Items, 'video');
+    cmbSGsource1.Items.Clear;
+    cmbSGsource1.Items.AddStrings(cmbSGsource0.Items);
+    myFillSGin(cmbSGsource2.Items, 'audio');
     cmbSGsource3.Items.Clear;
     cmbSGsource3.Items.AddStrings(cmbSGsource2.Items);
-    cmbSGopts3.Items.Clear;
-    cmbSGopts3.Items.AddStrings(cmbSGopts2.Items);
-    {$IFDEF MSWINDOWS}
-    myFillSGin(cmbSGopts0.Items, cmbSGsource0.Items, 'video');
+    //set defaults
     if cmbSGsource0.Items.Count > 0 then
       cmbSGsource0.ItemIndex := 0;
-    if cmbSGopts0.Items.Count > 0 then
-      cmbSGopts0.ItemIndex := 0;
+    if cmbSGsource1.Items.Count > 1 then
+      cmbSGsource1.ItemIndex := 1;
+    {$IFDEF MSWINDOWS}
     if cmbSGsource2.Items.Count > 0 then
       cmbSGsource2.ItemIndex := 0;
-    if cmbSGopts2.Items.Count > 0 then
-      cmbSGopts2.ItemIndex := 0;
     if cmbSGsource3.Items.Count > 1 then
       cmbSGsource3.ItemIndex := 1;
-    if cmbSGopts3.Items.Count > 1 then
-      cmbSGopts3.ItemIndex := 1;
     {$ELSE}
-    myFillSGin(cmbSGopts0.Items, cmbSGsource0.Items, 'video');
     chkSGsource1.Checked := FileExistsUTF8('/dev/video0');
     //pactl list sources
-    i := cmbSGsource2.Items.IndexOf('alsa_output.pci-0000_00_1b.0.analog-stereo.monitor');
-    if i >= 0 then
+    for i := 0 to cmbSGsource2.Items.Count - 1 do
     begin
-      cmbSGsource2.ItemIndex := i;
-      cmbSGopts2.ItemIndex := i;
+      s := cmbSGsource2.Items[i];
+      if (Pos('alsa_output.', s) > 0) and (Pos('.analog', s) > 0) and (Pos('.monitor', s) > 0) then
+      begin
+        cmbSGsource2.ItemIndex := i;
+        Break;
+      end;
     end;
-    i := cmbSGsource3.Items.IndexOf('noechosource');
-    if i >= 0 then
+    for i := 0 to cmbSGsource3.Items.Count - 1 do
     begin
-      cmbSGsource3.ItemIndex := i;
-      cmbSGopts3.ItemIndex := i;
+      s := cmbSGsource3.Items[i];
+      if (Pos('alsa_input.', s) > 0) then
+      begin
+        cmbSGsource3.ItemIndex := i;
+        Break;
+      end;
     end;
     {$ENDIF}
   end;
   frmGUIta.Font.Name := cmbFont.Text;
-  //load language
-  myLanguage(True, True);
   //if masks empty then set defaults
   if LVmasks.Items.Count = 0 then
     btnMaskResetClick(nil);
