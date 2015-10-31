@@ -1,4 +1,12 @@
 #!/bin/bash
+### create file ~/.netrc
+#machine github.com
+#       login mylogin
+#       password mypassword
+### git config
+#git config --global user.email "name@server"
+#git config --global user.name "name"
+
 git status
 read -r -p "git add . > Run? [Y/n]" yesno
 yesno=${yesno,,}
@@ -20,8 +28,3 @@ if [[ $yesno =~ ^(yes|y| ) ]] | [ -z $yesno ]; then
     fi
   fi
 fi
-
-#create file ~/.netrc
-#machine github.com
-#       login mylogin
-#       password mypassword
