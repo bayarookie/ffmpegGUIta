@@ -1662,6 +1662,11 @@ begin
       if chkDebug.Checked then
         memJournal.Lines.Add(t);
       mem.Lines.Add(t);
+      if not FileExistsUTF8(pr.Executable) then
+      begin
+        myError(-1, mes[12] + ': ' + pr.Executable);
+        Continue;
+      end;
       pr.Options := [poUsePipes, poStderrToOutPut];
       pr.ShowWindow := swoHIDE;
       pr.Execute;
@@ -2859,7 +2864,7 @@ begin
   cmd.f[0].s[0].addval('7', 'NUL');
   k := myGetDosOut(cmd, SynMemo2);
   cmd.Free;
-  if k > 1 then Exit;
+  if (k < 0) or (k > 1) then Exit;
   i := 0;
   while i < SynMemo2.Lines.Count do
   begin
@@ -2896,7 +2901,7 @@ begin
       cmd.f[0].s[0].addval('6', '/dev/video' + IntToStr(k));
       j := myGetDosOut(cmd, SynMemo2);
       cmd.Free;
-      if j > 1 then Exit;
+      if (j < 0) or (j > 1) then Exit;
       i := 0;
       //ffprobe -list_formats all -f v4l2 /dev/video0
       //[video4linux2,v4l2 @ 0xb05026a0] Raw       :     yuyv422 :     YUV 4:2:2 (YUYV) : 640x480 352x288 320x240 176x144 160x120
@@ -2931,7 +2936,7 @@ begin
   if (ct = 'audio') or (ct = '') then
   begin
     cmd := TJob.Create;
-    cmd.AddFile('pactl');
+    cmd.AddFile(FindDefaultExecutablePath('pactl'));
     cmd.f[0].AddStream;
     cmd.f[0].s[0].addval('1', 'list');
     cmd.f[0].s[0].addval('2', 'sources');
@@ -5218,7 +5223,7 @@ begin
   fs.DecimalSeparator := '.';
   fs.ThousandSeparator := ' ';
   DuraAll := 0;
-  iTabCount := PageControl3.PageCount;
+  iTabCount := PageControl3.PageCount; //backup page count, for thread count
   //get inifile location
   s := SysToUTF8(Application.ExeName);
   sDirApp := ExtractFilePath(s);
