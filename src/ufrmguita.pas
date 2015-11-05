@@ -522,6 +522,8 @@ type
     procedure myFormPosLoad(Form: TForm; Ini: TIniFile);
     procedure myFormPosSave(Form: TForm; Ini: TIniFile);
     procedure myLanguage(bRead: boolean; bDefault: boolean = False);
+    procedure myGetTerminal;
+    function myGetUserDir(dir: string): string;
   public
     { public declarations }
     procedure myError(i: integer; s: string);
@@ -1984,7 +1986,8 @@ begin
     frm.Caption := mes[3] + ': ' + Path + ' - ' + Mask;
     frm.btnCancel.Caption := mes[8];
     frm.Label1.Caption := mes[3];
-    frm.Show;
+    if subdir then
+      frm.Show;
     Result := myGetList(Path);
   except
     on E: Exception do
@@ -2284,6 +2287,103 @@ begin
     s1 := UpperCase(mes[6]);
     if SynUNIXShellScriptSyn1.SecondKeyWords.IndexOf(s1) < 0 then
       SynUNIXShellScriptSyn1.SecondKeyWords.Add(s1);
+  end;
+end;
+
+procedure TfrmGUIta.myGetTerminal;
+var
+  s, t: string;
+begin
+  {$IFDEF MSWINDOWS}
+  s := 'cmd.exe'
+  t := '/c';
+  edtxterm.Text := s;
+  myAdd2cmb(edtxterm, s);
+  edtxtermopts.Text := t;
+  myAdd2cmb(edtxtermopts, t);
+  myAdd2cmb(edtxtermopts, '/k');
+  {$ELSE}
+  s := '/bin/sh';
+  t := '-c';
+  if FileExistsUTF8(s) then
+  begin
+    edtxterm.Text := s;
+    myAdd2cmb(edtxterm, s);
+    edtxtermopts.Text := t;
+    myAdd2cmb(edtxtermopts, t);
+  end;
+  s := '/usr/bin/xterm';
+  t := '-e';
+  if FileExistsUTF8(s) then
+  begin
+    myAdd2cmb(edtxterm, s);
+    myAdd2cmb(edtxtermopts, t);
+  end;
+  //s := GetEnvironmentVariable('XDG_CURRENT_DESKTOP');
+  //if s = 'KDE' then
+  s := '/usr/bin/konsole';
+  t := '--nofork -e';
+  if FileExistsUTF8(s) then
+  begin
+    edtxterm.Text := s;
+    myAdd2cmb(edtxterm, s);
+    edtxtermopts.Text := t;
+    myAdd2cmb(edtxtermopts, t);
+    myAdd2cmb(edtxtermopts, '--nofork --hold -e');
+  end;
+  //else if (s = 'GNOME') or (s = 'X-Cinnamon') then
+  s := '/usr/bin/gnome-terminal';
+  t := '-x';
+  if FileExistsUTF8(s) then
+  begin
+    edtxterm.Text := s;
+    myAdd2cmb(edtxterm, s);
+    edtxtermopts.Text := t;
+    myAdd2cmb(edtxtermopts, t);
+  end;
+  //else if s = 'XFCE' then
+  s := '/usr/bin/xfce4-terminal';
+  t := '-x';
+  if FileExistsUTF8(s) then
+  begin
+    edtxterm.Text := s;
+    myAdd2cmb(edtxterm, s);
+    edtxtermopts.Text := t;
+    myAdd2cmb(edtxtermopts, t);
+  end;
+  //else if s = 'LXDE' then
+  s := '/usr/bin/lxterminal';
+  t := '-e';
+  if FileExistsUTF8(s) then
+  begin
+    edtxterm.Text := s;
+    myAdd2cmb(edtxterm, s);
+    edtxtermopts.Text := t;
+    myAdd2cmb(edtxtermopts, t);
+  end;
+  {$ENDIF}
+end;
+
+function TfrmGUIta.myGetUserDir(dir: string): string;
+var
+  s: string;
+  i: integer;
+  cmd: TJob;
+begin
+  Result := '';
+  s := FindDefaultExecutablePath('xdg-user-dir');
+//  if not FileExistsUTF8(s) then Exit;
+  cmd := TJob.Create;
+  cmd.AddFile(s);
+  cmd.f[0].AddStream;
+  cmd.f[0].s[0].addval('1', dir);
+  i := myGetDosOut(cmd, SynMemo2);
+  cmd.Free;
+  if i <> 0 then Exit;
+  for i := 1 to SynMemo2.Lines.Count - 1 do
+  begin
+    s := SynMemo2.Lines[i];
+    Result := myUnExpandFN(s);
   end;
 end;
 
@@ -4448,6 +4548,9 @@ begin
     mySet2(TabSets2.Controls[i], cDefaultSets.getval(TabSets2.Controls[i].Name));
   for i := 0 to TabScreenGrab.ControlCount - 1 do
     mySet2(TabScreenGrab.Controls[i], cDefaultSets.getval(TabScreenGrab.Controls[i].Name));
+  if edtxterm.Text = '' then
+    myGetTerminal;
+  edtDirOut.Text := myGetUserDir('VIDEOS');
 end;
 
 procedure TfrmGUIta.btnSaveSetsClick(Sender: TObject);
@@ -5076,11 +5179,8 @@ begin
 end;
 
 procedure TfrmGUIta.edtffmpegChange(Sender: TObject);
-var
-  s: string;
 begin
-  s := myExpandFN(myGet2(Sender));
-  if FileExistsUTF8(s) then
+  if FileExistsUTF8(myExpandFN(edtffmpeg.Text)) then
   begin
     myFillEnc;
     myFillFmt;
@@ -5262,11 +5362,6 @@ begin
   edtMediaInfo.Text := 'MediaInfo.exe';
   cmbExtPlayer.Text := 'wmplayer.exe';
   cmbDirLast.Text := 'C:\';
-  edtxterm.Text := 'cmd.exe';
-  edtxterm.Items.Add('cmd.exe');
-  edtxtermopts.Text := '/c';
-  edtxtermopts.Items.Add('/c');
-  edtxtermopts.Items.Add('/k');
   //screen grab
   cmbSGsource0.Text := '-f dshow -i video="screen-capture-recorder"';
   chkSGsource1.Checked := False;
@@ -5289,52 +5384,8 @@ begin
   cmbExtPlayer.Text := 'mplayer';
   cmbDirLast.Text := '$HOME';
   cmbFont.Text := 'Ubuntu';
-  if FileExistsUTF8('/bin/sh') then
-  begin
-    edtxterm.Text := '/bin/sh';
-    edtxtermopts.Text := '-c';
-    edtxterm.Items.Add('/bin/sh');
-    edtxtermopts.Items.Add('-c');
-  end;
-  if FileExistsUTF8('/usr/bin/xterm') then
-  begin
-    edtxterm.Items.Add('/usr/bin/xterm');
-    edtxtermopts.Items.Add('-e');
-  end;
-  //s := GetEnvironmentVariable('XDG_CURRENT_DESKTOP');
-  //if s = 'KDE' then
-  if FileExistsUTF8('/usr/bin/konsole') then
-  begin
-    edtxterm.Text := '/usr/bin/konsole';
-    edtxtermopts.Text := '--nofork -e';
-    edtxterm.Items.Add('/usr/bin/konsole');
-    edtxtermopts.Items.Add('--nofork -e');
-    edtxtermopts.Items.Add('--nofork --hold -e');
-  end;
-  //else if (s = 'GNOME') or (s = 'X-Cinnamon') then
-  if FileExistsUTF8('/usr/bin/gnome-terminal') then
-  begin
-    edtxterm.Text := '/usr/bin/gnome-terminal';
-    edtxtermopts.Text := '-x';
-    edtxterm.Items.Add('/usr/bin/gnome-terminal');
-    edtxtermopts.Items.Add('-x');
-  end;
-  //else if s = 'XFCE' then
-  if FileExistsUTF8('/usr/bin/xfce4-terminal') then
-  begin
-    edtxterm.Text := '/usr/bin/xfce4-terminal';
-    edtxtermopts.Text := '-x';
-    edtxterm.Items.Add('/usr/bin/xfce4-terminal');
-    edtxtermopts.Items.Add('-x');
-  end;
-  //else if s = 'LXDE' then
-  if FileExistsUTF8('/usr/bin/lxterminal') then
-  begin
-    edtxterm.Text := '/usr/bin/lxterminal';
-    edtxtermopts.Text := '-e';
-    edtxterm.Items.Add('/usr/bin/lxterminal');
-    edtxtermopts.Items.Add('-e');
-  end;
+  edtxterm.Text := '';
+  edtxtermopts.Text := '';
   chkxterm1str.Checked := True;
   //screen grab
   cmbSGsource0.Text := '-f x11grab -framerate 30 -video_size '
@@ -5390,6 +5441,7 @@ begin
     myFindMediaInfo;
     {$ENDIF}
     myFindPlayers(True);
+    edtDirOut.Text := myGetUserDir('VIDEOS');
     cmbProfileGetItems(nil);
     if cmbProfile.Items.Count > 0 then
       cmbProfile.ItemIndex := 0;
@@ -5433,6 +5485,8 @@ begin
     end;
     {$ENDIF}
   end;
+  if edtxterm.Text = '' then
+    myGetTerminal;
   frmGUIta.Font.Name := cmbFont.Text;
   //if masks empty then set defaults
   if LVmasks.Items.Count = 0 then
