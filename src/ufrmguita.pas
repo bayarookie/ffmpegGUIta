@@ -20,7 +20,7 @@ uses
   Spin, Buttons, IntfGraphics, LCLType, Menus, fpImage,
   Masks,
   {$IFDEF MSWINDOWS}
-  Windows, Registry, mediainfodll,
+  Windows, Registry, shlobj, mediainfodll,
   {$ELSE}
   clipbrd,
   {$ENDIF}
@@ -401,12 +401,14 @@ type
     procedure cmbBitrateVChange(Sender: TObject);
     procedure cmbEncoderVChange(Sender: TObject);
     procedure cmbExtChange(Sender: TObject);
+    procedure cmbExtGetItems(Sender: TObject);
     procedure cmbExtPlayerChange(Sender: TObject);
     procedure cmbExtPlayerGetItems(Sender: TObject);
     procedure cmbExtSelect(Sender: TObject);
     procedure cmbFontGetItems(Sender: TObject);
     procedure cmbFontSelect(Sender: TObject);
     procedure cmbFormatChange(Sender: TObject);
+    procedure cmbFormatGetItems(Sender: TObject);
     procedure cmbFormatSelect(Sender: TObject);
     procedure cmbLanguageChange(Sender: TObject);
     procedure cmbLanguageGetItems(Sender: TObject);
@@ -416,7 +418,6 @@ type
     procedure cmbSGsource0GetItems(Sender: TObject);
     procedure cmbSGsource2GetItems(Sender: TObject);
     procedure edtDirOutChange(Sender: TObject);
-    procedure edtffmpegChange(Sender: TObject);
     procedure edtffmpegGetItems(Sender: TObject);
     procedure edtOfnChange(Sender: TObject);
     procedure edtxtermSelect(Sender: TObject);
@@ -467,6 +468,7 @@ type
       var Accept: Boolean);
     procedure TabCmdlineShow(Sender: TObject);
     procedure TabContRowsShow(Sender: TObject);
+    procedure TabSets1Show(Sender: TObject);
     procedure TabVideoShow(Sender: TObject);
     procedure UniqueInstance1OtherInstance(Sender: TObject;
       ParamCount: Integer; Parameters: array of String);
@@ -514,7 +516,8 @@ type
     procedure myGetClipboardFileNames(files: TStrings; test: boolean = False);
     function myWindowColorIsDark: boolean;
     function myGetExts: string;
-    procedure myDefaultSets;
+    procedure myDefaultSave;
+    procedure myDefaultLoad;
     procedure myToIni(Ini: TIniFile; s1, s2, s3: string; t: Integer = 0);
     procedure mySets1(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean);
     procedure mySets4(Ini: TIniFile; bRead: boolean);
@@ -524,6 +527,7 @@ type
     procedure myLanguage(bRead: boolean; bDefault: boolean = False);
     procedure myGetTerminal;
     function myGetUserDir(dir: string): string;
+    procedure myChkCpuCount;
   public
     { public declarations }
     procedure myError(i: integer; s: string);
@@ -2295,7 +2299,7 @@ var
   s, t: string;
 begin
   {$IFDEF MSWINDOWS}
-  s := 'cmd.exe'
+  s := 'cmd.exe';
   t := '/c';
   edtxterm.Text := s;
   myAdd2cmb(edtxterm, s);
@@ -2365,6 +2369,15 @@ begin
 end;
 
 function TfrmGUIta.myGetUserDir(dir: string): string;
+{$IFDEF MSWINDOWS}
+var
+  Path: Array[0..MaxPathLen] of WideChar; //Allocate memory
+begin
+  Path := '';
+  if dir = 'VIDEOS' then
+    SHGetSpecialFolderPathW(0, Path, CSIDL_MYVIDEO, false);
+  Result := Path;
+{$ELSE}
 var
   s: string;
   i: integer;
@@ -2372,7 +2385,7 @@ var
 begin
   Result := '';
   s := FindDefaultExecutablePath('xdg-user-dir');
-//  if not FileExistsUTF8(s) then Exit;
+  if not FileExistsUTF8(s) then Exit;
   cmd := TJob.Create;
   cmd.AddFile(s);
   cmd.f[0].AddStream;
@@ -2380,10 +2393,21 @@ begin
   i := myGetDosOut(cmd, SynMemo2);
   cmd.Free;
   if i <> 0 then Exit;
-  for i := 1 to SynMemo2.Lines.Count - 1 do
+  if SynMemo2.Lines.Count > 1 then
+    Result := myUnExpandFN(SynMemo2.Lines[SynMemo2.Lines.Count - 1]);
+{$ENDIF}
+end;
+
+procedure TfrmGUIta.myChkCpuCount;
+begin
+  if spnCpuCount.Value = 0 then
+    spnCpuCount.Value := cpucount.GetLogicalCpuCount;
+  if (spnCpuCount.Value = 0) then
+    spnCpuCount.Value := 1;
+  if ((High(aThrs) + 1) <> spnCpuCount.Value) then
   begin
-    s := SynMemo2.Lines[i];
-    Result := myUnExpandFN(s);
+    SetLength(aThrs, spnCpuCount.Value);
+    SetLength(aMems, spnCpuCount.Value);
   end;
 end;
 
@@ -4193,7 +4217,7 @@ begin
   li.Checked := True;
   li.Caption := '*';
   li.SubItems.Add('.jp*g;.png');
-  li.SubItems.Add('resize to png w160.ini');
+  li.SubItems.Add('picture to png - resize w160.ini');
   li := LVmasks.Items.Add;
   li.Checked := False;
   li.Caption := '*';
@@ -4501,7 +4525,7 @@ begin
   end;
 end;
 
-procedure TfrmGUIta.myDefaultSets;
+procedure TfrmGUIta.myDefaultSave;
 var
   i: integer;
   procedure my1(c: TComponent);
@@ -4528,7 +4552,7 @@ begin
   cDefaultSets.setval(chkx264Pass1fast.Name, myGet2(chkx264Pass1fast));
 end;
 
-procedure TfrmGUIta.btnResetClick(Sender: TObject);
+procedure TfrmGUIta.myDefaultLoad;
 var
   i: integer;
   procedure my2(c: TComponent);
@@ -4548,9 +4572,120 @@ begin
     mySet2(TabSets2.Controls[i], cDefaultSets.getval(TabSets2.Controls[i].Name));
   for i := 0 to TabScreenGrab.ControlCount - 1 do
     mySet2(TabScreenGrab.Controls[i], cDefaultSets.getval(TabScreenGrab.Controls[i].Name));
+end;
+
+procedure TfrmGUIta.btnResetClick(Sender: TObject);
+var
+  s, t: string;
+  i: integer;
+  sl: TStringList;
+  {$IFDEF MSWINDOWS}
+  procedure myFindMediaInfo;
+  var
+    j: integer;
+    s: string;
+    reg: TRegistry;
+  begin
+    if not FileExistsUTF8(myExpandFN(edtMediaInfo.Text)) then
+    begin
+      reg := TRegistry.Create;
+      try
+        Reg.RootKey := HKEY_CLASSES_ROOT;
+        if Reg.OpenKeyReadOnly('\SystemFileAssociations\.avi\Shell\MediaInfo\Command') then
+        begin
+          s := Reg.ReadString('');
+          if (s <> '') and (s[1] = '"') then
+          begin
+            j := PosEx('"', s, 2);
+            if j > 0 then
+              s := Copy(s, 2, j - 2);
+          end;
+          if FileExistsUTF8(s) then
+            mySet2(edtMediaInfo, myUnExpandFN(s));
+        end;
+        Reg.CloseKey;
+      except
+        on E: Exception do
+          ShowMessage(E.Message);
+      end;
+      reg.Free;
+    end;
+  end;
+  {$ENDIF}
+begin
+  if Sender = btnReset then
+    myDefaultLoad;
+  s := myGetLocaleLanguage;
+  if s <> '' then
+  begin
+    sl := TStringList.Create;
+    for i := 0 to cmbLangsList.Items.Count - 1 do
+    begin
+      myGetListFromStr(cmbLangsList.Items[i], '|', sl);
+      if (sl.Count > 2) and (s = sl[2]) then
+      begin
+        s := sl[3];
+        t := sl[0];
+        Break;
+      end;
+    end;
+    sl.Free;
+    cmbLanguage.Text := s + '.lng';
+    cmbLangA.Text := t;
+  end;
   if edtxterm.Text = '' then
     myGetTerminal;
+  myFindFiles(sDirApp, edtffmpeg.Text, edtffmpeg);
+  myFindFiles(sDirApp, edtffprobe.Text, edtffprobe);
+  myFindFiles(sDirApp, edtffplay.Text, edtffplay);
+  myFindFiles(sDirApp, edtMediaInfo.Text, edtMediaInfo);
+  {$IFDEF MSWINDOWS}
+  myFindMediaInfo;
+  {$ENDIF}
+  myFindPlayers(True);
   edtDirOut.Text := myGetUserDir('VIDEOS');
+  cmbProfileGetItems(nil);
+  if cmbProfile.Items.Count > 0 then
+    cmbProfile.ItemIndex := 0;
+  //screen grab, fill items
+  myFillSGin(cmbSGsource0.Items, 'video');
+  cmbSGsource1.Items.Clear;
+  cmbSGsource1.Items.AddStrings(cmbSGsource0.Items);
+  myFillSGin(cmbSGsource2.Items, 'audio');
+  cmbSGsource3.Items.Clear;
+  cmbSGsource3.Items.AddStrings(cmbSGsource2.Items);
+  //set defaults
+  if cmbSGsource0.Items.Count > 0 then
+    cmbSGsource0.ItemIndex := 0;
+  if cmbSGsource1.Items.Count > 1 then
+    cmbSGsource1.ItemIndex := 1;
+  {$IFDEF MSWINDOWS}
+  if cmbSGsource2.Items.Count > 0 then
+    cmbSGsource2.ItemIndex := 0;
+  if cmbSGsource3.Items.Count > 1 then
+    cmbSGsource3.ItemIndex := 1;
+  {$ELSE}
+  chkSGsource1.Checked := FileExistsUTF8('/dev/video0');
+  //pactl list sources
+  for i := 0 to cmbSGsource2.Items.Count - 1 do
+  begin
+    s := cmbSGsource2.Items[i];
+    if (Pos('alsa_output.', s) > 0) and (Pos('.analog', s) > 0) and (Pos('.monitor', s) > 0) then
+    begin
+      cmbSGsource2.ItemIndex := i;
+      Break;
+    end;
+  end;
+  for i := 0 to cmbSGsource3.Items.Count - 1 do
+  begin
+    s := cmbSGsource3.Items[i];
+    if (Pos('alsa_input.', s) > 0) then
+    begin
+      cmbSGsource3.ItemIndex := i;
+      Break;
+    end;
+  end;
+  {$ENDIF}
 end;
 
 procedure TfrmGUIta.btnSaveSetsClick(Sender: TObject);
@@ -4564,13 +4699,8 @@ var
   t: TTabSheet;
 begin
   btnStart.Enabled := False;
-  if (spnCpuCount.Value = 0) then
-    spnCpuCount.Value := 1;
-  if ((High(aThrs) + 1) <> spnCpuCount.Value) then
-  begin
-    SetLength(aThrs, spnCpuCount.Value);
-    SetLength(aMems, spnCpuCount.Value);
-  end;
+  spnCpuCount.Enabled := False;
+  myChkCpuCount;
   for i := Low(aThrs) to High(aThrs) do
   begin
     if PageControl3.PageCount > iTabCount + i then
@@ -4945,7 +5075,7 @@ end;
 
 procedure TfrmGUIta.cmbEncoderVChange(Sender: TObject);
 var
-  b, b2, b3, b4, b5: boolean;
+  b1, b2, b3, b4, b5: boolean;
   i: integer;
   s: string;
   c: TWinControl;
@@ -4953,24 +5083,24 @@ begin
   if (Sender is TComboBox) then
   begin
     with (Sender as TComboBox) do
-    if Items.IndexOf(Text) < 0 then
+    if (Items.Count > 0) and (Items.IndexOf(Text) < 0) then
       Font.Color := clRed
     else
       Font.Color := clWindowText;
   end;
   s := TComboBox(Sender).Text;
-  b := (s <> 'copy');
-  b2 := b and not chkFilterComplex.Checked;
+  b1 := (s <> 'copy');
+  b2 := b1 and not chkFilterComplex.Checked;
   b3 := (Pos('x264', s) > 0);
   b4 := (Pos('x265', s) > 0);
-  b5 := b and chkMetadataWork.Checked;
+  b5 := b1 and chkMetadataWork.Checked;
   c := TControl(Sender).Parent;
   for i := 0 to c.ControlCount - 1 do
     if c.Controls[i].Name <> TControl(Sender).Name then
-      c.Controls[i].Enabled := (b and (c.Controls[i].Tag = 0))
-      or (b2 and (c.Controls[i].Tag = 2))
-      or ((b3 or b4) and (c.Controls[i].Tag = 4))
-      or (b5 and (c.Controls[i].Tag = 5));
+      c.Controls[i].Enabled := (b1 and (c.Controls[i].Tag = 0))
+                            or (b2 and (c.Controls[i].Tag = 2))
+                            or ((b3 or b4) and (c.Controls[i].Tag = 4))
+                            or (b5 and (c.Controls[i].Tag = 5));
   cmbx264tune.Items.Clear;
   if b3 then //x264
     cmbx264tune.Items.AddStrings(['', 'film', 'animation', 'grain', 'stillimage', 'psnr', 'ssim', 'fastdecode', 'zerolatency']);
@@ -4988,7 +5118,7 @@ var
   i: integer;
 begin
   s := cmbExt.Text;
-  if cmbExt.Items.IndexOf(s) < 0 then
+  if (cmbExt.Items.Count > 0) and (cmbExt.Items.IndexOf(s) < 0) then
   begin
     cmbExt.Font.Color := clRed;
     Exit;
@@ -5010,6 +5140,12 @@ begin
         cmbFormat.ItemIndex := i;
     end;
   xmyChange0(cmbExt);
+end;
+
+procedure TfrmGUIta.cmbExtGetItems(Sender: TObject);
+begin
+  if cmbExt.Items.Count > 0 then Exit;
+  myFillFmt;
 end;
 
 procedure TfrmGUIta.cmbExtPlayerChange(Sender: TObject);
@@ -5046,11 +5182,17 @@ end;
 
 procedure TfrmGUIta.cmbFormatChange(Sender: TObject);
 begin
-  if cmbFormat.Items.IndexOf(cmbFormat.Text) < 0 then
+  if (cmbFormat.Items.Count > 0) and (cmbFormat.Items.IndexOf(cmbFormat.Text) < 0) then
     cmbFormat.Font.Color := clRed
   else
     cmbFormat.Font.Color := clWindowText;
   xmyChange0(Sender);
+end;
+
+procedure TfrmGUIta.cmbFormatGetItems(Sender: TObject);
+begin
+  if cmbFormat.Items.Count > 0 then Exit;
+  myFillFmt;
 end;
 
 procedure TfrmGUIta.cmbFormatSelect(Sender: TObject);
@@ -5178,16 +5320,6 @@ begin
   chkDirOutStruct.Enabled := edtDirOut.Text <> '';
 end;
 
-procedure TfrmGUIta.edtffmpegChange(Sender: TObject);
-begin
-  if FileExistsUTF8(myExpandFN(edtffmpeg.Text)) then
-  begin
-    myFillEnc;
-    myFillFmt;
-  end;
-  xmyCheckFile(Sender);
-end;
-
 procedure TfrmGUIta.edtffmpegGetItems(Sender: TObject);
 var
   s, t: string;
@@ -5243,10 +5375,12 @@ end;
 
 procedure TfrmGUIta.edtxtermSelect(Sender: TObject);
 begin
+  {$IFDEF MSWINDOWS}
   if edtxterm.Text = 'cmd.exe' then begin
     edtxtermopts.Text := '/c';
     chkxterm1str.Checked := False;
-  end else
+  end;
+  {$ELSE}
   if edtxterm.Text = '/bin/sh' then begin
     edtxtermopts.Text := '-c';
     chkxterm1str.Checked := True;
@@ -5267,48 +5401,12 @@ begin
     edtxtermopts.Text := '-x';
     chkxterm1str.Checked := True;
   end;
+  {$ENDIF}
 end;
 
 procedure TfrmGUIta.FormCreate(Sender: TObject);
 var
-  b: boolean;
-  s, t: string;
-  i: integer;
-  sl: TStringList;
-  {$IFDEF MSWINDOWS}
-  procedure myFindMediaInfo;
-  var
-    j: integer;
-    s: string;
-    reg: TRegistry;
-  begin
-    if not FileExistsUTF8(myExpandFN(edtMediaInfo.Text)) then
-    begin
-      reg := TRegistry.Create;
-      try
-        Reg.RootKey := HKEY_CLASSES_ROOT;
-        if Reg.OpenKeyReadOnly('\SystemFileAssociations\.avi\Shell\MediaInfo\Command') then
-        begin
-          s := Reg.ReadString('');
-          if (s <> '') and (s[1] = '"') then
-          begin
-            j := PosEx('"', s, 2);
-            if j > 0 then
-              s := Copy(s, 2, j - 2);
-          end;
-          if FileExistsUTF8(s) then
-            mySet2(edtMediaInfo, myUnExpandFN(s));
-        end;
-        Reg.CloseKey;
-      except
-        on E: Exception do
-          ShowMessage(E.Message);
-      end;
-      reg.Free;
-    end;
-  end;
-  {$ENDIF}
-
+  s: string;
 begin
   memJournal.Clear;
   sCap := 'ffmpegGUIta ' + taVersion + '.' + taRevision + ' alpha';
@@ -5331,9 +5429,8 @@ begin
     sInidir := sDirApp
   else
     sInidir := GetAppConfigDirUTF8(False, True);
-  sInifile := AppendPathDelim(sInidir) + ExtractFileNameOnly(s) + '.cfg';
+  sInifile := AppendPathDelim(sInidir) + ChangeFileExt(ExtractFileName(s), '.cfg');
   memJournal.Lines.Add(sInifile);
-  b := FileExistsUTF8(sInifile);
   //hide some unused components
   {$IFDEF MSWINDOWS}
   {$ELSE}
@@ -5400,111 +5497,19 @@ begin
   {$ENDIF}
   bUpdFromCode := False;
   chkSynColor.Checked := myWindowColorIsDark;
-  s := myGetLocaleLanguage;
-  if s <> '' then
+  //save defaults to container
+  myDefaultSave;
+  if FileExistsUTF8(sInifile) then //if config file exists then
+    mySets(True) //load settings from config file
+  else //assign some sets
   begin
-    sl := TStringList.Create;
-    for i := 0 to cmbLangsList.Items.Count - 1 do
-    begin
-      myGetListFromStr(cmbLangsList.Items[i], '|', sl);
-      if (sl.Count > 2) and (s = sl[2]) then
-      begin
-        s := sl[3];
-        t := sl[0];
-        Break;
-      end;
-    end;
-    sl.Free;
-    cmbLanguage.Text := s + '.lng';
-    cmbLangA.Text := t;
-  end;
-  //save defaults to containers
-  myDefaultSets;
-  if b then //if config file exists then load settings
-  begin
-    mySets(True); //load settings from config file
-    chk1instanceChange(nil);
-    //load language
-    myLanguage(True, True);
-  end
-  else //if config file doesnt exists then assign some sets
-  begin
-    chk1instanceChange(nil);
-    //load language
-    myLanguage(True, True);
-    //
-    myFindFiles(sDirApp, edtffmpeg.Text, edtffmpeg);
-    myFindFiles(sDirApp, edtffprobe.Text, edtffprobe);
-    myFindFiles(sDirApp, edtffplay.Text, edtffplay);
-    myFindFiles(sDirApp, edtMediaInfo.Text, edtMediaInfo);
-    {$IFDEF MSWINDOWS}
-    myFindMediaInfo;
-    {$ENDIF}
-    myFindPlayers(True);
-    edtDirOut.Text := myGetUserDir('VIDEOS');
-    cmbProfileGetItems(nil);
-    if cmbProfile.Items.Count > 0 then
-      cmbProfile.ItemIndex := 0;
-    //screen grab, fill items
-    myFillSGin(cmbSGsource0.Items, 'video');
-    cmbSGsource1.Items.Clear;
-    cmbSGsource1.Items.AddStrings(cmbSGsource0.Items);
-    myFillSGin(cmbSGsource2.Items, 'audio');
-    cmbSGsource3.Items.Clear;
-    cmbSGsource3.Items.AddStrings(cmbSGsource2.Items);
-    //set defaults
-    if cmbSGsource0.Items.Count > 0 then
-      cmbSGsource0.ItemIndex := 0;
-    if cmbSGsource1.Items.Count > 1 then
-      cmbSGsource1.ItemIndex := 1;
-    {$IFDEF MSWINDOWS}
-    if cmbSGsource2.Items.Count > 0 then
-      cmbSGsource2.ItemIndex := 0;
-    if cmbSGsource3.Items.Count > 1 then
-      cmbSGsource3.ItemIndex := 1;
-    {$ELSE}
-    chkSGsource1.Checked := FileExistsUTF8('/dev/video0');
-    //pactl list sources
-    for i := 0 to cmbSGsource2.Items.Count - 1 do
-    begin
-      s := cmbSGsource2.Items[i];
-      if (Pos('alsa_output.', s) > 0) and (Pos('.analog', s) > 0) and (Pos('.monitor', s) > 0) then
-      begin
-        cmbSGsource2.ItemIndex := i;
-        Break;
-      end;
-    end;
-    for i := 0 to cmbSGsource3.Items.Count - 1 do
-    begin
-      s := cmbSGsource3.Items[i];
-      if (Pos('alsa_input.', s) > 0) then
-      begin
-        cmbSGsource3.ItemIndex := i;
-        Break;
-      end;
-    end;
-    {$ENDIF}
-  end;
-  if edtxterm.Text = '' then
-    myGetTerminal;
-  frmGUIta.Font.Name := cmbFont.Text;
-  //if masks empty then set defaults
-  if LVmasks.Items.Count = 0 then
+    btnResetClick(nil);
     btnMaskResetClick(nil);
-  //process count for single thread formats: png xvid etc
-  if spnCpuCount.Value = 0 then
-    spnCpuCount.Value := cpucount.GetLogicalCpuCount;
-  SetLength(aThrs, spnCpuCount.Value);
-  SetLength(aMems, spnCpuCount.Value);
-  //TComboBox - did not work onChange, red color for not existed files
-  edtffmpegChange(edtffmpeg); //and fill some comboboxes with codecs and formats
-  xmyCheckFile(edtffplay);
-  xmyCheckFile(edtffprobe);
-  xmyCheckFile(edtMediaInfo);
-  xmyCheckFile(cmbExtPlayer);
-  xmyCheckDir(edtDirTmp);
-  xmyCheckDir(edtDirOut);
-  xmyCheckDir(cmbDirLast);
+  end;
+  chk1instanceChange(nil);
+  myLanguage(True, True); //load language
+  frmGUIta.Font.Name := cmbFont.Text;
+  myChkCpuCount; //process count for single thread formats: png xvid etc
   cmbProfileChange(cmbProfile);
 end;
 
@@ -6154,6 +6159,7 @@ begin
   btnStart.Enabled := True;
   btnSuspend.Enabled := False;
   btnStop.Enabled := False;
+  spnCpuCount.Enabled := True;
   DuraJob := '';
   myShowCaption('');
 end;
@@ -6277,6 +6283,18 @@ begin
     for i := 0 to High(c.sk) do
       SynMemo4.Lines.Add(c.sk[i] + '=' + c.sv[i]);
   end;
+end;
+
+procedure TfrmGUIta.TabSets1Show(Sender: TObject);
+begin
+  xmyCheckFile(edtffmpeg);
+  xmyCheckFile(edtffplay);
+  xmyCheckFile(edtffprobe);
+  xmyCheckFile(edtMediaInfo);
+  xmyCheckFile(cmbExtPlayer);
+  xmyCheckDir(edtDirTmp);
+  xmyCheckDir(edtDirOut);
+  xmyCheckDir(cmbDirLast);
 end;
 
 procedure TfrmGUIta.TabVideoShow(Sender: TObject);
@@ -6430,22 +6448,16 @@ begin
 end;
 
 procedure TfrmGUIta.xmyCheckDir(Sender: TObject);
-var
-  s: string;
 begin
-  s := myExpandFN(myGet2(Sender), True);
-  if DirectoryExistsUTF8(s) then
+  if DirectoryExistsUTF8(myExpandFN(myGet2(Sender), True)) then
     TWinControl(Sender).Font.Color := clWindowText
   else
     TWinControl(Sender).Font.Color := clRed;
 end;
 
 procedure TfrmGUIta.xmyCheckFile(Sender: TObject);
-var
-  s: string;
 begin
-  s := myExpandFN(myGet2(Sender));
-  if FileExistsUTF8(s) then
+  if FileExistsUTF8(myExpandFN(myGet2(Sender))) then
     TWinControl(Sender).Font.Color := clWindowText
   else
     TWinControl(Sender).Font.Color := clRed;
@@ -6468,13 +6480,8 @@ var
   w, t, sExt: string;
   od: TOpenDialog;
 begin
-  {$IFDEF MSWINDOWS}
-  sExt := '.exe';
-  {$ELSE}
-  sExt := '';
-  {$ENDIF}
   w := myGet2(Sender);
-  t := Copy((Sender as TControl).Name, 4, 20) + sExt;
+  t := Copy((Sender as TControl).Name, 4, 20) + GetExeExt;
   od := TOpenDialog.Create(frmGUIta);
   od.Title := mes[20] + ' - ' + t;
   if (w <> '') then
