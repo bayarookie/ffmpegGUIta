@@ -15,4 +15,4 @@ linux - https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media - ppa:mc3man/
 windows - http://ffmpeg.zeranoe.com/builds/
 
 
-[Free Pascal 3.0.0 - Lazarus 1.6.0.4](http://www.lazarus-ide.org/)
+[Free Pascal 3.0.0 - Lazarus 1.6.0](http://www.lazarus-ide.org/)
