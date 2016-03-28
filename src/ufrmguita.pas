@@ -17,8 +17,8 @@ uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ComCtrls,
   ExtCtrls, StdCtrls, IniFiles, LclIntf, Process, UTF8Process, LConvEncoding,
   SynMemo, synhighlighterunixshellscript, StrUtils, types, Math,
-  Spin, Buttons, IntfGraphics, LCLType, Menus, fpImage,
-  Masks,
+  Spin, Buttons, IntfGraphics, LCLType, Menus, fpImage, Masks,
+  LazFileUtils, LazUTF8,
   {$IFDEF MSWINDOWS}
   Windows, Registry, shlobj, mediainfodll,
   {$ELSE}
@@ -1727,10 +1727,12 @@ procedure TfrmGUIta.myFindFiles(dir, exe: string; c: TComboBox; bSet2: boolean =
 var
   SL: TStringList;
   j: integer;
+  s: string;
 begin
-  SL := TStringList.Create;
-  if FileExistsUTF8(myExpandFN(exe)) then
+  s := myExpandFN(exe);
+  if FileExistsUTF8(s) and not DirectoryExistsUTF8(s) then
     myAdd2cmb(c, exe);
+  SL := TStringList.Create;
   if myGetFileList(dir, exe, SL, True) then
     for j := 0 to SL.Count - 1 do
       myAdd2cmb(c, myUnExpandFN(SL[j]));
@@ -1934,53 +1936,39 @@ function TfrmGUIta.myGetFileList(const Path, Mask: string; List: TStrings;
   subdir: boolean = False; fullpath: boolean = True): boolean;
 var
   frm: TfrmSplash;
+  SL: TStringList;
 
   function myGetList(const Path2: string): boolean;
   var
-    i, nStatus: integer;
+    i: integer;
     b: boolean;
     SR: TSearchRec;
-    SL: TStringList;
   begin
-    SL := TStringList.Create;
-    myGetListFromStr(Mask, ';', SL);
-    nStatus := FindFirstUTF8(AppendPathDelim(Path2) + '*', 0, SR);
-    while nStatus = 0 do
+    if FindFirstUTF8(AppendPathDelim(Path2) + '*', faAnyFile and faDirectory, SR) = 0 then
     begin
-      b := False;
-      for i := 0 to SL.Count - 1 do
-      if MatchesMask(SR.Name, SL.Strings[i]) then
-      begin
-        b := True;
-        Break;
-      end;
-      if b then
-        List.Add(IfThen(fullpath, AppendPathDelim(Path2)) + SR.Name);
-      if frm.bCancel then
-        Break;
-      nStatus := FindNextUTF8(SR);
-    end;
-    FindCloseUTF8(SR);
-    Result := not frm.bCancel;
-    if frm.bCancel then
-      Exit;
-    if subdir then
-    begin
-      nStatus := FindFirstUTF8(AppendPathDelim(Path2) + '*', faDirectory, SR);
-      while nStatus = 0 do
-      begin
-        frm.Label1.Caption := SR.Name;
-        Application.ProcessMessages;
-        if ((SR.Attr and faDirectory) <> 0) and (SR.Name <> '.') and
-          (SR.Name <> '..') then
-          myGetList(AppendPathDelim(Path2) + SR.Name);
+      repeat
+        if (SR.Attr and faDirectory) = faDirectory then
+        begin
+          if (SR.Name <> '.') and (SR.Name <> '..') then
+            myGetList(AppendPathDelim(Path2) + SR.Name);
+        end
+        else
+        begin
+          b := False;
+          for i := 0 to SL.Count - 1 do
+          if MatchesMask(SR.Name, SL.Strings[i]) then
+          begin
+            b := True;
+            Break;
+          end;
+          if b then
+            List.Add(IfThen(fullpath, AppendPathDelim(Path2)) + SR.Name);
+        end;
         if frm.bCancel then
           Break;
-        nStatus := FindNextUTF8(SR);
-      end;
-      FindCloseUTF8(SR);
+      until FindNextUTF8(SR) <> 0;
     end;
-    SL.Free;
+    FindCloseUTF8(SR);
     Result := not frm.bCancel;
   end;
 
@@ -1992,7 +1980,10 @@ begin
     frm.Label1.Caption := mes[3];
     if subdir then
       frm.Show;
+    SL := TStringList.Create;
+    myGetListFromStr(Mask, ';', SL);
     Result := myGetList(Path);
+    SL.Free;
   except
     on E: Exception do
       ShowMessage(E.Message)
@@ -5423,13 +5414,30 @@ begin
   DuraAll := 0;
   iTabCount := PageControl3.PageCount; //backup page count, for thread count
   //get inifile location
-  s := SysToUTF8(Application.ExeName);
-  sDirApp := ExtractFilePath(s);
-  if DirectoryIsWritable(sDirApp) then
-    sInidir := sDirApp
+  s := ChangeFileExt(ExtractFileName(Application.ExeName), '.cfg');
+  sDirApp := ExtractFilePath(Application.ExeName);
+  sInidir := GetAppConfigDirUTF8(False, True);
+  sInifile := AppendPathDelim(sDirApp) + s;
+  if FileExistsUTF8(sIniFile) then //if portable
+  begin
+    if FileIsWritable(sIniFile) then
+      sInidir := sDirApp
+    else
+    begin
+      sInifile := AppendPathDelim(sInidir) + s;
+      if not FileExistsUTF8(sIniFile) then
+        CopyFile(AppendPathDelim(sDirApp) + s, sIniFile, False);
+    end;
+  end
   else
-    sInidir := GetAppConfigDirUTF8(False, True);
-  sInifile := AppendPathDelim(sInidir) + ChangeFileExt(ExtractFileName(s), '.cfg');
+  begin
+    sInifile := AppendPathDelim(sInidir) + s;
+    if not FileExistsUTF8(sIniFile) and DirectoryIsWritable(sDirApp) then //if first start then default is portable
+    begin
+      sInidir := sDirApp;
+      sInifile := AppendPathDelim(sInidir) + s;
+    end;
+  end;
   memJournal.Lines.Add(sInifile);
   //hide some unused components
   {$IFDEF MSWINDOWS}

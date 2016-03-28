@@ -5,7 +5,8 @@ unit ufrmcompare;
 interface
 
 uses
-  Classes, FileUtil, SynMemo, Forms, Graphics,
+  Classes, LazFileUtils, //FileUtil,
+  SynMemo, Forms, Graphics,
   ExtCtrls, StdCtrls, Math, IntfGraphics, LCLType, ComCtrls, Spin, fpImage;
 
 type

@@ -5,8 +5,8 @@ unit uThreadAddF;
 interface
 
 uses
-  Classes, SysUtils, utf8process, Process, fileutil, IniFiles,
-  ComCtrls, Math, ujobinfo, ubyutils;
+  Classes, SysUtils, utf8process, Process, LazFileUtils, LazUTF8, //fileutil,
+  IniFiles, ComCtrls, Math, ujobinfo, ubyutils;
 
 type
 

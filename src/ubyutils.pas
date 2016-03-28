@@ -9,7 +9,8 @@ uses
   {$IFDEF MSWINDOWS}
   Windows, LConvEncoding, Dialogs, Registry,
   {$ENDIF}
-  Fileutil, LCLIntf, Process, UTF8Process;
+  LazFileUtils, LazUTF8, //Fileutil,
+  LCLIntf, Process, UTF8Process;
 
 function myGetFileSize(fn: string; short: boolean = False): string;
 function myExpandFileNameCaseW(const wfn: string; out MatchFound: boolean): string;

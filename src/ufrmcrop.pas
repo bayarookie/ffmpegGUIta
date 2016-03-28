@@ -5,7 +5,8 @@ unit ufrmcrop;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, SynMemo,
+  Classes, SysUtils, LazFileUtils, //FileUtil,
+  SynMemo,
   {$IFNDEF LCL} Windows, Messages, {$ELSE} LMessages, LclType, {$ENDIF}
   Forms, Controls,
   ExtCtrls, Buttons, StdCtrls, ComCtrls;
