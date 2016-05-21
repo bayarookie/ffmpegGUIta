@@ -2625,12 +2625,15 @@ begin
 end;
 
 procedure TfrmGUIta.myGetFileStreamNums(s: string; var l, k: integer);
+var
+  i: integer;
 begin
-  l := 0;
-  k := 0;
-  if Length(s) <> 3 then Exit;
-  l := StrToIntDef(s[1], 0);
-  k := StrToIntDef(s[3], 0);
+  l := -1;
+  k := -1;
+  if Length(s) < 3 then Exit;
+  i := Pos(':', s);
+  l := StrToIntDef(Copy(s, 1, i - 1), -1);
+  k := StrToIntDef(Copy(s, i + 1, Length(s)), -1);
 end;
 
 procedure TfrmGUIta.myGetWH(v: TCont; var w, h: integer);

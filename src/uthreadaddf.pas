@@ -97,10 +97,10 @@ var
   li: TListItem;
   bj, bp: boolean;
 begin
-  bj := False; //job is not checked, if no tracks
+  bj := False; //job is not checked
   if filenum > 0 then
   begin
-    iv := 0; //need to get number of video if checked
+    iv := 0; //if video stream is checked then get number of stream
     ia := 0; //also for audio
   end
   else
@@ -118,7 +118,7 @@ begin
   for i := 0 to sl.Count - 1 do
     jo.setpair(sl[i]);
   s := frmGUIta.SynMemo6.Text;
-  //information about the container format of the input multimedia stream
+  //information about container format of the input multimedia stream
   sl.Text := myBetween(s, '[FORMAT]', '[/FORMAT]');
   for i := 0 to sl.Count - 1 do
     jo.f[filenum].setpair(sl[i]);
@@ -244,7 +244,7 @@ begin
     end;
   until (s = '');
   Ini.Free;
-  //if no audio is checked, check first audio track
+  //if audio track does not checked, check first audio track
   if (ia < 0) and (ia2 >= 0) then
   begin
     jo.f[filenum].s[ia2].setval('Checked', '1');
@@ -257,7 +257,7 @@ begin
   frmGUIta.StatusBar1.SimpleText := s;
   if frmGUIta.chkDebug.Checked or (fExitStatus <> 0) then
     frmGUIta.memJournal.Lines.Add(s);
-  //add or update to listview
+  //add to listview or update listview item
   v := '';
   a := '';
   s := '';
