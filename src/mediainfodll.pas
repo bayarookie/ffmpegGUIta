@@ -10,7 +10,7 @@ unit MediaInfoDll;
 
 interface
 uses
-{$IFDEF WIN32}
+{$IFDEF WINDOWS}
   Windows;
 {$ELSE}
   Wintypes, WinProcs;

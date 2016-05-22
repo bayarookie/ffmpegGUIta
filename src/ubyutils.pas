@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, strutils, Math,
   {$IFDEF MSWINDOWS}
-  Windows, LConvEncoding, Dialogs, Registry,
+  Windows, LConvEncoding, Dialogs, Registry, Fileutil,
   {$ENDIF}
   LazFileUtils, LazUTF8, //Fileutil,
   LCLIntf, Process, UTF8Process;

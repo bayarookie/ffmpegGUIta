@@ -519,7 +519,7 @@ type
     procedure myDefaultSave;
     procedure myDefaultLoad;
     procedure myToIni(Ini: TIniFile; s1, s2, s3: string; t: Integer = 0);
-    procedure mySets1(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean);
+    procedure mySets1(Ini: TIniFile; s: string; c: array of TComponent; bRead: boolean); //enabled and not tag in 1,3
     procedure mySets4(Ini: TIniFile; bRead: boolean);
     procedure mySets(bRead: boolean);
     procedure myFormPosLoad(Form: TForm; Ini: TIniFile);
@@ -586,7 +586,7 @@ var
   Files2Add: TList;
   Counter: integer;
   myUnik: TUniqueInstance;
-  cDefaultSets: TCont;
+  cDefaultSets: TCont; //default settings,
   cCmdIni: TCont;
   iTabCount: integer;
   sMyDTformat: string = 'yyyy-mm-dd hh:nn:ss';
@@ -4221,20 +4221,12 @@ begin
   li.Checked := False;
   li.Caption := 'anim*';
   li.SubItems.Add('.avi;.mkv;.vob;.mp*g;.mp4;.mov;.flv;.3gp;.3g2;.asf;.wmv;.m2ts;.ts;.ogv;.webm;.rm;.qt');
-  {$IFDEF MSWINDOWS}
-  li.SubItems.Add('libx264 slow animation-libvo_aacenc-matroska.ini');
-  {$ELSE}
-  li.SubItems.Add('libx264 slow animation-libfdk_aac-matroska.ini');
-  {$ENDIF}
+  li.SubItems.Add('libx264 slow animation-aac-matroska.ini');
   li := LVmasks.Items.Add;
   li.Checked := True;
   li.Caption := '*';
   li.SubItems.Add('.avi;.mkv;.vob;.mp*g;.mp4;.mov;.flv;.3gp;.3g2;.asf;.wmv;.m2ts;.ts;.ogv;.webm;.rm;.qt');
-  {$IFDEF MSWINDOWS}
-  li.SubItems.Add('libx264 slow film w720-libvo_aacenc-matroska.ini');
-  {$ELSE}
-  li.SubItems.Add('libx264 slow film w720-libfdk_aac-matroska.ini');
-  {$ENDIF}
+  li.SubItems.Add('libx264 slow film-aac-matroska.ini');
 end;
 
 procedure TfrmGUIta.btnMediaInfo1Click(Sender: TObject);
@@ -4874,7 +4866,7 @@ end;
 
 procedure TfrmGUIta.chkAddTracksChange(Sender: TObject);
 begin
-  cmbAddTracks.Enabled := chkAddTracks.Checked;
+  //cmbAddTracks.Enabled := chkAddTracks.Checked;
 end;
 
 procedure TfrmGUIta.chkFilterComplexChange(Sender: TObject);
@@ -4929,7 +4921,7 @@ procedure TfrmGUIta.chkPlayer3Change(Sender: TObject);
 begin
   if chkPlayer3.Checked then
     chkPlayer2.Checked := False;
-  cmbExtPlayer.Enabled := chkPlayer3.Checked;
+  //cmbExtPlayer.Enabled := chkPlayer3.Checked;
 end;
 
 procedure TfrmGUIta.chkSGmixvideoChange(Sender: TObject);
@@ -5429,7 +5421,7 @@ begin
     begin
       sInifile := AppendPathDelim(sInidir) + s;
       if not FileExistsUTF8(sIniFile) then
-        CopyFile(AppendPathDelim(sDirApp) + s, sIniFile, False);
+        FileUtil.CopyFile(AppendPathDelim(sDirApp) + s, sIniFile, False);
     end;
   end
   else
@@ -5466,9 +5458,9 @@ begin
   edtffplay.Text := 'ffplay.exe';
   edtffprobe.Text:= 'ffprobe.exe';
   edtDirTmp.Text := '%TEMP%';
-  edtDirOut.Text := 'C:\TEMP';
-  edtMediaInfo.Text := 'MediaInfo.exe';
-  cmbExtPlayer.Text := 'wmplayer.exe';
+  edtDirOut.Text := '';
+  edtMediaInfo.Text := '%ProgramFiles%\MediaInfo\MediaInfo.exe';
+  cmbExtPlayer.Text := '%ProgramFiles%\Windows Media Player\wmplayer.exe';
   cmbDirLast.Text := 'C:\';
   //screen grab
   cmbSGsource0.Text := '-f dshow -i video="screen-capture-recorder"';
@@ -5487,7 +5479,7 @@ begin
   edtffplay.Text := 'ffplay';
   edtffprobe.Text:= 'ffprobe';
   edtDirTmp.Text := '/tmp';
-  edtDirOut.Text := '$HOME';
+  edtDirOut.Text := '';
   edtMediaInfo.Text:= 'mediainfo-gui';
   cmbExtPlayer.Text := 'mplayer';
   cmbDirLast.Text := '$HOME';
@@ -5508,15 +5500,15 @@ begin
   {$ENDIF}
   bUpdFromCode := False;
   chkSynColor.Checked := myWindowColorIsDark;
-  //save defaults to container
-  myDefaultSave;
+  myDefaultSave; //save defaults to container
   if FileExistsUTF8(sInifile) then //if config file exists then
-    mySets(True) //load settings from config file
-  else //assign some sets
-  begin
+    mySets(True)                   //load settings from config file
+  else
+  begin                            //assign some sets
     btnResetClick(nil);
     btnMaskResetClick(nil);
   end;
+  //chkPlayer3Change(nil);
   chk1instanceChange(nil);
   myLanguage(True, True); //load language
   frmGUIta.Font.Name := cmbFont.Text;

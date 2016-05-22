@@ -7,14 +7,15 @@
 
 
 Для работы нужны в windows:
-ffmpeg.exe, ffprobe.exe, ffplay.exe 2.8 - http://ffmpeg.zeranoe.com/builds/
+ffmpeg.exe, ffprobe.exe, ffplay.exe 3.0 - http://ffmpeg.zeranoe.com/builds/
 mediainfo.exe или mediainfo.dll - http://sourceforge.net/projects/mediainfo/files/binary/mediainfo-gui/
+Разрядность mediainfo.dll должна соответствовать исполняемому ffmpegGUIta.exe (вроде логично, но спрашивают)
 Дополнительно, но не обязательно, можно использовать:
 Avisynth - http://sourceforge.net/projects/avisynth2/
 плагин для Avisynth - https://github.com/ffms/ffms2
 
 Для работы нужны в linux:
-ffmpeg, ffprobe, ffplay 2.8 - https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media - ppa:mc3man/trusty-media
+ffmpeg, ffprobe, ffplay 3.0 - https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media - ppa:mc3man/trusty-media
 
 Ключи:
 -o:"D:\Путь\к папке\назначения"
@@ -33,7 +34,7 @@ ffmpeg, ffprobe, ffplay 2.8 - https://launchpad.net/~mc3man/+archive/ubuntu/trus
 
   Для субтитров в формате ass, вместо subtitles написать ass, например: ass=$inpu2, но это необязательно, вроде и так понимает.
 
-  Переменные $input, $inpu0, $inpu1, $inpu2 и т.д. будут заменены на имена файлов.
+  Переменные $input, $inpu0, $inpu1, $inpu2, и до $inpu9 будут заменены на имена файлов.
 
   Дополнительно для винды придётся в папке с ffmpeg.exe создать папку fonts и в нём файл fonts.conf:
 -----файл fonts.conf-----
