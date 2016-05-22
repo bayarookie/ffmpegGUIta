@@ -5522,6 +5522,8 @@ begin
   frmGUIta.Font.Name := cmbFont.Text;
   myChkCpuCount; //process count for single thread formats: png xvid etc
   cmbProfileChange(cmbProfile);
+  myFillEnc;
+  myFillFmt;
 end;
 
 procedure TfrmGUIta.FormDestroy(Sender: TObject);
