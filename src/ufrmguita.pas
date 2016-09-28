@@ -3080,6 +3080,7 @@ begin
             begin
               s := SynMemo2.Lines[i];
               j := Pos(':', s); //Спецификация сэмплов: s16le 2ch 48000Гц
+                                //Спецификация сэмплов: s16le 2-канальный 4410
               if j > 0 then
               begin
                 s := Copy(s, j + 2, Length(s));
@@ -3088,12 +3089,13 @@ begin
                 begin
                   s := Copy(s, j + 1, Length(s));
                   t := myGetDigits(s);
-                  j := Pos(' ', s);
-                  if j > 0 then
-                  begin
-                    s := Copy(s, j + 1, Length(s));
-                    si.Add('-f pulse -ac ' + t + ' -ar ' + myGetDigits(s) + ' -i ' + u);
-                  end;
+                  //j := Pos(' ', s);
+                  //if j > 0 then
+                  //begin
+                  //  s := Copy(s, j + 1, Length(s));
+                  //  si.Add('-f pulse -ac ' + t + ' -ar ' + myGetDigits(s) + ' -i ' + u);
+                      si.Add('-f pulse -ac ' + t  + ' -i ' + u);
+                  //end;
                 end;
               end;
             end;
@@ -5198,6 +5200,7 @@ end;
 
 procedure TfrmGUIta.cmbLanguageGetItems(Sender: TObject);
 begin
+  if cmbLanguage.Items.Count > 0 then Exit;
   cmbLanguage.Items.Clear;
   myGetFileList(sInidir, '*.lng', cmbLanguage.Items, False, False);
   cmbLanguage.Sorted := True;
@@ -5277,15 +5280,20 @@ end;
 
 procedure TfrmGUIta.cmbProfileGetItems(Sender: TObject);
 begin
+  {$IFDEF MSWINDOWS}
+  //bug: cant select item
+  {$ELSE}
   cmbProfile.Items.Clear;
   myGetFileList(sInidir, '*.ini', cmbProfile.Items, False, False);
   cmbProfile.Sorted := True;
+  {$ENDIF}
 end;
 
 procedure TfrmGUIta.cmbRunCmdGetItems(Sender: TObject);
 var
   i: integer;
 begin
+  if cmbRunCmd.Items.Count > 0 then Exit;
   for i := 0 to High(cCmdIni.sk) do
     myAdd2cmb(cmbRunCmd, cCmdIni.sk[i]);
 end;
@@ -5420,7 +5428,7 @@ begin
     else
     begin
       sInifile := AppendPathDelim(sInidir) + s;
-      if not FileExistsUTF8(sIniFile) then
+      if not FileExistsUTF8(sIniFile) then //if app is executed in readonly folder
         FileUtil.CopyFile(AppendPathDelim(sDirApp) + s, sIniFile, False);
     end;
   end
@@ -5436,6 +5444,7 @@ begin
   memJournal.Lines.Add(sInifile);
   //hide some unused components
   {$IFDEF MSWINDOWS}
+  //nothing to hide
   {$ELSE}
   btnAddFilesAsAvs1.Visible := False;
   btnAddFilesAsAvs2.Visible := False;
@@ -5508,7 +5517,7 @@ begin
     btnResetClick(nil);
     btnMaskResetClick(nil);
   end;
-  //chkPlayer3Change(nil);
+  chkPlayer3Change(nil);
   chk1instanceChange(nil);
   myLanguage(True, True); //load language
   frmGUIta.Font.Name := cmbFont.Text;
@@ -5516,6 +5525,9 @@ begin
   cmbProfileChange(cmbProfile);
   myFillEnc;
   myFillFmt;
+  {$IFDEF MSWINDOWS}
+  myGetFileList(sInidir, '*.ini', cmbProfile.Items, False, False);
+  {$ENDIF}
 end;
 
 procedure TfrmGUIta.FormDestroy(Sender: TObject);
