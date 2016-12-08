@@ -28,7 +28,6 @@ function myGetOutFNa(Dir, Inp, Ext: string): string;
 {$ENDIF}
 function myBetween(var s: string; const s1, s2: string): string;
 procedure myExecProc(Path: string; ComLine: array of string; sw: TShowWindowOptions = swoShowNormal);
-procedure myExecProc1(ComLine: string; sw: TShowWindowOptions = swoShowNormal);
 procedure myOpenDoc(Path: string);
 function myCompareInt(List: TStringList; Index1, Index2: integer): integer;
 function myGetLocaleLanguage: string;
@@ -617,17 +616,6 @@ begin
   p.Executable := Path;
   for i := Low(ComLine) to High(ComLine) do
     p.Parameters.Add(ComLine[i]);
-  p.ShowWindow := sw;
-  p.Execute;
-  p.Free;
-end;
-
-procedure myExecProc1(ComLine: string; sw: TShowWindowOptions = swoShowNormal);
-var
-  p: TProcessUTF8;
-begin
-  p := TProcessUTF8.Create(nil);
-  p.CommandLine := ComLine;
   p.ShowWindow := sw;
   p.Execute;
   p.Free;

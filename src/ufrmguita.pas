@@ -3061,46 +3061,35 @@ begin
     j := myGetDosOut(cmd, SynMemo2);
     cmd.Free;
     if j <> 0 then Exit;
-    i := 0;
+    i := 1; //skip datetime - cmdline
     while i < SynMemo2.Lines.Count do
     begin
       s := SynMemo2.Lines[i];
-      if Pos('#', s) > 2 then //Источник #2
+      if (Length(s) > 0) and (s[1] <> #9) then //Источник #2 //Источник №2
       begin
         inc(i, 2);
-        if i < SynMemo2.Lines.Count then
-        begin
-          s := SynMemo2.Lines[i];
-          j := Pos(':', s); //Имя: alsa_input.pci-0000_00_1b.0.analog-stereo
-          if j > 0 then
-          begin
-            u := Copy(s, j + 2, Length(s)); //filename := alsa_input.pci-0000_00_1b.0.analog-stereo
-            inc(i, 3);
-            if i < SynMemo2.Lines.Count then
-            begin
-              s := SynMemo2.Lines[i];
-              j := Pos(':', s); //Спецификация сэмплов: s16le 2ch 48000Гц
-                                //Спецификация сэмплов: s16le 2-канальный 4410
-              if j > 0 then
-              begin
-                s := Copy(s, j + 2, Length(s));
-                j := Pos(' ', s);
-                if j > 0 then
-                begin
-                  s := Copy(s, j + 1, Length(s));
-                  t := myGetDigits(s);
-                  //j := Pos(' ', s);
-                  //if j > 0 then
-                  //begin
-                  //  s := Copy(s, j + 1, Length(s));
-                  //  si.Add('-f pulse -ac ' + t + ' -ar ' + myGetDigits(s) + ' -i ' + u);
-                      si.Add('-f pulse -ac ' + t  + ' -i ' + u);
-                  //end;
-                end;
-              end;
-            end;
-          end;
-        end;
+        if i >= SynMemo2.Lines.Count then Exit;
+        s := SynMemo2.Lines[i];
+        j := Pos(':', s); //Имя: alsa_input.pci-0000_00_1b.0.analog-stereo
+        if j = 0 then Exit;
+        u := Copy(s, j + 2, Length(s));
+        si.Add('-f pulse -i ' + u);
+        //inc(i, 3);
+        //if i >= SynMemo2.Lines.Count then Exit;
+        //s := SynMemo2.Lines[i];
+        //j := Pos(':', s); //Спецификация сэмплов: s16le 2ch 48000Гц
+        //                  //Спецификация сэмплов: s16le 2-канальный 4800
+        //if j = 0 then Exit;
+        //s := Copy(s, j + 2, Length(s));
+        //j := Pos(' ', s);
+        //if j = 0 then Exit;
+        //s := Copy(s, j + 1, Length(s));
+        //t := myGetDigits(s);
+        //si.Add('-f pulse -ac ' + t  + ' -i ' + u);
+        //j := Pos(' ', s);
+        //if j = 0 then Exit;
+        //s := Copy(s, j + 1, Length(s));
+        //si.Add('-f pulse -ac ' + t + ' -ar ' + myGetDigits(s) + ' -i ' + u);
       end;
       inc(i);
     end;

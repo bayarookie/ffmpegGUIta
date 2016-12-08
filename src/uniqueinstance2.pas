@@ -38,7 +38,7 @@ unit UniqueInstance2;
 interface
 
 uses
-  Forms, Classes, SysUtils, simpleipc, ExtCtrls, fileutil;
+  Forms, Classes, SysUtils, simpleipc, ExtCtrls, LazUTF8;
   
 type
 
