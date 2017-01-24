@@ -486,6 +486,7 @@ type
     procedure xmySelFile(Sender: TObject);
   private
     { private declarations }
+    procedure myAddFile1(fn, ss, t, o: string);
     procedure myAddFiles(params: TStrings);
     {$IFDEF MSWINDOWS}
     procedure myAddFilesAsAVS1(fns: TStrings);
@@ -810,69 +811,76 @@ end;
 
 { TfrmGUIta }
 
+procedure TfrmGUIta.myAddFile1(fn, ss, t, o: string);
+var
+  jo: TJob;
+  i, j: integer;
+  s, e: string;
+  sl: TStringList;
+  Ini: TIniFile;
+begin
+  jo := TJob.Create;
+  Inc(Counter);
+  jo.setval('index', IntToStr(Counter));
+  jo.setval(sMyCompleted, '0');
+  s := myGetProfile(ExtractFileName(fn));
+  jo.setval(cmbProfile.Name, s);
+  {$IFDEF MSWINDOWS}
+  s := myGetAnsiFN(AppendPathDelim(sInidir) + s);
+  {$ELSE}
+  s := AppendPathDelim(sInidir) + s;
+  {$ENDIF}
+  Ini := TIniFile.Create(UTF8ToSys(s));
+  Ini.StripQuotes := False;
+  sl := TStringList.Create;
+  Ini.ReadSection('1', sl);
+  for i := 0 to sl.Count - 1 do
+    jo.setval(sl[i], Ini.ReadString('1', sl[i], ''));
+  sl.Free;
+  Ini.Free;
+  if o <> '' then
+    s := o
+  else if Trim(edtDirOut.Text) <> '' then
+    s := Trim(edtDirOut.Text)
+  else
+    s := ExtractFilePath(fn);
+  if chkDirOutStruct.Checked then
+  begin
+    e := ExtractFilePath(fn);
+    s := AppendPathDelim(s) + Copy(e, Length(e) + 1, Length(fn));
+  end;
+  e := jo.getval(cmbExt.Name);
+  jo.setval(edtOfn.Name, myGetOutFN(s, fn, e));
+  jo.setval(cmbDurationt2.Name, t); //if add file splitted
+  i := jo.AddFile(fn);
+  jo.f[i].setval(cmbDurationss1.Name, ss); //if add file splitted
+  {$IFDEF MSWINDOWS}
+  jo.setval(edtOfna.Name, myGetOutFNa(s, jo.f[0].getval(sMyDOSfname), e));
+  {$ENDIF}
+  jo.setval(sMyBakfname, ExtractFileName(fn));
+  if chkAddTracks.Checked then
+  begin
+    sl := TStringList.Create;
+    if myGetSimilarFiles(fn, sl) then
+    for j := 0 to sl.Count - 1 do
+    begin
+      i := jo.AddFile(sl[j]);
+      jo.f[i].setval(cmbDurationss1.Name, ss); //if add file splitted
+    end;
+    sl.Free;
+  end;
+  Files2Add.Add(Pointer(jo));
+end;
+
 procedure TfrmGUIta.myAddFiles(params: TStrings);
 var
   i, j: integer;
-  s, t, o, d: string;
+  s, t, o: string;
   ST: TStringList;
-  procedure my1(fn: string);
-  var
-    jo: TJob;
-    i, j: integer;
-    s, e: string;
-    sl: TStringList;
-    Ini: TIniFile;
-  begin
-    jo := TJob.Create;
-    Inc(Counter);
-    jo.setval('index', IntToStr(Counter));
-    jo.setval(sMyCompleted, '0');
-    s := myGetProfile(ExtractFileName(fn));
-    jo.setval(cmbProfile.Name, s);
-    {$IFDEF MSWINDOWS}
-    s := myGetAnsiFN(AppendPathDelim(sInidir) + s);
-    {$ELSE}
-    s := AppendPathDelim(sInidir) + s;
-    {$ENDIF}
-    Ini := TIniFile.Create(UTF8ToSys(s));
-    Ini.StripQuotes := False;
-    sl := TStringList.Create;
-    Ini.ReadSection('1', sl);
-    for i := 0 to sl.Count - 1 do
-      jo.setval(sl[i], Ini.ReadString('1', sl[i], ''));
-    sl.Free;
-    Ini.Free;
-    if o <> '' then
-      s := o
-    else if Trim(edtDirOut.Text) <> '' then
-      s := Trim(edtDirOut.Text)
-    else
-      s := ExtractFilePath(fn);
-    if chkDirOutStruct.Checked then
-      s := AppendPathDelim(s) + Copy(ExtractFilePath(fn), Length(d) + 1, Length(fn));
-    e := jo.getval(cmbExt.Name);
-    jo.setval(edtOfn.Name, myGetOutFN(s, fn, e));
-    jo.AddFile(fn);
-    {$IFDEF MSWINDOWS}
-    jo.setval(edtOfna.Name, myGetOutFNa(s, jo.f[0].getval(sMyDOSfname), e));
-    {$ENDIF}
-    jo.setval(sMyBakfname, ExtractFileName(fn));
-    if chkAddTracks.Checked then
-    begin
-      sl := TStringList.Create;
-      if myGetSimilarFiles(fn, sl) then
-      for j := 0 to sl.Count - 1 do
-        jo.AddFile(sl[j]);
-      sl.Free;
-    end;
-    Files2Add.Add(Pointer(jo));
-  end;
-
 begin
   for i := 0 to params.Count - 1 do
   begin
     s := params[i];
-    d := ExtractFilePath(s);
     if DirectoryExistsUTF8(s) then
     begin
       ST := TStringList.Create;
@@ -880,7 +888,7 @@ begin
       begin
         ST.Sort;
         for j := 0 to ST.Count - 1 do
-          my1(ST[j]);
+          myAddFile1(ST[j], '', '', '');
       end;
       ST.Free;
     end
@@ -905,10 +913,10 @@ begin
       else if (t = 'h') then
         ShowMessage(StringReplace(mes[2], '\n', #13, [rfReplaceAll]))
       else
-        my1(s);
+        myAddFile1(s, '', '', o);
     end
     else
-      my1(s);
+      myAddFile1(s, '', '', o);
   end;
   myAddFileStart;
 end;
@@ -1021,7 +1029,7 @@ procedure TfrmGUIta.myAddFileSplit(files: TStrings);
 var
   i: integer;
   j, k, r: double;
-  jo, cmd: TJob;
+  cmd: TJob;
   s, d: string;
 begin
   s := '4:00';
@@ -1050,14 +1058,7 @@ begin
     k := 0;
     while k < j do
     begin
-      jo := TJob.Create;
-      Inc(Counter);
-      jo.setval('index', IntToStr(Counter));
-      jo.setval(sMyCompleted, '0');
-      jo.setval(cmbDurationt2.Name, myRealToTimeStr(r, False));
-      jo.AddFile(files[i]);
-      jo.f[0].setval(cmbDurationss1.Name, myRealToTimeStr(k, False));
-      Files2Add.Add(Pointer(jo));
+      myAddFile1(files[i], myRealToTimeStr(k, False), myRealToTimeStr(r, False), '');
       k := k + r;
     end;
   end;
