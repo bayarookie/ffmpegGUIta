@@ -73,6 +73,7 @@ type
     btnAddFileSplit: TButton;
     btnAddScreenGrab: TButton;
     btnAddTrack1: TButton;
+    chkffplayfs: TCheckBox;
     chkSGmixaudio: TCheckBox;
     chkSGmixvideo: TCheckBox;
     chkCreateSymLink: TCheckBox;
@@ -258,6 +259,9 @@ type
     Panel1: TPanel;
     Panel10: TPanel;
     Panel11: TPanel;
+    Panel66: TPanel;
+    Panel67: TPanel;
+    Panel68: TPanel;
     PanelGenLinks: TPanel;
     PanelMasks: TPanel;
     Panel18: TPanel;
@@ -4325,6 +4329,8 @@ begin
     cmd.f[0].s[0].addval('', '|');
     cmd.f[0].s[0].addval('', myStrReplace('$ffplay'));
     cmd.f[0].s[0].addval('', '-');
+    if chkffplayfs.Checked then
+      cmd.f[0].s[0].addval('', '-fs');
     p := TProcessUTF8.Create(nil);
     s := myCmdFillPr(cmd.f[0], chkPlayInTerm.Checked, p);
     if chkDebug.Checked then
@@ -4426,6 +4432,8 @@ begin
     {$ENDIF}
     cmd.f[0].s[0].addval('18', '-i');
     cmd.f[0].s[0].addval('19', s);
+    if chkffplayfs.Checked then
+      cmd.f[0].s[0].addval('20', '-fs');
     myGetDosOut(cmd, SynMemo2);
   end;
 end;
@@ -4446,6 +4454,9 @@ begin
   else
   if chkPlayer3.Checked and FileExistsUTF8(myExpandFN(cmbExtPlayer.Text)) then
     myExecProc(myExpandFN(cmbExtPlayer.Text), [s])
+  else
+  if chkffplayfs.Checked then
+    myExecProc(myStrReplace('$ffplay'), [s, '-fs'])
   else
     myExecProc(myStrReplace('$ffplay'), [s]);
 end;

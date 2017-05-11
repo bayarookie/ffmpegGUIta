@@ -8,19 +8,23 @@
 #git config --global user.name "name"
 
 git status
+echo ---------------------------------------------------------------------------
 read -r -p "git add . > Run? [Y/n]" yesno
 yesno=${yesno,,}
 if [[ $yesno =~ ^(yes|y| ) ]] | [ -z $yesno ]; then
   git add .
+  echo ---------------------------------------------------------------------------
   git status
+  echo ---------------------------------------------------------------------------
   ver=$(grep " taVersion" ./src/utaversion.pas | cut -d "'" -f2)
   rev=$(grep " taRevision" ./src/tarevision.inc | cut -d "'" -f2)
   read -r -p "git commit -m v$ver.$rev > Run? [Y/n]" yesno
   yesno=${yesno,,}
   if [[ $yesno =~ ^(yes|y| ) ]] | [ -z $yesno ]; then
-   #git commit -m "v0.1.0.67"
     git commit -m "v$ver.$rev"
+    echo ---------------------------------------------------------------------------
     git status
+    echo ---------------------------------------------------------------------------
     read -r -p "git push > Run? [Y/n]" yesno
     yesno=${yesno,,}
     if [[ $yesno =~ ^(yes|y| ) ]] | [ -z $yesno ]; then
