@@ -490,7 +490,7 @@ type
     procedure xmySelFile(Sender: TObject);
   private
     { private declarations }
-    procedure myAddFile1(fn, ss, t, o: string);
+    procedure myAddFile1(di, fn, ss, t, o: string);
     procedure myAddFiles(params: TStrings);
     {$IFDEF MSWINDOWS}
     procedure myAddFilesAsAVS1(fns: TStrings);
@@ -711,7 +711,6 @@ begin
     Exit;
   bUpdFromCode := True;
   Ini := TIniFile.Create(UTF8ToSys(sInifile));
-  Ini.StripQuotes := False;
   s := 'Main';
   mySets1(Ini, s, [TabSets1, TabSets2, TabScreenGrab], bRead);
   if not chkUseMasks.Checked then
@@ -815,11 +814,11 @@ end;
 
 { TfrmGUIta }
 
-procedure TfrmGUIta.myAddFile1(fn, ss, t, o: string);
+procedure TfrmGUIta.myAddFile1(di, fn, ss, t, o: string);
 var
   jo: TJob;
   i, j: integer;
-  s, e: string;
+  s, p: string;
   sl: TStringList;
   Ini: TIniFile;
 begin
@@ -835,7 +834,6 @@ begin
   s := AppendPathDelim(sInidir) + s;
   {$ENDIF}
   Ini := TIniFile.Create(UTF8ToSys(s));
-  Ini.StripQuotes := False;
   sl := TStringList.Create;
   Ini.ReadSection('1', sl);
   for i := 0 to sl.Count - 1 do
@@ -850,11 +848,10 @@ begin
     s := ExtractFilePath(fn);
   if chkDirOutStruct.Checked then
   begin
-    e := ExtractFilePath(fn);
-    s := AppendPathDelim(s) + Copy(e, Length(e) + 1, Length(fn));
+    p := ExtractFilePath(fn);
+    s := AppendPathDelim(s) + Copy(p, Length(di) + 1, Length(p));
   end;
-  e := jo.getval(cmbExt.Name);
-  jo.setval(edtOfn.Name, myGetOutFN(s, fn, e));
+  jo.setval(edtOfn.Name, myGetOutFN(s, fn, jo.getval(cmbExt.Name)));
   jo.setval(cmbDurationt2.Name, t); //if add file splitted
   i := jo.AddFile(fn);
   jo.f[i].setval(cmbDurationss1.Name, ss); //if add file splitted
@@ -882,6 +879,7 @@ var
   s, t, o: string;
   ST: TStringList;
 begin
+  o := '';
   for i := 0 to params.Count - 1 do
   begin
     s := params[i];
@@ -892,11 +890,11 @@ begin
       begin
         ST.Sort;
         for j := 0 to ST.Count - 1 do
-          myAddFile1(ST[j], '', '', '');
+          myAddFile1(ExtractFilePath(s), ST[j], '', '', o);
       end;
       ST.Free;
     end
-    else if (s > '') and (s[1] = '-') or (s[1] = '/') then
+    else if (s[1] = '-') {$IFDEF MSWINDOWS}or (s[1] = '/'){$ENDIF} then
     begin
       t := Copy(LowerCase(s), 2, Length(s));
       if (t = 'start') then
@@ -917,10 +915,10 @@ begin
       else if (t = 'h') then
         ShowMessage(StringReplace(mes[2], '\n', #13, [rfReplaceAll]))
       else
-        myAddFile1(s, '', '', o);
+        myAddFile1(ExtractFilePath(s), s, '', '', o);
     end
     else
-      myAddFile1(s, '', '', o);
+      myAddFile1(ExtractFilePath(s), s, '', '', o);
   end;
   myAddFileStart;
 end;
@@ -1062,7 +1060,7 @@ begin
     k := 0;
     while k < j do
     begin
-      myAddFile1(files[i], myRealToTimeStr(k, False), myRealToTimeStr(r, False), '');
+      myAddFile1(ExtractFilePath(files[i]), files[i], myRealToTimeStr(k, False), myRealToTimeStr(r, False), '');
       k := k + r;
     end;
   end;
@@ -2233,7 +2231,7 @@ begin
   begin
     mes[0] := 'Video files';
     mes[1] := 'All files (*)|*';
-    mes[2] := 'Usage: ffmpegGUIta [-start] [-o:"folder"] [<files>...]\n-start   start converting\n-o:"output" set output dir to folder';
+    mes[2] := 'Usage: ffmpegGUIta [-start] [-o:"folder"] [<files>...]\n-start   start converting\n-o:"folder" set output dir to folder';
     mes[3] := 'Creating file list';
     mes[4] := 'process completed, error code:';
     mes[5] := 'job completed for';
@@ -2270,7 +2268,6 @@ begin
   or (bDefault and (cmbLanguage.Text = 'Default.lng'))) then
     Exit;
   Ini := TIniFile.Create(UTF8ToSys(s1));
-  Ini.StripQuotes := False;
   s1 := 'Captions';
   s2 := 'Hints';
   s3 := 'Messages';
@@ -4498,7 +4495,6 @@ begin
     PageControl2.ActivePage := TabSubtitle;
     PageControl2.ActivePage := TabOutput;
     Ini := TIniFile.Create(UTF8ToSys(s));
-    Ini.StripQuotes := False;
     mySets1(Ini, '1', [TabOutput], False);
     mySets1(Ini, 'input', [TabInput], False);
     mySets1(Ini, 'video', [TabVideo], False);
@@ -5229,7 +5225,6 @@ begin
   s := myGetAnsiFN(s);
   {$ENDIF}
   Ini := TIniFile.Create(UTF8ToSys(s));
-  Ini.StripQuotes := False;
   jo := TJob(LVjobs.Selected.Data);
   jo.setval(cmbProfile.Name, cmbProfile.Text);
   for i := 0 to TabOutput.ControlCount - 1 do
