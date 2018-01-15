@@ -5,7 +5,7 @@ unit uthreadconv;
 interface
 
 uses
-  Classes, SysUtils, utf8process, Process, synmemo, Math,
+  Classes, SysUtils, utf8process, Process, synmemo, Math, ComCtrls,
   {$IFDEF MSWINDOWS}
   Fileutil,
   {$ENDIF}
@@ -38,7 +38,7 @@ type
   public
     pr: TProcessUTF8;
     NumOfThread: integer;
-    NumOfJob: string;
+    NumOfJob: integer;
     constructor Create(threadnum: integer);
   end;
 
@@ -51,6 +51,7 @@ uses ufrmGUIta;
 procedure TThreadConv.DataGet;
 var
   i: integer;
+  li: TListItem;
 begin
   dt := Now;
   fmemo := aMems[NumOfThread];
@@ -63,16 +64,18 @@ begin
   DuraJob := '';
   for i := 0 to frmGUIta.LVjobs.Items.Count - 1 do
   begin
-    if frmGUIta.LVjobs.Items[i].Checked then
+    li := frmGUIta.LVjobs.Items[i];
+    if li.Checked then
     begin
-      frmGUIta.LVjobs.Items[i].Checked := False;
+      li.Checked := False;
       fmemo.Clear;
-      jo := TJob(frmGUIta.LVjobs.Items[i].Data);
+      jo := TJob(li.Data);
       frmGUIta.myGetCmdFromJo(jo, cmd);
       jo.setval(sMyCompleted, '2');
+      li.Caption := mes[35];
       frmGUIta.LVjobs.Refresh;
-      DuraJob := frmGUIta.LVjobs.Items[i].Caption;
-      NumOfJob := DuraJob;
+      DuraJob := li.SubItems[0];
+      NumOfJob := i;
       //frmGUIta.myShowCaption('');
       frmGUIta.LVjobsItemChecked(nil, nil);
       Break;
@@ -82,16 +85,12 @@ end;
 
 procedure TThreadConv.DataOut;
 var
-  i: integer;
   s, fno: string;
   {$IFDEF MSWINDOWS}
   fnoa: string;
   {$ENDIF}
+  li: TListItem;
 begin
-  if fExitStatus = 0 then
-    jo.setval(sMyCompleted, '1')
-  else
-    jo.setval(sMyCompleted, '3');
   fno := jo.getval(frmGUIta.edtOfn.Name);
   {$IFDEF MSWINDOWS}
   fnoa := jo.getval(frmGUIta.edtOfna.Name);
@@ -107,16 +106,19 @@ begin
     jo.setval(frmGUIta.edtOfna.Name, fnoa);
   end;
   {$ENDIF}
-  for i := 0 to frmGUIta.LVjobs.Items.Count - 1 do
+  li := frmGUIta.LVjobs.Items[NumOfJob];
+  if fExitStatus = 0 then
   begin
-    if frmGUIta.LVjobs.Items[i].Caption = jo.getval('index') then
-    begin
-      if frmGUIta.LVjobs.Items[i].Selected then
-        frmGUIta.LVjobsSelectItem(nil, frmGUIta.LVjobs.Items[i], True);
-      Break;
-    end;
+    jo.setval(sMyCompleted, '1');
+    li.Caption := mes[34]  //completed
+  end
+  else
+  begin
+    jo.setval(sMyCompleted, '3');
+    li.Caption := mes[36]; //error
   end;
-  s := IntToStr(NumOfThread + 1) + '-' + NumOfJob + ': ' + myDTtoStr(sMyDTformat, Now)
+
+  s := IntToStr(NumOfThread + 1) + '-' + IntToStr(NumOfJob) + ': ' + myDTtoStr(sMyDTformat, Now)
     + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
   if fExitStatus <> 0 then
   begin
@@ -141,12 +143,12 @@ end;
 
 procedure TThreadConv.ShowJournal;
 begin
-  frmGUIta.memJournal.Lines.Add(IntToStr(NumOfThread + 1) + '-' + NumOfJob + ': ' + fStatus);
+  frmGUIta.memJournal.Lines.Add(IntToStr(NumOfThread + 1) + '-' + IntToStr(NumOfJob) + ': ' + fStatus);
 end;
 
 procedure TThreadConv.ShowStatus1;
 begin
-  frmGUIta.StatusBar1.SimpleText := IntToStr(NumOfThread + 1) + '-' + NumOfJob + ': ' + fStatus;
+  frmGUIta.StatusBar1.SimpleText := IntToStr(NumOfThread + 1) + '-' + IntToStr(NumOfJob) + ': ' + fStatus;
 end;
 
 procedure TThreadConv.ShowSynMemo;

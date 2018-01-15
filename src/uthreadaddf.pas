@@ -270,7 +270,9 @@ begin
     jo.setval(frmGUIta.cmbTagTitleOut.Name, s);
     li := frmGUIta.LVjobs.Items.Add;
     li.Checked := bj;
-    li.Caption := jo.getval('index');
+    li.Caption := mes[33];
+    jo.setval('index', IntToStr(li.Index));
+    li.SubItems.Add(IntToStr(li.Index + 1));
     li.SubItems.Add(filenamew);
     li.SubItems.Add(myGetFileSize(filename));
     li.SubItems.Add(frmGUIta.myCalcOutSize(jo));
@@ -291,18 +293,15 @@ begin
       frmGUIta.LVjobs.Items[0].Selected := True;
   end
   else
-  for i := 0 to frmGUIta.LVjobs.Items.Count - 1 do
   begin
-    if frmGUIta.LVjobs.Items[i].Caption = jo.getval('index') then
-    begin
-      frmGUIta.myGetCaptions(jo, v, a, s);
-      frmGUIta.LVjobs.Items[i].SubItems[4] := v;
-      frmGUIta.LVjobs.Items[i].SubItems[5] := a;
-      frmGUIta.LVjobs.Items[i].Data := Pointer(jo);
-      if frmGUIta.LVjobs.Items[i].Selected then
-        frmGUIta.LVjobsSelectItem(nil, frmGUIta.LVjobs.Items[i], True);
-      Break;
-    end;
+    i := StrToIntDef(jo.getval('index'), 0);
+    li := frmGUIta.LVjobs.Items[i];
+    frmGUIta.myGetCaptions(jo, v, a, s);
+    li.SubItems[5] := v;
+    li.SubItems[6] := a;
+    li.Data := Pointer(jo);
+    if li.Selected then
+      frmGUIta.LVjobsSelectItem(nil, li, True);
   end;
 end;
 

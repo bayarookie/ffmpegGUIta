@@ -18,11 +18,11 @@ uses
   ExtCtrls, StdCtrls, IniFiles, LclIntf, Process, UTF8Process, LConvEncoding,
   SynMemo, synhighlighterunixshellscript, StrUtils, types, Math,
   Spin, Buttons, IntfGraphics, LCLType, Menus, fpImage, Masks,
-  LazFileUtils, LazUTF8,
+  LazFileUtils, LazUTF8, CheckBoxThemed, ListFilterEdit, ListViewFilterEdit,
   {$IFDEF MSWINDOWS}
   Windows, Registry, shlobj, mediainfodll,
   {$ELSE}
-  clipbrd,
+  clipbrd, ColorBox, Grids, ShellCtrls,
   {$ENDIF}
   ucalcul, ufrmcompare, ujobinfo, utaversion, UniqueInstance2, cpucount,
   uthreadconv, uthreadtest, uthreadaddf, uthreadexec, ufrmmaskprof;
@@ -178,7 +178,6 @@ type
     edtOfn: TLabeledEdit;
     edtxterm: TComboBox;
     edtxtermopts: TComboBox;
-    ImageList1: TImageList;
     edtBitrateV: TLabeledEdit;
     edtOfna: TLabeledEdit;
     lblSGoutput: TLabel;
@@ -436,6 +435,8 @@ type
       var Handled: boolean);
     procedure LVjobsCustomDrawItem(Sender: TCustomListView; Item: TListItem;
       State: TCustomDrawState; var DefaultDraw: boolean);
+    procedure LVjobsCustomDrawSubItem(Sender: TCustomListView; Item: TListItem;
+      SubItem: Integer; State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure LVjobsDragDrop(Sender, Source: TObject; X, Y: integer);
     procedure LVjobsDragOver(Sender, Source: TObject; X, Y: integer;
       State: TDragState; var Accept: boolean);
@@ -576,7 +577,7 @@ var
   frmGUIta: TfrmGUIta;
   sCap, sDirApp, sInidir, sInifile, sLngfile: string;
   fs: TFormatSettings;
-  mes: array [0..32] of string;
+  mes: array [0..36] of string;
   tAutoStart: TTimer;
   bUpdFromCode: boolean;
   aThrs: array of TThreadConv;
@@ -603,6 +604,7 @@ var
   sMyffprobe: string = 'my_ffprobe';   //0 - get streams info, 1 - do not get
   sMyCompleted: string = 'my_Completed';//0 - job added, 1 - completed, 2 - in progress, 3 - error
   sMyChecked: string = 'my_Checked';   //0 - do not convert, 1 - in queue
+  cStatus: array [0..3] of TColor = (clBlue, clGreen, clYellow, clRed);
 
 implementation
 
@@ -824,7 +826,6 @@ var
 begin
   jo := TJob.Create;
   Inc(Counter);
-  jo.setval('index', IntToStr(Counter));
   jo.setval(sMyCompleted, '0');
   s := myGetProfile(ExtractFileName(fn));
   jo.setval(cmbProfile.Name, s);
@@ -2262,6 +2263,10 @@ begin
     mes[30] := 'Process';
     mes[31] := 'terminated';
     mes[32] := 'Job';
+    mes[33] := 'added';
+    mes[34] := 'completed';
+    mes[35] := 'in progress';
+    mes[36] := 'error';
   end;
   s1 := AppendPathDelim(sInidir) + cmbLanguage.Text;
   if bRead and (not FileExistsUTF8(s1)
@@ -3606,12 +3611,25 @@ begin
       t := fil.s[0].sv[0];
     if b then
     begin
-      pr.CommandLine := edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + t;
+      pr.Executable := edtxterm.Text;
+      //pr.CommandLine := edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + t;
+      sl := TStringList.Create;
+      process.CommandToList(edtxtermopts.Text, sl);
+      for i := 0 to sl.Count - 1 do
+        pr.Parameters.Add(sl[i]);
+      sl.Free;
+      pr.Parameters.Add(t);
       Result := myDTtoStr(sMyDTformat, Now) + ' - ' + edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + t;
     end
     else
     begin
-      pr.CommandLine := t;
+      //pr.CommandLine := t;
+      sl := TStringList.Create;
+      process.CommandToList(t, sl);
+      pr.Executable := sl[0];
+      for i := 1 to sl.Count - 1 do
+        pr.Parameters.Add(sl[i]);
+      sl.Free;
       Result := myDTtoStr(sMyDTformat, Now) + ' - ' + t;
     end;
     Exit;
@@ -5735,6 +5753,45 @@ begin
   {$ENDIF}
 end;
 
+procedure TfrmGUIta.LVjobsCustomDrawSubItem(Sender: TCustomListView;
+  Item: TListItem; SubItem: Integer; State: TCustomDrawState;
+  var DefaultDraw: Boolean);
+var
+  b, c: TColor;
+  mRect: TRect;
+  i: integer;
+begin
+  if (Sender = LVjobs) then
+  begin
+    if TJob(Item.Data) = nil then
+      Exit;
+    if (SubItem = 1) then
+    begin
+      i := StrToIntDef(TJob(Item.Data).getval(sMyCompleted), 3);
+      if (i > 3) or (i < 0) then
+        i := 3;
+      c := cStatus[i];
+      mRect := Item.DisplayRect(drBounds);
+      for i := SubItem - 1 downto 0 do
+        mRect.Left := mRect.Left + Sender.Column[i].Width;
+      mRect.Right := mRect.Left + Sender.Column[SubItem].Width;
+      if (i >= 0) then
+      begin
+        DefaultDraw := False;
+        if Item.Selected then
+          b := clHighlight
+        else
+          b := clDefault;
+        Sender.Canvas.Brush.Color := b;
+        Sender.Canvas.Font := LVjobs.Font;
+        Sender.Canvas.Font.Color := c;
+        Sender.Canvas.FillRect(mRect);
+        Sender.Canvas.TextRect(mRect, mRect.Left, mRect.Top, Item.SubItems[SubItem - 1]);
+      end;
+    end;
+  end;
+end;
+
 procedure TfrmGUIta.LVjobsDragDrop(Sender, Source: TObject; X, Y: integer);
 var
   currentItem, nextItem, dragItem, dropItem: TListItem;
@@ -5887,9 +5944,10 @@ begin
     if not FileExistsUTF8(s) then
     begin
       DefaultDraw := False;
+      Sender.Canvas.Font := LVmasks.Font;
       Sender.Canvas.Font.Color := clRed;
       Sender.Canvas.FillRect(mRect);
-      Sender.Canvas.TextRect(mRect, mRect.Left + 2, mRect.Top + 2, Item.SubItems[SubItem - 1]);
+      Sender.Canvas.TextRect(mRect, mRect.Left + 1, mRect.Top + 1, Item.SubItems[SubItem - 1]);
     end;
   end;
 end;
