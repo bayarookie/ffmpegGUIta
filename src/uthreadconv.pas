@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, utf8process, Process, synmemo, Math, ComCtrls,
   {$IFDEF MSWINDOWS}
-  Fileutil,
+  Fileutil, LazFileutils,
   {$ENDIF}
   ubyutils, ujobinfo;
 
@@ -38,7 +38,8 @@ type
   public
     pr: TProcessUTF8;
     NumOfThread: integer;
-    NumOfJob: integer;
+    NumOfJob: string;
+    li: TListItem;
     constructor Create(threadnum: integer);
   end;
 
@@ -51,7 +52,6 @@ uses ufrmGUIta;
 procedure TThreadConv.DataGet;
 var
   i: integer;
-  li: TListItem;
 begin
   dt := Now;
   fmemo := aMems[NumOfThread];
@@ -72,10 +72,10 @@ begin
       jo := TJob(li.Data);
       frmGUIta.myGetCmdFromJo(jo, cmd);
       jo.setval(sMyCompleted, '2');
-      li.Caption := mes[35];
+      li.SubItems[0] := mes[35];
       frmGUIta.LVjobs.Refresh;
-      DuraJob := li.SubItems[0];
-      NumOfJob := i;
+      DuraJob := li.Caption;
+      NumOfJob := DuraJob;
       //frmGUIta.myShowCaption('');
       frmGUIta.LVjobsItemChecked(nil, nil);
       Break;
@@ -87,9 +87,9 @@ procedure TThreadConv.DataOut;
 var
   s, fno: string;
   {$IFDEF MSWINDOWS}
+  i: integer;
   fnoa: string;
   {$ENDIF}
-  li: TListItem;
 begin
   fno := jo.getval(frmGUIta.edtOfn.Name);
   {$IFDEF MSWINDOWS}
@@ -106,19 +106,20 @@ begin
     jo.setval(frmGUIta.edtOfna.Name, fnoa);
   end;
   {$ENDIF}
-  li := frmGUIta.LVjobs.Items[NumOfJob];
   if fExitStatus = 0 then
   begin
     jo.setval(sMyCompleted, '1');
-    li.Caption := mes[34]  //completed
+    li.SubItems[0] := mes[34]  //completed
   end
   else
   begin
     jo.setval(sMyCompleted, '3');
-    li.Caption := mes[36]; //error
+    li.SubItems[0] := mes[36]; //error
   end;
+  if li.Selected then
+    frmGUIta.LVjobsSelectItem(nil, li, True);
 
-  s := IntToStr(NumOfThread + 1) + '-' + IntToStr(NumOfJob) + ': ' + myDTtoStr(sMyDTformat, Now)
+  s := IntToStr(NumOfThread + 1) + '-' + NumOfJob + ': ' + myDTtoStr(sMyDTformat, Now)
     + ' ' + mes[5] + ' ' + TimeToStr(Now - dt);
   if fExitStatus <> 0 then
   begin
@@ -143,12 +144,12 @@ end;
 
 procedure TThreadConv.ShowJournal;
 begin
-  frmGUIta.memJournal.Lines.Add(IntToStr(NumOfThread + 1) + '-' + IntToStr(NumOfJob) + ': ' + fStatus);
+  frmGUIta.memJournal.Lines.Add(IntToStr(NumOfThread + 1) + '-' + NumOfJob + ': ' + fStatus);
 end;
 
 procedure TThreadConv.ShowStatus1;
 begin
-  frmGUIta.StatusBar1.SimpleText := IntToStr(NumOfThread + 1) + '-' + IntToStr(NumOfJob) + ': ' + fStatus;
+  frmGUIta.StatusBar1.SimpleText := IntToStr(NumOfThread + 1) + '-' + NumOfJob + ': ' + fStatus;
 end;
 
 procedure TThreadConv.ShowSynMemo;

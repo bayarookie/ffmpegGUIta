@@ -57,6 +57,7 @@ var
   BytesAvailable: DWord;
   BytesRead: longint;
   i, j: integer;
+  sl: TStringList;
 begin
   scp := GetConsoleTextEncoding;
   if fcmd = '' then
@@ -66,7 +67,13 @@ begin
   Synchronize(@ShowSynMemo);
   pr := TProcessUTF8.Create(nil);
   try
-    pr.CommandLine := fcmd;
+    //pr.CommandLine := fcmd;
+    sl := TStringList.Create;
+    process.CommandToList(fcmd, sl);
+    pr.Executable := sl[0];
+    for i := 1 to sl.Count - 1 do
+      pr.Parameters.Add(sl[i]);
+    sl.Free;
     pr.Options := [poUsePipes, poStderrToOutPut];
     pr.ShowWindow := swoHide;
     pr.Execute;

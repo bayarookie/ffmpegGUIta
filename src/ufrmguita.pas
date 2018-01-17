@@ -433,8 +433,6 @@ type
     procedure LVjobsClick(Sender: TObject);
     procedure LVjobsContextPopup(Sender: TObject; MousePos: TPoint;
       var Handled: boolean);
-    procedure LVjobsCustomDrawItem(Sender: TCustomListView; Item: TListItem;
-      State: TCustomDrawState; var DefaultDraw: boolean);
     procedure LVjobsCustomDrawSubItem(Sender: TCustomListView; Item: TListItem;
       SubItem: Integer; State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure LVjobsDragDrop(Sender, Source: TObject; X, Y: integer);
@@ -476,7 +474,7 @@ type
     procedure TabSets1Show(Sender: TObject);
     procedure TabVideoShow(Sender: TObject);
     procedure UniqueInstance1OtherInstance(Sender: TObject;
-      ParamCount: Integer; Parameters: array of String);
+      ParamCount: Integer; const Parameters: array of String);
     procedure xmyChange0(Sender: TObject);
     procedure xmyChange0o(Sender: TObject);
     procedure xmyChange1i(Sender: TObject);
@@ -604,7 +602,8 @@ var
   sMyffprobe: string = 'my_ffprobe';   //0 - get streams info, 1 - do not get
   sMyCompleted: string = 'my_Completed';//0 - job added, 1 - completed, 2 - in progress, 3 - error
   sMyChecked: string = 'my_Checked';   //0 - do not convert, 1 - in queue
-  cStatus: array [0..3] of TColor = (clBlue, clGreen, clYellow, clRed);
+  cStatusB: array [0..3] of TColor = (clBlue, clGreen, clYellow, clRed);
+  cStatusC: array [0..3] of TColor = (clYellow, clWhite, clBlue, clWhite);
 
 implementation
 
@@ -857,7 +856,7 @@ begin
   i := jo.AddFile(fn);
   jo.f[i].setval(cmbDurationss1.Name, ss); //if add file splitted
   {$IFDEF MSWINDOWS}
-  jo.setval(edtOfna.Name, myGetOutFNa(s, jo.f[0].getval(sMyDOSfname), e));
+  jo.setval(edtOfna.Name, myGetOutFNa(s, jo.f[0].getval(sMyDOSfname), jo.getval(cmbExt.Name)));
   {$ENDIF}
   jo.setval(sMyBakfname, ExtractFileName(fn));
   if chkAddTracks.Checked then
@@ -1076,6 +1075,7 @@ begin
   jo := TJob(li.Data);
   for j := 0 to files.Count - 1 do
     jo.AddFile(files[j]);
+  jo.setval('index', IntToStr(li.Index));
   Files2Add.Add(Pointer(jo));
   myAddFileStart;
 end;
@@ -3602,7 +3602,6 @@ function TfrmGUIta.myCmdFillPr(fil: TFil; b: boolean; var pr: TProcessUTF8): str
 var
   scmd, t: string;
   i, k: integer;
-  sl: TStringList;
 begin
   scmd := fil.getval(sMyFilename);
   if (scmd = '') then
@@ -3610,28 +3609,9 @@ begin
     if (Length(fil.s) > 0) and (Length(fil.s[0].sv) > 0) then
       t := fil.s[0].sv[0];
     if b then
-    begin
-      pr.Executable := edtxterm.Text;
-      //pr.CommandLine := edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + t;
-      sl := TStringList.Create;
-      process.CommandToList(edtxtermopts.Text, sl);
-      for i := 0 to sl.Count - 1 do
-        pr.Parameters.Add(sl[i]);
-      sl.Free;
-      pr.Parameters.Add(t);
-      Result := myDTtoStr(sMyDTformat, Now) + ' - ' + edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + t;
-    end
-    else
-    begin
-      //pr.CommandLine := t;
-      sl := TStringList.Create;
-      process.CommandToList(t, sl);
-      pr.Executable := sl[0];
-      for i := 1 to sl.Count - 1 do
-        pr.Parameters.Add(sl[i]);
-      sl.Free;
-      Result := myDTtoStr(sMyDTformat, Now) + ' - ' + t;
-    end;
+      t := edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + t;
+    pr.ParseCmdLine(t);
+    Result := myDTtoStr(sMyDTformat, Now) + ' - ' + t;
     Exit;
   end;
   t := '';
@@ -3639,21 +3619,16 @@ begin
     t := t + myGetStr(fil.s[k].sv);
   if b then
   begin
-    pr.Executable := edtxterm.Text;
-    sl := TStringList.Create;
-    process.CommandToList(edtxtermopts.Text, sl);
-    for i := 0 to sl.Count - 1 do
-      pr.Parameters.Add(sl[i]);
-    sl.Free;
+    pr.ParseCmdLine(edtxterm.Text + ' ' + edtxtermopts.Text);
     if chkxterm1str.Checked then
-      pr.Parameters.Add(myGetStr(scmd) + ' ' + t)
+      pr.Parameters.Add(scmd + ' ' + t)
     else
     begin
       for k := 0 to High(fil.s) do
       for i := 0 to High(fil.s[k].sv) do
         pr.Parameters.Add(fil.s[k].sv[i]);
     end;
-    Result := myDTtoStr(sMyDTformat, Now) + ' - ' + edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + scmd + ' ' + t
+    Result := myDTtoStr(sMyDTformat, Now) + ' - ' + edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + scmd + ' ' + t;
   end
   else
   begin
@@ -3971,20 +3946,28 @@ begin
   end
   else
     s := myStrReplace(cmbRunCmd.Text);
-  cmd := TJob.Create;
-  myCmdFill1(s, cmd);
   if chkRunInTerm.Checked then
   begin
     p := TProcessUTF8.Create(nil);
-    myCmdFillPr(cmd.f[0], True, p);
+    p.ParseCmdLine(edtxterm.Text + ' ' + edtxtermopts.Text + ' ' + s);
+    if chkDebug.Checked then
+      SynMemo2.Lines.Add(myDTtoStr(sMyDTformat, Now) + ' run in terminal: ' + p.Executable + ' ' + p.Parameters.Text);
     p.Execute;
     p.Free;
   end
   else
   if chkRunInMem.Checked then
-    myGetDosOut(cmd, SynMemo2)
+  begin
+    if chkDebug.Checked then
+      SynMemo2.Lines.Add(myDTtoStr(sMyDTformat, Now) + ' run in memo: ' + s);
+    cmd := TJob.Create;
+    myCmdFill1(s, cmd);
+    myGetDosOut(cmd, SynMemo2);
+  end
   else
   begin
+    if chkDebug.Checked then
+      SynMemo2.Lines.Add(myDTtoStr(sMyDTformat, Now) + ' run in thread: ' + s);
     if (ThreadCmdr <> nil) then
     begin
       {$IFDEF MSWINDOWS}
@@ -4222,7 +4205,7 @@ begin
   li.Checked := True;
   li.Caption := '*';
   li.SubItems.Add('.jp*g;.png');
-  li.SubItems.Add('picture to png - resize w160.ini');
+  li.SubItems.Add('photo to webp.ini');
   li := LVmasks.Items.Add;
   li.Checked := False;
   li.Caption := '*';
@@ -4415,6 +4398,8 @@ begin
         end;
       end;
     end;
+    if (vn = '') and (an = '') then
+      Exit; //play nothing
     if vn = '' then
       cmd.f[0].s[0].addval('11', '-vn');
     if an = '' then
@@ -5725,41 +5710,13 @@ begin
   myDisComp;
 end;
 
-procedure TfrmGUIta.LVjobsCustomDrawItem(Sender: TCustomListView;
-  Item: TListItem; State: TCustomDrawState; var DefaultDraw: boolean);
-var
-  i: integer;
-begin
-  if (Sender = LVjobs) then
-  begin
-    if TJob(Item.Data) = nil then
-      Exit;
-    i := StrToIntDef(TJob(Item.Data).getval(sMyCompleted), 3);
-    if (i > 3) or (i < 0) then
-      i := 3;
-    Item.ImageIndex := i;
-  end;
-  {$IFDEF MSWINDOWS}
-  if Item.Selected then
-  begin
-    Sender.Canvas.Brush.Color := clHighlight;
-    Sender.Canvas.Font.Color := clHighlightText;
-  end
-  else
-  begin
-    Sender.Canvas.Brush.Color := clWindow;
-    Sender.Canvas.Font.Color := clWindowText;
-  end;
-  {$ENDIF}
-end;
-
 procedure TfrmGUIta.LVjobsCustomDrawSubItem(Sender: TCustomListView;
   Item: TListItem; SubItem: Integer; State: TCustomDrawState;
   var DefaultDraw: Boolean);
 var
   b, c: TColor;
   mRect: TRect;
-  i: integer;
+  i, w: integer;
 begin
   if (Sender = LVjobs) then
   begin
@@ -5770,24 +5727,17 @@ begin
       i := StrToIntDef(TJob(Item.Data).getval(sMyCompleted), 3);
       if (i > 3) or (i < 0) then
         i := 3;
-      c := cStatus[i];
+      b := cStatusB[i];
+      c := cStatusC[i];
+      w := 0;
+      for i := 0 to SubItem - 1 do
+        w := w + LVjobs.Columns[i].Width;
       mRect := Item.DisplayRect(drBounds);
-      for i := SubItem - 1 downto 0 do
-        mRect.Left := mRect.Left + Sender.Column[i].Width;
-      mRect.Right := mRect.Left + Sender.Column[SubItem].Width;
-      if (i >= 0) then
-      begin
-        DefaultDraw := False;
-        if Item.Selected then
-          b := clHighlight
-        else
-          b := clDefault;
-        Sender.Canvas.Brush.Color := b;
-        Sender.Canvas.Font := LVjobs.Font;
-        Sender.Canvas.Font.Color := c;
-        Sender.Canvas.FillRect(mRect);
-        Sender.Canvas.TextRect(mRect, mRect.Left, mRect.Top, Item.SubItems[SubItem - 1]);
-      end;
+      Sender.Canvas.Brush.Color := b;
+      Sender.Canvas.Font := LVjobs.Font;
+      Sender.Canvas.Font.Color := c;
+      Sender.Canvas.TextOut(mRect.Left + w, mRect.Top, Item.SubItems[SubItem - 1]);
+      DefaultDraw := false;
     end;
   end;
 end;
@@ -6413,7 +6363,7 @@ begin
 end;
 
 procedure TfrmGUIta.UniqueInstance1OtherInstance(Sender: TObject;
-  ParamCount: Integer; Parameters: array of String);
+  ParamCount: Integer; const Parameters: array of String);
 var
   i:Integer;
   SL: TStringList;

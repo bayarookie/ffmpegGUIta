@@ -34,37 +34,39 @@ unit UniqueInstance2;
 
 
 {$mode objfpc}{$H+}
+{$if not defined(Windows) or (FPC_FULLVERSION >= 30001)}
+{$define PollIPCMessage}
+{$endif}
 
 interface
 
 uses
-  Forms, Classes, SysUtils, simpleipc, ExtCtrls, LazUTF8;
+  Forms, Classes, SysUtils, simpleipc, ExtCtrls;
   
 type
 
-  TOnOtherInstance = procedure (Sender : TObject; ParamCount: Integer; Parameters: array of String) of object;
+  TOnOtherInstance = procedure (Sender : TObject; ParamCount: Integer; const Parameters: array of String) of object;
 
   { TUniqueInstance }
 
   TUniqueInstance = class(TComponent)
   private
     FIdentifier: String;
-    FIPCServer: TSimpleIPCServer;
     FOnOtherInstance: TOnOtherInstance;
     FUpdateInterval: Cardinal;
     FEnabled: Boolean;
-    function GetServerId: String;
+    FPriorInstanceRunning: Boolean;
     procedure ReceiveMessage(Sender: TObject);
-    procedure TerminateApp(Sender: TObject; var Done: Boolean);
-    {$ifdef unix}
+    {$ifdef PollIPCMessage}
     procedure CheckMessage(Sender: TObject);
     {$endif}
   protected
   public
     procedure Loaded; override;
     constructor Create(AOwner: TComponent); override;
+    property PriorInstanceRunning: Boolean read FPriorInstanceRunning;
   published
-    property Enabled: Boolean read FEnabled write FEnabled default True;
+    property Enabled: Boolean read FEnabled write FEnabled default False;
     property Identifier: String read FIdentifier write FIdentifier;
     property UpdateInterval: Cardinal read FUpdateInterval write FUpdateInterval default 1000;
     property OnOtherInstance: TOnOtherInstance read FOnOtherInstance write FOnOtherInstance;
@@ -73,94 +75,50 @@ type
 implementation
 
 uses
-  StrUtils, SimpleIPCWrapper;
-
-const
-  BaseServerId = 'tuniqueinstance2_';
-  Separator = '|';
-
-function GetFormattedParams: String;
-var
-  i: Integer;
-begin
-  Result := '';
-  for i := 1 to ParamCount do
-    Result := Result + ParamStrUTF8(i) + Separator;
-end;
+  StrUtils, UniqueInstanceBase;
 
 { TUniqueInstance }
 
 procedure TUniqueInstance.ReceiveMessage(Sender: TObject);
 var
-  TempArray: array of String;
-  Count,i: Integer;
-
-  procedure GetParams(const AStr: String);
-  var
-    pos1,pos2:Integer;
-  begin
-    SetLength(TempArray, Count);
-    //fill params
-    i := 0;
-    pos1:=1;
-    pos2:=pos(Separator, AStr);
-    while pos1 < pos2 do
-    begin
-      TempArray[i] := Copy(AStr, pos1, pos2 - pos1);
-      pos1 := pos2+1;
-      pos2 := posex(Separator, AStr, pos1);
-      inc(i);
-    end;
-  end;
-
+  ParamsArray: array of String;
+  Params: String;
+  Count, i: Integer;
 begin
   if Assigned(FOnOtherInstance) then
   begin
     //MsgType stores ParamCount
     Count := FIPCServer.MsgType;
-    GetParams(FIPCServer.StringMessage);
-    FOnOtherInstance(Self, Count, TempArray);
-    SetLength(TempArray, 0);
+    SetLength(ParamsArray, Count);
+    Params := FIPCServer.StringMessage;
+    for i := 1 to Count do
+      ParamsArray[i - 1] := ExtractWord(i, Params, [ParamsSeparator]);
+    FOnOtherInstance(Self, Count, ParamsArray);
   end;
 end;
 
-{$ifdef unix}
+{$ifdef PollIPCMessage}
 procedure TUniqueInstance.CheckMessage(Sender: TObject);
 begin
   FIPCServer.PeekMessage(1, True);
 end;
 {$endif}
 
-procedure TUniqueInstance.TerminateApp(Sender: TObject; var Done: Boolean);
-begin
-  Application.Terminate;
-  //necessary to avoid being a zombie
-  Done := False;
-end;
-
-function TUniqueInstance.GetServerId: String;
-begin
-  if FIdentifier <> '' then
-    Result := BaseServerId + FIdentifier
-  else
-    Result := BaseServerId + ExtractFileName(ParamStr(0));
-end;
-
-
 procedure TUniqueInstance.Loaded;
 var
   IPCClient: TSimpleIPCClient;
-  {$ifdef unix}
+  {$ifdef PollIPCMessage}
   Timer: TTimer;
   {$endif}
 begin
-  //if not (csDesigning in ComponentState) and FEnabled then
-  if FEnabled then
+  if not (csDesigning in ComponentState) and FEnabled then
   begin
     IPCClient := TSimpleIPCClient.Create(Self);
-    IPCClient.ServerId := GetServerId;
-    if IsServerRunning(IPCClient) then
+    IPCClient.ServerId := GetServerId(FIdentifier);
+    if not Assigned(FIPCServer) and IPCClient.ServerRunning then
     begin
+      //A older instance is running.
+      FPriorInstanceRunning := True;
       //A instance is already running
       //Send a message and then exit
       if Assigned(FOnOtherInstance) then
@@ -169,27 +127,16 @@ begin
         IPCClient.SendStringMessage(ParamCount, GetFormattedParams);
       end;
       Application.ShowMainForm := False;
-      //Calling Terminate directly here would cause a crash under gtk2 in LCL < 0.9.31
-      //todo: remove the workaround after a release with LCL > 0.9.31
-      //Application.Terminate;
-
-      //calling as an async call will not work also since it will lead to a zombie process
-      //Application.QueueAsyncCall(@TerminateApp, 0);
-
-      //New try:
-      Application.AddOnIdleHandler(@TerminateApp);
+      Application.Terminate;
     end
     else
     begin
-      //It's the first instance. Init the server
-      FIPCServer := TSimpleIPCServer.Create(Self);
-      FIPCServer.ServerID := IPCClient.ServerId;
-      FIPCServer.Global := True;
+      if not Assigned(FIPCServer) then
+        InitializeUniqueServer(IPCClient.ServerID);
       FIPCServer.OnMessage := @ReceiveMessage;
-      InitServer(FIPCServer);
       //there's no more need for IPCClient
       IPCClient.Destroy;
-      {$ifdef unix}
+      {$ifdef PollIPCMessage}
       if Assigned(FOnOtherInstance) then
       begin
         Timer := TTimer.Create(Self);

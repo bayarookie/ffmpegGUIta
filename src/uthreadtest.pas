@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, utf8process, Process, ComCtrls,
   {$IFDEF MSWINDOWS}
-  Fileutil,
+  Fileutil, LazFileUtils,
   {$ENDIF}
   Math, ujobinfo, ubyutils, dateutils;
 

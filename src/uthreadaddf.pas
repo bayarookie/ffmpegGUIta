@@ -270,9 +270,9 @@ begin
     jo.setval(frmGUIta.cmbTagTitleOut.Name, s);
     li := frmGUIta.LVjobs.Items.Add;
     li.Checked := bj;
-    li.Caption := mes[33];
     jo.setval('index', IntToStr(li.Index));
-    li.SubItems.Add(IntToStr(li.Index + 1));
+    li.Caption := IntToStr(li.Index + 1);
+    li.SubItems.Add(mes[33]);
     li.SubItems.Add(filenamew);
     li.SubItems.Add(myGetFileSize(filename));
     li.SubItems.Add(frmGUIta.myCalcOutSize(jo));
