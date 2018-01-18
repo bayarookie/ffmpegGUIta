@@ -7,7 +7,7 @@
 
 
 Для работы нужны в windows:
-ffmpeg.exe, ffprobe.exe, ffplay.exe 3.0 - http://ffmpeg.zeranoe.com/builds/
+ffmpeg.exe, ffprobe.exe, ffplay.exe 3.4.1 - http://ffmpeg.zeranoe.com/builds/
 mediainfo.exe или mediainfo.dll - http://sourceforge.net/projects/mediainfo/files/binary/mediainfo-gui/
 Разрядность mediainfo.dll должна соответствовать исполняемому ffmpegGUIta.exe (вроде логично, но спрашивают)
 Дополнительно, но не обязательно, можно использовать:
@@ -15,7 +15,7 @@ Avisynth - http://sourceforge.net/projects/avisynth2/
 плагин для Avisynth - https://github.com/ffms/ffms2
 
 Для работы нужны в linux:
-ffmpeg, ffprobe, ffplay 3.0 - https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media - ppa:mc3man/trusty-media
+ffmpeg, ffprobe, ffplay 3.4.1 - https://launchpad.net/~mc3man/+archive/ubuntu/xerus-media - ppa:mc3man/xerus-media
 
 Ключи:
 -o:"D:\Путь\к папке\назначения"
@@ -24,7 +24,7 @@ ffmpeg, ffprobe, ffplay 3.0 - https://launchpad.net/~mc3man/+archive/ubuntu/trus
 
 ФАК Ю - Фсе Атветы Каторые знаЮ
 
-Вопрос: Наложить текстовые субтитры (*.srt, *.ass) на видео.
+Вопрос: Как наложить текстовые субтитры (*.srt, *.ass) на видео?
 Ответ: Выбрать видео дорожку на которую хотите наложить текст.
   В поле "Ещё видеофильтры" написать для srt:
     если субтитры в этом же файле, то: subtitles=$input
@@ -48,7 +48,7 @@ ffmpeg, ffprobe, ffplay 3.0 - https://launchpad.net/~mc3man/+archive/ubuntu/trus
   Запустите конвертацию небольшого куска видео для того чтобы создался кэш шрифтов.
   Теперь можно запускать предварительный просмотр, чтобы видеть правильно ли выбраны субтитры.
 
-Вопрос: Наложить логотип на видео.
+Вопрос: Как наложить логотип на видео?
 Ответ: Выбрать видео дорожку на которую хотите наложить логотип.
   Добавить файл png в потоки, чтобы не писать путь к нему вручную.
   В поле "Ещё видеофильтры" написать:

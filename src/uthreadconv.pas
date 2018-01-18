@@ -72,7 +72,7 @@ begin
       jo := TJob(li.Data);
       frmGUIta.myGetCmdFromJo(jo, cmd);
       jo.setval(sMyCompleted, '2');
-      li.SubItems[0] := mes[35];
+      li.SubItems[0] := mes[35]; //in progress
       frmGUIta.LVjobs.Refresh;
       DuraJob := li.Caption;
       NumOfJob := DuraJob;

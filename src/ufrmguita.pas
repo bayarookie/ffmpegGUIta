@@ -2482,25 +2482,28 @@ procedure TfrmGUIta.myGetCaptions(jo: TJob; var v, a, s: string);
 var
   k, l: integer;
   t: string;
+  c: TCont;
 begin
   for l := 0 to High(jo.f) do
   for k := 0 to High(jo.f[l].s) do
   begin
-    t := jo.f[l].s[k].getval('codec_type');
+    c := jo.f[l].s[k];
+    t := c.getval('codec_type');
     if t = 'video' then
-      v := v + myGetCaptionCont(jo.f[l].s[k]) + '; '
+      v := v + myGetCaptionCont(c) + '; '
     else if t = 'audio' then
-      a := a + myGetCaptionCont(jo.f[l].s[k]) + '; '
+      a := a + myGetCaptionCont(c) + '; '
     else if t = 'subtitle' then
-      s := s + myGetCaptionCont(jo.f[l].s[k]) + '; ';
+      s := s + myGetCaptionCont(c) + '; ';
   end;
 end;
 
 function TfrmGUIta.myCalcOutSize(jo: TJob): string;
 var
-  r, q: double;
-  k, l: integer;
+  r, q, p: double;
+  k, l, m: integer;
   t, sExt: string;
+  c: TCont;
 
   function my1(s: string): double;
   var
@@ -2524,46 +2527,72 @@ var
   end;
 
 begin
+  sExt := LowerCase(ExtractFileExt(jo.getval(edtOfn.Name)));
   //get bitrate per second for every checked tracks
   r := 0;
+  m := 0;
   for l := 0 to High(jo.f) do
   for k := 0 to High(jo.f[l].s) do
-    if jo.f[l].s[k].getval('Checked') = '1' then
+  begin
+    c := jo.f[l].s[k];
+    if c.getval('Checked') = '1' then
     begin
-      t := jo.f[l].s[k].getval('codec_type');
+      t := c.getval('codec_type');
       if t = 'video' then
       begin
-        if jo.f[l].s[k].getval(cmbEncoderV.Name) = 'copy' then
-          q := StrToIntDef(jo.f[l].s[k].getval('bit_rate'), 0)
+        if c.getval(cmbEncoderV.Name) = 'copy' then
+          q := StrToIntDef(c.getval('bit_rate'), 0)
         else
-          q := my1(jo.f[l].s[k].getval(edtBitRateV.Name));
+          q := my1(c.getval(edtBitRateV.Name));
+        if q = 0 then
+        begin
+          if sExt = '.webp' then
+          begin
+            q := StrToIntDef(c.getval('width'), 0)
+               * StrToIntDef(c.getval('height'), 0) * 24;
+          end;
+        end;
+        //additional bitrate per video stream
+        if sExt = '.mkv' then
+          p := 6000
+        else if sExt = '.avi' then
+          p := 7000
+        else if sExt = '.mp4' then
+          p := 9000
+        else if sExt = '.3gp' then
+          p := 1000
+        else
+          p := 10000;  //other files?
       end
       else if t = 'audio' then
       begin
-        if jo.f[l].s[k].getval(cmbEncoderA.Name) = 'copy' then
-          q := StrToIntDef(jo.f[l].s[k].getval('bit_rate'), 0)
+        if c.getval(cmbEncoderA.Name) = 'copy' then
+          q := StrToIntDef(c.getval('bit_rate'), 0)
         else
-          q := my1(jo.f[l].s[k].getval(edtBitRateA.Name));
+          q := my1(c.getval(edtBitRateA.Name));
+        //additional bitrate per audio stream
+        if sExt = '.mkv' then
+          p := 1000
+        else if sExt = '.avi' then
+          p := 8000
+        else if sExt = '.mp4' then
+          p := 1000
+        else if sExt = '.3gp' then
+          p := 800
+        else
+          p := 10000;  //other files?
       end
       else
+      begin
         q := 0;
+        p := 0;
+      end;
+      inc(m);
       if chkDebug.Checked then
-        memJournal.Lines.Add('calc out size: ' + t + ' bitrate=' + FloatToStr(q));
-      r := r + q;
+        memJournal.Lines.Add('calc out size: ' + IntToStr(m) + ' ' + t + ' bitrate=' + FloatToStr(q) + ' +' + FloatToStr(p));
+      r := r + q + p;
     end;
-  sExt := LowerCase(ExtractFileExt(jo.getval(edtOfn.Name)));
-  //additional bitrate, something like index
-  if sExt = '.mkv' then
-    q := 4000
-  else if sExt = '.avi' then
-    q := 10000
-  else if sExt = '.mp4' then
-    q := 4000
-  else if sExt = '.3gp' then
-    q := 3000
-  else
-    q := 10000;  //other files?
-  r := r + q;
+  end;
   if chkDebug.Checked then
     memJournal.Lines.Add('calc out size: out br=' + FloatToStr(r));
   //multiplicate to duration
@@ -2583,7 +2612,7 @@ begin
   else if sExt = '.mp4' then
     q := 3860
   else
-    q := 10000;
+    q := 5000;
   r := r + q;
   if chkDebug.Checked then
     memJournal.Lines.Add('calc out size: out size=' + FloatToStr(r));
@@ -3220,14 +3249,15 @@ end;
 function TfrmGUIta.myGetFPS(jo: TJob; stream: string): extended;
 var
   k, l: integer;
-  v: TCont;
+  c: TCont;
 begin
   if stream <> '' then
   begin
     myGetFileStreamNums(stream, l, k);
-    Result := myValFPS(jo.f[l].s[k].getval('avg_frame_rate'));
+    c := jo.f[l].s[k];
+    Result := myValFPS(c.getval('avg_frame_rate'));
     if Result = 0 then
-      Result := myValFPS(jo.f[l].s[k].getval('r_frame_rate'));
+      Result := myValFPS(c.getval('r_frame_rate'));
     if Result = 0 then
       Result := 30;
   end
@@ -3236,12 +3266,12 @@ begin
     for l := 0 to High(jo.f) do
     for k := 0 to High(jo.f[l].s) do
     begin
-      v := jo.f[l].s[k];
-      if (v.getval('Checked') = '1') and (v.getval('codec_type') = 'video') then
+      c := jo.f[l].s[k];
+      if (c.getval('Checked') = '1') and (c.getval('codec_type') = 'video') then
       begin
-        Result := myValFPS(v.getval('avg_frame_rate'));
+        Result := myValFPS(c.getval('avg_frame_rate'));
         if Result = 0 then
-          Result := myValFPS(v.getval('r_frame_rate'));
+          Result := myValFPS(c.getval('r_frame_rate'));
         if Result = 0 then
           Result := 30;
         Break;
@@ -3655,6 +3685,7 @@ var
   s, op, fn: string;
   cmd: TJob;
   sl: TStringList;
+  c: TCont;
 begin
   i := Pos(' -i ', p);
   if i > 0 then
@@ -3690,9 +3721,10 @@ begin
     if (sl.Text = '') then
       Break;
     k := jo.f[l].AddStream;
-    jo.f[l].s[k].setval('Checked', '1');
+    c := jo.f[l].s[k];
+    c.setval('Checked', '1');
     for i := 0 to sl.Count - 1 do
-      jo.f[l].s[k].setpair(sl[i]);
+      c.setpair(sl[i]);
     jo.AddMap(IntToStr(l) + ':' + IntToStr(k));
   until s = '';
   sl.Free;
@@ -3831,6 +3863,7 @@ procedure TfrmGUIta.btnCompareClick(Sender: TObject);
 var
   Ini: TIniFile;
   jo: TJob;
+  c: TCont;
   frmCompare: TfrmCompare;
   ty, iv, ia, fv, fa, fn, map: string;
   k, l, nv, na: integer;
@@ -3851,27 +3884,29 @@ begin
   bfi := (jo.getval(chkFilterComplex.Name) = '1');
   for l := 0 to High(jo.f) do
   for k := 0 to High(jo.f[l].s) do
-    with jo.f[l].s[k] do
-      if getval('Checked') = '1' then
+  begin
+    c := jo.f[l].s[k];
+    if c.getval('Checked') = '1' then
+    begin
+      ty := c.getval('codec_type');
+      if (ty = 'video') and (iv = '') then
       begin
-        ty := getval('codec_type');
-        if (ty = 'video') and (iv = '') then
+        nv := l;
+        iv := IntToStr(k);
+        if not bfi then
         begin
-          nv := l;
-          iv := IntToStr(k);
-          if not bfi then
-          begin
-            fv := myGetFilter(jo, jo.f[l].s[k], False); //resize only filter
-            if fv <> '' then fv := ' -filter:v "' + fv + '"';
-          end;
-        end
-        else if (ty = 'audio') and (ia = '') then
-        begin
-          na := l;
-          ia := IntToStr(k);
-          fa := ' -filter_complex "showwaves=s=1200x480:mode=line"';
+          fv := myGetFilter(jo, c, False); //resize only filter
+          if fv <> '' then fv := ' -filter:v "' + fv + '"';
         end;
+      end
+      else if (ty = 'audio') and (ia = '') then
+      begin
+        na := l;
+        ia := IntToStr(k);
+        fa := ' -filter_complex "showwaves=s=1200x480:mode=line"';
       end;
+    end;
+  end;
   l := nv;
   if (l < 0) or (l > High(jo.f)) then
     l := na;
@@ -3995,7 +4030,7 @@ procedure TfrmGUIta.btnCropClick(Sender: TObject);
 var
   l, k, w, h, x, y: integer;
   jo: TJob;
-  co: TCont;
+  c: TCont;
   frmCrop: TfrmCrop;
   Ini: TIniFile;
   iv, fn: string;
@@ -4004,7 +4039,7 @@ begin
     Exit;
   jo := TJob(LVjobs.Selected.Data);
   myGetFileStreamNums(LVstreams.Selected.Caption, l, k);
-  co := jo.f[l].s[k];
+  c := jo.f[l].s[k];
   if cmbCrop.Text = '' then
   begin
     cmbCrop.Text := myAutoCrop(jo, l, k);
@@ -4024,7 +4059,7 @@ begin
   h := 0;
   x := 0;
   y := 0;
-  myGetWHXYcrop(co, w, h, x, y);
+  myGetWHXYcrop(c, w, h, x, y);
   frmCrop.Caption := IntToStr(w) + ':' + IntToStr(h) + ':' + IntToStr(x) +
     ':' + IntToStr(y);
   frmCrop.btnW.Left := x + w - frmCrop.btnW.Width;
@@ -5208,9 +5243,10 @@ end;
 
 procedure TfrmGUIta.cmbProfileChange(Sender: TObject);
 var
-  s, c, se: string;
+  s, u, se: string;
   Ini: TIniFile;
   jo: TJob;
+  c: TCont;
   i, k, l: integer;
   t: TTabSheet;
 begin
@@ -5251,29 +5287,30 @@ begin
     end;
     for k := 0 to High(jo.f[l].s) do
     begin
-      c := jo.f[l].s[k].getval('codec_type');
-      if c = 'video' then
+      c := jo.f[l].s[k];
+      u := c.getval('codec_type');
+      if u = 'video' then
         t := TabVideo
-      else if c = 'audio' then
+      else if u = 'audio' then
         t := TabAudio
-      else if c = 'subtitle' then
+      else if u = 'subtitle' then
         t := TabSubtitle
       else
         Continue;
       for i := 0 to t.ControlCount - 1 do
       if not (t.Controls[i].Tag in [1, 3]) then
       begin
-        s := Ini.ReadString(c, t.Controls[i].Name, '');
-        jo.f[l].s[k].setval(t.Controls[i].Name, s);
+        s := Ini.ReadString(u, t.Controls[i].Name, '');
+        c.setval(t.Controls[i].Name, s);
       end;
-      if c = 'video' then
-        jo.f[l].s[k].setval(edtBitrateV.Name, myCalcBRv(jo.f[l].s[k]))
-      else if c = 'audio' then
-        jo.f[l].s[k].setval(edtBitrateA.Name, myCalcBRa(jo.f[l].s[k]));
+      if u = 'video' then
+        c.setval(edtBitrateV.Name, myCalcBRv(c))
+      else if u = 'audio' then
+        c.setval(edtBitrateA.Name, myCalcBRa(c));
     end;
   end;
   Ini.Free;
-  LVjobs.Selected.SubItems[2] := myCalcOutSize(jo);
+  LVjobs.Selected.SubItems[3] := myCalcOutSize(jo);
   LVjobsSelectItem(Sender, LVjobs.Selected, True);
 end;
 
@@ -5965,7 +6002,7 @@ begin
   myGetFileStreamNums(Item.Caption, l, k);
   jo := TJob(LVjobs.Selected.Data);
   jo.f[l].s[k].setval('Checked', s);
-  LVjobs.Selected.SubItems[2] := myCalcOutSize(jo);
+  LVjobs.Selected.SubItems[3] := myCalcOutSize(jo);
   if PageControl2.ActivePage = TabCmdline then
     TabCmdlineShow(Sender);
 end;
@@ -6051,9 +6088,9 @@ begin
   if LVjobs.Selected = nil then
     Exit;
   b := False;
-  s := myExpandFileNameCaseW(LVjobs.Selected.SubItems[0], b);
+  s := myExpandFileNameCaseW(LVjobs.Selected.SubItems[1], b);
   if not b then
-    s := LVjobs.Selected.SubItems[0];
+    s := LVjobs.Selected.SubItems[1];
   if LowerCase(ExtractFileExt(s)) = '.avs' then
     Exit;
   sl := TStringList.Create;
@@ -6110,7 +6147,7 @@ procedure TfrmGUIta.mnuOpenClick(Sender: TObject);
 begin
   if myCantUpd(0) then
     Exit;
-  myOpenDoc(LVjobs.Selected.SubItems[0]);
+  myOpenDoc(LVjobs.Selected.SubItems[1]);
 end;
 
 procedure TfrmGUIta.mnuPasteClick(Sender: TObject);
@@ -6395,7 +6432,7 @@ begin
   if myCantUpd(0) then
     Exit;
   xmyChange0(Sender);
-  LVjobs.Selected.SubItems[2] := myCalcOutSize(TJob(LVjobs.Selected.Data));
+  LVjobs.Selected.SubItems[3] := myCalcOutSize(TJob(LVjobs.Selected.Data));
 end;
 
 procedure TfrmGUIta.xmyChange1i(Sender: TObject);
@@ -6465,7 +6502,7 @@ begin
   if myCantUpd(2) then
     Exit;
   xmyChange2(Sender);
-  LVjobs.Selected.SubItems[2] := myCalcOutSize(TJob(LVjobs.Selected.Data));
+  LVjobs.Selected.SubItems[3] := myCalcOutSize(TJob(LVjobs.Selected.Data));
 end;
 
 procedure TfrmGUIta.xmyCheckDir(Sender: TObject);

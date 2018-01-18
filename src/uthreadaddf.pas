@@ -96,6 +96,7 @@ var
   Ini: TIniFile;
   li: TListItem;
   bj, bp: boolean;
+  c: TCont;
 begin
   bj := False; //job is not checked
   if filenum > 0 then
@@ -134,18 +135,19 @@ begin
     if (sl.Text = '') then
       Break;
     k := jo.f[filenum].AddStream;
+    c := jo.f[filenum].s[k];
     jo.AddMap(IntToStr(filenum) + ':' + IntToStr(k));
     for i := 0 to sl.Count - 1 do
-      jo.f[filenum].s[k].setpair(sl[i]);
-    if (jo.f[filenum].s[k].getval('codec_name') = 'unknown') then
+      c.setpair(sl[i]);
+    if (c.getval('codec_name') = 'unknown') then
       Continue;
-    jo.f[filenum].s[k].setval('----------', '---------------------------------------------------------------------');
+    c.setval('----------', '---------------------------------------------------------------------');
     //fill stream sets from profile.ini
-    styp := jo.f[filenum].s[k].getval('codec_type');
+    styp := c.getval('codec_type');
     sl.Clear;
     Ini.ReadSectionValues(styp, sl);
     for i := 0 to sl.Count - 1 do
-      jo.f[filenum].s[k].setpair(sl[i]);
+      c.setpair(sl[i]);
     //to check, or not to check, that is a question
     bp := sl.Count > 0;
     if (styp = 'video') then
@@ -153,93 +155,93 @@ begin
       if bp and (iv < 0) then
       begin
         iv := k;
-        jo.f[filenum].s[k].setval('Checked', '1');
+        c.setval('Checked', '1');
         bj := True;
       end;
       {$IFDEF MSWINDOWS}
       if FileExistsUTF8(frmGUIta.myExpandFN(frmGUIta.edtMediaInfo.Text)) then
       begin
-        i := StrToIntDef(jo.f[filenum].s[k].getval('bit_rate'), 0);
+        i := StrToIntDef(c.getval('bit_rate'), 0);
         if i = 0 then
         begin
           v := frmGUIta.myGetMediaInfo(filename, 'BitRate');
           i := StrToIntDef(v, 0);
           if i = 0 then
             v := frmGUIta.myGetMediaInfo(filename, 'BitRate_Nominal');
-          jo.f[filenum].s[k].setval('bit_rate', v);
+          c.setval('bit_rate', v);
         end;
-        r := frmGUIta.myValFPS([jo.f[filenum].s[k].getval('avg_frame_rate'), jo.f[filenum].s[k].getval('r_frame_rate')]);
+        r := frmGUIta.myValFPS([c.getval('avg_frame_rate'), c.getval('r_frame_rate')]);
         if r = 1000 then
         begin
           v := frmGUIta.myGetMediaInfo(filename, 'FrameRate');
-          jo.f[filenum].s[k].setval('avg_frame_rate', v);
+          c.setval('avg_frame_rate', v);
         end;
       end;
       {$ENDIF}
-      jo.f[filenum].s[k].setval(frmGUIta.edtBitrateV.Name, frmGUIta.myCalcBRv(jo.f[filenum].s[k]));
+      c.setval(frmGUIta.edtBitrateV.Name, frmGUIta.myCalcBRv(c));
       //title
       if frmGUIta.chkMetadataGet.Checked then
       begin
-        v := jo.f[filenum].s[k].getval('TAG:title');
-        jo.f[filenum].s[k].setval(frmGUIta.cmbTagTitleV.Name, v);
-        v := jo.f[filenum].s[k].getval('TAG:language');
-        jo.f[filenum].s[k].setval(frmGUIta.cmbTagLangV.Name, v);
+        v := c.getval('TAG:title');
+        c.setval(frmGUIta.cmbTagTitleV.Name, v);
+        v := c.getval('TAG:language');
+        c.setval(frmGUIta.cmbTagLangV.Name, v);
       end;
     end
     else
     if (styp = 'audio') then
     begin
-      lng := jo.f[filenum].s[k].getval('TAG:language');
+      lng := c.getval('TAG:language');
       if (lng = '') and (filenum > 0) then
       begin
         lng := frmGUIta.myGetLngFromFNs(jo, filenum);
         if lng <> '' then
-          jo.f[filenum].s[k].setval('TAG:language', lng);
+          c.setval('TAG:language', lng);
       end;
       if bp and (frmGUIta.chkLangA1.Checked
       or (frmGUIta.chkLangA2.Checked and (lng <> '')
       and (Pos(LowerCase(lng) + ' ', LowerCase(frmGUIta.cmbLangA.Text) + ' ') > 0))) then
       begin
         ia := k;
-        jo.f[filenum].s[k].setval('Checked', '1');
+        c.setval('Checked', '1');
         bj := True;
       end;
       if bp and (ia2 < 0) then
         ia2 := k;
-      jo.f[filenum].s[k].setval(frmGUIta.edtBitrateA.Name, frmGUIta.myCalcBRa(jo.f[filenum].s[k]));
+      c.setval(frmGUIta.edtBitrateA.Name, frmGUIta.myCalcBRa(c));
       //title
       if frmGUIta.chkMetadataGet.Checked then
       begin
-        v := jo.f[filenum].s[k].getval('TAG:title');
-        jo.f[filenum].s[k].setval(frmGUIta.cmbTagTitleA.Name, v);
-        v := jo.f[filenum].s[k].getval('TAG:language');
-        jo.f[filenum].s[k].setval(frmGUIta.cmbTagLangA.Name, v);
+        v := c.getval('TAG:title');
+        c.setval(frmGUIta.cmbTagTitleA.Name, v);
+        v := c.getval('TAG:language');
+        c.setval(frmGUIta.cmbTagLangA.Name, v);
       end;
     end
     else
     if (styp = 'subtitle') then
     begin
-      lng := jo.f[filenum].s[k].getval('TAG:language');
+      lng := c.getval('TAG:language');
       if (lng = '') and (filenum > 0) then
       begin
         lng := frmGUIta.myGetLngFromFNs(jo, filenum);
         if lng <> '' then
-          jo.f[filenum].s[k].setval('TAG:language', lng);
+          c.setval('TAG:language', lng);
       end;
       if bp and (frmGUIta.chkLangS1.Checked
       or (frmGUIta.chkLangS2.Checked and (lng <> '')
       and (Pos(LowerCase(lng) + ' ', LowerCase(frmGUIta.cmbLangS.Text) + ' ') > 0))) then
       begin
-        jo.f[filenum].s[k].setval('Checked', '1');
+        c.setval('Checked', '1');
         bj := True;
       end;
       //title
       if frmGUIta.chkMetadataGet.Checked then
       begin
-        v := jo.f[filenum].s[k].getval('TAG:title');
-        jo.f[filenum].s[k].setval(frmGUIta.cmbTagTitleS.Name, v);
-        v := jo.f[filenum].s[k].getval('TAG:language');
-        jo.f[filenum].s[k].setval(frmGUIta.cmbTagLangS.Name, v);
+        v := c.getval('TAG:title');
+        c.setval(frmGUIta.cmbTagTitleS.Name, v);
+        v := c.getval('TAG:language');
+        c.setval(frmGUIta.cmbTagLangS.Name, v);
       end;
     end;
   until (s = '');
