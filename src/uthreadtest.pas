@@ -9,7 +9,7 @@ uses
   {$IFDEF MSWINDOWS}
   Fileutil, LazFileUtils,
   {$ENDIF}
-  Math, ujobinfo, ubyutils, dateutils;
+  Math, ujobinfo, urun, ubyutils, dateutils;
 
 type
 
@@ -20,10 +20,7 @@ type
     dt: TDateTime;
     li: TListItem;
     fterm_use: boolean;
-    fterminal: string;
-    ftermopts: string;
-    fterm1str: boolean;
-    cmd: TJob;
+    run: TRun;
     fStatus: string;
     d, e: double;
     fExitStatus: integer;
@@ -52,13 +49,10 @@ var
 begin
   dt := Now;
   fterm_use := frmGUIta.chkxtermconv.Checked;
-  fterminal := frmGUIta.edtxterm.Text;
-  ftermopts := frmGUIta.edtxtermopts.Text;
-  fterm1str := frmGUIta.chkxterm1str.Checked;
   frmGUIta.SynMemo5.Clear;
   jo := TJob(li.Data);
-  cmd := TJob.Create;
-  frmGUIta.myGetCmdFromJo(jo, cmd, 1);
+  run := TRun.Create;
+  frmGUIta.myGetRunFromJo(jo, run, 1);
   jo.setval('Completed', '2');
   frmGUIta.LVjobs.Refresh;
 end;
@@ -148,12 +142,12 @@ var
   i, j, l: integer;
 begin
   Synchronize(@DataGet);
-  for l := 0 to High(cmd.f) do
+  for l := 0 to High(run.p) do
   begin
     fExitStatus := -1;
-    pr := TProcessUTF8.Create(nil);
+    pr := run.p[l];
     try
-      fStatus := frmGUIta.myCmdFillPr(cmd.f[l], fterm_use, pr);
+      fStatus := myDTtoStr(sMyDTformat, Now) + ' ' + pr.Executable + ' ' + frmGUIta.myGetStr(pr.Parameters);
       Synchronize(@ShowJournal);
       Synchronize(@Showstatus1);
       if fterm_use then

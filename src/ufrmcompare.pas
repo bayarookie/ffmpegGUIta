@@ -204,7 +204,7 @@ begin
   else
     ob := LabeledEdit2;
   jo := TJob(frmGUIta.LVjobs.Selected.Data);
-  rd := myTimeStrToReal(jo.getval('duration'));
+  rd := myTimeStrToReal(jo.f[0].getval('duration'));
   r1 := myTimeStrToReal(ob.Text);
   if fd = 0 then
   begin

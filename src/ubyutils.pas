@@ -613,12 +613,19 @@ var
   i: integer;
 begin
   p := TProcessUTF8.Create(nil);
-  p.Executable := Path;
-  for i := Low(ComLine) to High(ComLine) do
-    p.Parameters.Add(ComLine[i]);
-  p.ShowWindow := sw;
-  p.Execute;
-  p.Free;
+  try
+    p.InheritHandles := False;
+    p.Options := [];
+    for i := 1 to GetEnvironmentVariableCount do
+      p.Environment.Add(GetEnvironmentString(i));
+    p.Executable := Path;
+    for i := Low(ComLine) to High(ComLine) do
+      p.Parameters.Add(ComLine[i]);
+    p.ShowWindow := sw;
+    p.Execute;
+  finally
+    p.Free;
+  end;
 end;
 
 procedure myOpenDoc(Path: string);

@@ -9,22 +9,19 @@ uses
   {$IFDEF MSWINDOWS}
   Fileutil, LazFileutils,
   {$ENDIF}
-  ubyutils, ujobinfo;
+  ubyutils, ujobinfo, urun;
 
 type
 
-  { TThreadConv }
+  { TThreadCnv2 }
 
-  TThreadConv = class(TThread)
+  TThreadCnv2 = class(TThread)
   private
     dt: TDateTime;
     jo: TJob;
     fterm_use: boolean;
-    fterminal: string;
-    ftermopts: string;
-    fterm1str: boolean;
     fStopIfError: boolean;
-    cmd: TJob;
+    run: TRun;
     fmemo: TSynMemo;
     fStatus: string;
     fExitStatus: integer;
@@ -40,27 +37,24 @@ type
     NumOfThread: integer;
     NumOfJob: string;
     li: TListItem;
-    constructor Create(threadnum: integer);
+    constructor Create(threadnum: integer; mem: TSynMemo);
   end;
 
 implementation
 
 uses ufrmGUIta;
 
-{ TThreadConv }
+{ TThreadCnv2 }
 
-procedure TThreadConv.DataGet;
+procedure TThreadCnv2.DataGet;
 var
   i: integer;
 begin
   dt := Now;
-  fmemo := aMems[NumOfThread];
+  //fmemo := aMems[NumOfThread];
   fterm_use := frmGUIta.chkxtermconv.Checked;
-  fterminal := frmGUIta.edtxterm.Text;
-  ftermopts := frmGUIta.edtxtermopts.Text;
-  fterm1str := frmGUIta.chkxterm1str.Checked;
   fStopIfError := frmGUIta.chkStopIfError.Checked;
-  SetLength(cmd.f, 0);
+  SetLength(run.p, 0);
   DuraJob := '';
   for i := 0 to frmGUIta.LVjobs.Items.Count - 1 do
   begin
@@ -70,7 +64,7 @@ begin
       li.Checked := False;
       fmemo.Clear;
       jo := TJob(li.Data);
-      frmGUIta.myGetCmdFromJo(jo, cmd);
+      frmGUIta.myGetRunFromJo(jo, run, 0);
       jo.setval(sMyCompleted, '2');
       li.SubItems[0] := mes[35]; //in progress
       frmGUIta.LVjobs.Refresh;
@@ -83,7 +77,7 @@ begin
   end;
 end;
 
-procedure TThreadConv.DataOut;
+procedure TThreadCnv2.DataOut;
 var
   s, fno: string;
   {$IFDEF MSWINDOWS}
@@ -142,22 +136,22 @@ begin
   frmGUIta.LVjobs.Refresh;
 end;
 
-procedure TThreadConv.ShowJournal;
+procedure TThreadCnv2.ShowJournal;
 begin
   frmGUIta.memJournal.Lines.Add(IntToStr(NumOfThread + 1) + '-' + NumOfJob + ': ' + fStatus);
 end;
 
-procedure TThreadConv.ShowStatus1;
+procedure TThreadCnv2.ShowStatus1;
 begin
   frmGUIta.StatusBar1.SimpleText := IntToStr(NumOfThread + 1) + '-' + NumOfJob + ': ' + fStatus;
 end;
 
-procedure TThreadConv.ShowSynMemo;
+procedure TThreadCnv2.ShowSynMemo;
 begin
   fmemo.Lines.Add(fStatus);
 end;
 
-procedure TThreadConv.Execute;
+procedure TThreadCnv2.Execute;
 var
   Buffer, s, t: string;
   BytesAvailable: DWord;
@@ -168,14 +162,14 @@ begin
   while not Terminated and (fExitStatus = 0) do
   begin
     Synchronize(@DataGet);
-    if Length(cmd.f) = 0 then
+    if Length(run.p) = 0 then
       Exit;
-    for l := 0 to High(cmd.f) do
+    for l := 0 to High(run.p) do
     begin
       fExitStatus := -1;
-      pr := TProcessUTF8.Create(nil);
+      pr := run.p[l];
       try
-        fStatus := frmGUIta.myCmdFillPr(cmd.f[l], fterm_use, pr);
+        fStatus := myDTtoStr(sMyDTformat, Now) + ' ' + pr.Executable + ' ' + frmGUIta.myGetStr(pr.Parameters);
         Synchronize(@ShowJournal);
         Synchronize(@Showstatus1);
         if fterm_use then
@@ -250,13 +244,15 @@ begin
   end;
 end;
 
-constructor TThreadConv.Create(threadnum: integer);
+constructor TThreadCnv2.Create(threadnum: integer; mem: TSynMemo);
 begin
   FreeOnTerminate := True;
-  cmd := TJob.Create;
+  run := TRun.Create;
   NumOfThread := threadnum;
+  fmemo := mem;
   fExitStatus := 0;
   inherited Create(True);
 end;
 
 end.
+

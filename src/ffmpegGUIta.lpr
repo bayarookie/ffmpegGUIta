@@ -8,7 +8,7 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, lazcontrols, ufrmGUIta, ufrmtrack;
+  Forms, lazcontrols, ufrmGUIta, ufrmtrack, urun, utreds;
 
 {$R *.res}
 

@@ -5,7 +5,7 @@ unit uthreadexec;
 interface
 
 uses
-  Classes, SysUtils, utf8process, Process, LConvEncoding,
+  Classes, SysUtils, utf8process, process, LConvEncoding,
   Math, synmemo;
 
 type
@@ -14,7 +14,6 @@ type
 
   TThreadExec = class(TThread)
   private
-    fcmd: string;
     fOEM: boolean;
     fmem: TSynMemo;
     fStatus: string;
@@ -24,7 +23,7 @@ type
   protected
     procedure Execute; override;
   public
-    pr: TProcessUTF8;
+    p: TProcessUTF8;
     constructor Create(cmd: string; oem: boolean; mem: TSynMemo);
   end;
 
@@ -32,7 +31,7 @@ implementation
 
 uses ufrmGUIta;
 
-{ TExeThread }
+{ TThreadExec }
 
 procedure TThreadExec.ShowJournal;
 begin
@@ -57,35 +56,22 @@ var
   BytesAvailable: DWord;
   BytesRead: longint;
   i, j: integer;
-  sl: TStringList;
 begin
   scp := GetConsoleTextEncoding;
-  if fcmd = '' then
-    Exit;
-  fStatus := fcmd;
+  fStatus := p.Executable + ' ' + p.Parameters.Text;
   Synchronize(@ShowJournal);
   Synchronize(@ShowSynMemo);
-  pr := TProcessUTF8.Create(nil);
   try
-    //pr.CommandLine := fcmd;
-    sl := TStringList.Create;
-    process.CommandToList(fcmd, sl);
-    pr.Executable := sl[0];
-    for i := 1 to sl.Count - 1 do
-      pr.Parameters.Add(sl[i]);
-    sl.Free;
-    pr.Options := [poUsePipes, poStderrToOutPut];
-    pr.ShowWindow := swoHide;
-    pr.Execute;
+    p.Execute;
     t := '';
     repeat
       Sleep(2);
-      BytesAvailable := pr.Output.NumBytesAvailable;
+      BytesAvailable := p.Output.NumBytesAvailable;
       BytesRead := 0;
       while BytesAvailable > 0 do
       begin
         SetLength(Buffer, BytesAvailable);
-        BytesRead := pr.OutPut.Read(Buffer[1], BytesAvailable);
+        BytesRead := p.OutPut.Read(Buffer[1], BytesAvailable);
         s := copy(Buffer, 1, BytesRead);
         if fOEM then
           s := ConvertEncoding(s, scp, EncodingUTF8);
@@ -111,23 +97,27 @@ begin
             Synchronize(@ShowSynMemo);
           end;
         until i = 0;
-        BytesAvailable := pr.Output.NumBytesAvailable;
+        BytesAvailable := p.Output.NumBytesAvailable;
       end;
-    until Terminated or not pr.Running;
+    until Terminated or not p.Running;
     if (t <> '') then
     begin
       fStatus := t;
       Synchronize(@ShowSynMemo);
     end;
   finally
-    pr.Free;
+    p.Free;
   end;
 end;
 
 constructor TThreadExec.Create(cmd: string; oem: boolean; mem: TSynMemo);
 begin
   FreeOnTerminate := True;
-  fcmd := cmd;
+  p := TProcessUTF8.Create(nil);
+  if cmd <> '' then
+    p.ParseCmdLine(cmd);
+  p.Options := [poUsePipes, poStderrToOutPut];
+  //p.ShowWindow := swoHide;
   fOEM := oem;
   fmem := mem;
   inherited Create(True);
