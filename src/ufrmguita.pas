@@ -68,24 +68,24 @@ type
     btnAddFileSplit: TButton;
     btnAddScreenGrab: TButton;
     btnAddTrack1: TButton;
+    chk1instance: TCheckBox;
     chkCreateDosFN: TCheckBox;
     chkCreateSymLink: TCheckBox;
-    chkffplayfs: TCheckBox;
-    chkSGmixaudio: TCheckBox;
-    chkSGmixvideo: TCheckBox;
-    chk1instance: TCheckBox;
-    chkAddTracks: TCheckBox;
     chkDebug: TCheckBox;
-    chkDirOutStruct: TCheckBox;
+    chkffplayfs: TCheckBox;
     chkLangA1: TCheckBox;
     chkLangA2: TCheckBox;
     chkLangS1: TCheckBox;
     chkLangS2: TCheckBox;
     chkMetadataGet: TCheckBox;
-    chkPlayer2: TCheckBox;
-    chkPlayer3: TCheckBox;
     chkPlayInTerm: TCheckBox;
     chkSaveFormPos: TCheckBox;
+    chkSGmixaudio: TCheckBox;
+    chkSGmixvideo: TCheckBox;
+    chkAddTracks: TCheckBox;
+    chkDirOutStruct: TCheckBox;
+    chkPlayer2: TCheckBox;
+    chkPlayer3: TCheckBox;
     chkMetadataWork: TCheckBox;
     chkSaveOnExit: TCheckBox;
     chkSGsource1: TCheckBox;
@@ -172,14 +172,14 @@ type
     edtFileExts: TComboBox;
     edtMediaInfo: TComboBox;
     edtOfn: TLabeledEdit;
-    edtxterm: TComboBox;
-    edtxtermopts: TComboBox;
     edtBitrateV: TLabeledEdit;
     edtOfna: TLabeledEdit;
+    edtxterm: TComboBox;
+    edtxtermopts: TComboBox;
+    lblCpuCount: TLabel;
     lblSGoutput: TLabel;
     lblSGaddoptsO: TLabel;
     lblSGfiltercomplex: TLabel;
-    lblCpuCount: TLabel;
     lblDirLast: TLabel;
     lblDirOut: TLabel;
     lblDirTmp: TLabel;
@@ -255,6 +255,8 @@ type
     Panel1: TPanel;
     Panel10: TPanel;
     Panel11: TPanel;
+    Panel5: TPanel;
+    Panel6: TPanel;
     Panel66: TPanel;
     Panel67: TPanel;
     Panel68: TPanel;
@@ -305,7 +307,6 @@ type
     Panel57: TPanel;
     Panel58: TPanel;
     Panel59: TPanel;
-    Panel6: TPanel;
     Panel60: TPanel;
     Panel61: TPanel;
     Panel62: TPanel;
@@ -695,10 +696,14 @@ begin
     Exit;
   bUpdFromCode := True;
   Ini := TIniFile.Create(UTF8ToSys(sInifile));
+  {$IFDEF MSWINDOWS}
+  s := 'Win';
+  {$ELSE}
+  s := 'Nix';
+  {$ENDIF}
+  mySets1(Ini, s, [TabSets1, TabScreenGrab], bRead);
   s := 'Main';
-  mySets1(Ini, s, [TabSets1, TabSets2, TabScreenGrab], bRead);
-  //if not chkUseMasks.Checked then
-  //  mySets1(Ini, s, [cmbProfile], bRead);
+  mySets1(Ini, s, [TabSets2], bRead);
   mySets4(Ini, bRead);
   if bRead then
   begin
@@ -1081,6 +1086,8 @@ var
   h: TThreadAddF;
   li: TListItem;
 begin
+  li := LVtrd.FindCaption(0, 'a', False, True, False);
+  if li <> nil then Exit;
   h := TThreadAddF.Create(True);
   if Assigned(h.FatalException) then
     raise h.FatalException;
@@ -2033,7 +2040,7 @@ procedure TfrmGUIta.myFormPosLoad(Form: TForm; Ini: TIniFile);
 begin
   if chkSaveFormPos.Checked then
   begin
-    Form.Position := poDesigned;
+    Form.Position := poDefaultPosOnly;
     Form.Top := Ini.ReadInteger(Form.Name, 'Top', Form.Top);
     Form.Left := Ini.ReadInteger(Form.Name, 'Left', Form.Left);
     Form.Height := Ini.ReadInteger(Form.Name, 'Height', Form.Height);
@@ -2285,6 +2292,7 @@ begin
   s1 := 'Captions';
   s2 := 'Hints';
   s3 := 'Messages';
+  myLng1([Panel1]);
   myLng5([PageControl1, PageControl2, PageControl3, PageControl4]);
   myLng4([PopupMenu1, PopupMenu2, PopupMenu3]);
   for i := Low(mes) to High(mes) do
@@ -5591,8 +5599,8 @@ begin
   + IntToStr(Screen.Width) + 'x'+ IntToStr(Screen.Height)
   + ' -i ' + GetEnvironmentVariableUTF8('DISPLAY');
   cmbSGsource1.Text := '-f v4l2 -framerate 30 -video_size 160x120 -i /dev/video0';
-  cmbSGsource2.Text := '-f pulse -ac 2 -ar 44100 -i alsa_output.pci-0000_00_1b.0.analog-stereo.monitor';
-  cmbSGsource3.Text := '-f pulse -ac 2 -ar 48000 -i alsa_input.pci-0000_00_1b.0.analog-stereo';
+  cmbSGsource2.Text := '-f pulse -i alsa_output.pci-0000_00_1b.0.analog-stereo.monitor';
+  cmbSGsource3.Text := '-f pulse -i alsa_input.pci-0000_00_1b.0.analog-stereo';
   cmbSGfiltercomplex.Text := '[0][1]overlay=main_w-overlay_w-2:main_h-overlay_h-2[v], [2][3]amix=inputs=2[a]';
   cmbSGaddoptsO.Text := '-c:v libvpx -b:v 3M -quality realtime -deadline realtime -c:a libvorbis -b:a 320k -map [v] -map [a]';
   cmbSGoutext.Text := '.webm';
