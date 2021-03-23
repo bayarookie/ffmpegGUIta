@@ -27,6 +27,7 @@ type
   public
     s: array of TCont; //streams
     function AddStream: integer;
+    procedure ClearStreams;
   end;
 
   { TJob }
@@ -78,7 +79,8 @@ begin
     sv[i] := Value;
     Exit;
   end;
-  addval(key, Value);
+  if Value <> '' then
+    addval(key, Value);
 end;
 
 procedure TCont.setpair(pair: string);
@@ -99,6 +101,11 @@ begin
   s[Result] := TCont.Create;
 end;
 
+procedure TFil.ClearStreams;
+begin
+  SetLength(s, 0);
+end;
+
 { TJob }
 
 function TJob.AddFile(fn: string): integer;
@@ -106,15 +113,20 @@ begin
   Result := Length(f);
   SetLength(f, Result + 1);
   f[Result] := TFil.Create;
-  f[Result].addval(sMyFilename, fn);
-  {$IFDEF MSWINDOWS}
-  f[Result].addval(sMyDOSfname, myGetAnsiFN(fn));
-  {$ENDIF}
+  f[Result].addval(sMyInputFN, fn);
   f[Result].setval(sMyffprobe, '0');
 end;
 
 function TJob.AddMap(index: string): integer;
+var
+  i: integer;
 begin
+  for i := Low(m) to High(m) do
+    if LowerCase(m[i]) = LowerCase(index) then
+    begin
+      Result := i;
+      Exit;
+    end;
   Result := Length(m);
   SetLength(m, Result + 1);
   m[Result] := index;

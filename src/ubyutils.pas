@@ -5,13 +5,14 @@ unit ubyUtils;
 interface
 
 uses
-  Classes, SysUtils, strutils, Math,
+  Classes, SysUtils, strutils, Math, graphics,
   {$IFDEF MSWINDOWS}
   Windows, LConvEncoding, Dialogs, Registry, Fileutil,
   {$ENDIF}
   LazFileUtils, LazUTF8, //Fileutil,
   LCLIntf, Process, UTF8Process;
 
+function myGetFileSizeInt(fn: string): int64;
 function myGetFileSize(fn: string; short: boolean = False): string;
 function myExpandFileNameCaseW(const wfn: string; out MatchFound: boolean): string;
 function myExpandEnv(Path: string): string;
@@ -20,47 +21,68 @@ function myUnExpandEnv2(Path, Env: string): string;
 function myUnExpandEnvs(Path: string): string;
 function myRealToTimeStr(rt: double; full: boolean = True): string;
 function myTimeStrToReal(s: string): double;
-function myGetAnsiFN(wfn: string): string;
-procedure myGetListFromStr(s, sep: string; List: TStrings);
-function myGetOutFN(Dir, Inp, Ext: string): string;
 {$IFDEF MSWINDOWS}
-function myGetOutFNa(Dir, Inp, Ext: string): string;
+function myGetAnsiFN(wfn: string): string;
+{$ELSE}
+function myGetDesktopEnvironment: integer;
 {$ENDIF}
+function myQuotedStr(Str: string): string;
+procedure myStr2List(s, sep: string; List: TStrings; Clear: boolean = True);
+procedure my2lst(t, s: string; sl: TStrings);
+function myList2Str(a: array of string): string;
+function myList2Str(sl: TStrings): string;
+function myGetOutFN(Dir, Inp, Ext: string): string;
 function myBetween(var s: string; const s1, s2: string): string;
 procedure myExecProc(Path: string; ComLine: array of string; sw: TShowWindowOptions = swoShowNormal);
+procedure myExecProc(sl: TStrings; sw: TShowWindowOptions = swoShowNormal);
+procedure myExecProc(p: TProcessUTF8; sw: TShowWindowOptions = swoShowNormal);
 procedure myOpenDoc(Path: string);
 function myCompareInt(List: TStringList; Index1, Index2: integer): integer;
+function myCompareWH(List: TStringList; Index1, Index2: integer): integer;
 function myGetLocaleLanguage: string;
-function myDTtoStr(FormatStr: string; DateTime: TDateTime): string;
-function myGetDigits(s: string): string;
+function myGetDigit0(s: string): integer;
+function myGetDigit1(s: string): string;
+function myGetDigit2(s: string; out l: integer): string;
+function myGetTempFileName(dir, pre, ext: string): string;
+function myShrinkPath(const PathToMince: string; cnv: TCanvas; MaxLen: Integer): string;
+function myValidFilename(s: string): string;
 
 implementation
 
 uses ufrmGUIta;
 
+function myGetFileSizeInt(fn: string): int64;
+var
+  sr: TSearchRec;
+begin
+  if FindFirstUTF8(fn, 0, sr) = 0 then
+    Result := sr.Size
+  else
+    Result := 0;
+  FindCloseUTF8(sr);
+end;
+
 function myGetFileSize(fn: string; short: boolean = False): string;
 var
   sr: TSearchRec;
   i: double;
-  fs: TFormatSettings;
 begin
-  fs.ThousandSeparator := ' ';
   if FindFirstUTF8(fn, 0, sr) = 0 then
   begin
-    i := sr.Size * 1.0;
+    i := sr.Size;
     if short then
     begin
-      if i > 1024 * 1024 * 10240 then
-        Result := Format('%12.0n GiB', [i / 1024 / 1024 / 1024], fs)
-      else if i > 1024 * 10240 then
-        Result := Format('%12.0n MiB', [i / 1024 / 1024], fs)
+      if i > 10737418240 then //1024 * 1024 * 10240 then
+        Result := Format('%12.0n GiB', [i / 1024 / 1024 / 1024])
+      else if i > 10485760 then //1024 * 10240 then
+        Result := Format('%12.0n MiB', [i / 1024 / 1024])
       else if i > 10240 then
-        Result := Format('%12.0n KiB', [i / 1024], fs)
+        Result := Format('%12.0n KiB', [i / 1024])
       else
-        Result := Format('%12.0n', [i], fs);
+        Result := Format('%12.0n', [i]);
     end
     else
-      Result := Format('%12.0n', [i], fs);
+      Result := Format('%12.0n', [i]);
   end
   else
     Result := '0';
@@ -173,11 +195,10 @@ begin
   s := myUnExpandEnv1(s, 'APPDATA');
   s := myUnExpandEnv1(s, 'LOCALAPPDATA');
   s := myUnExpandEnv1(s, 'windir');
-  s := myUnExpandEnv1(s, 'SystemRoot');
-  Result := myUnExpandEnv2(s, 'USERNAME');
+  Result := myUnExpandEnv1(s, 'SystemRoot');
   {$ELSE}
   s := myUnExpandEnv1(Path, 'HOME');
-  Result := s;
+  Result := StringReplace(s, '$HOME', '~', [rfReplaceAll, rfIgnoreCase]);
   {$ENDIF}
 end;
 
@@ -189,12 +210,12 @@ begin
   Min := (Trunc(rt) - Hour * 3600) div 60;
   Sec := (Trunc(rt) - Hour * 3600 - Min * 60);
   MSec := Trunc((rt - Hour * 3600 - Min * 60 - Sec) * 1000);
-  Result := strutils.IfThen(Hour = 0, '', IntToStr(Hour) + ':');
+  Result := IfThen(Hour = 0, '', IntToStr(Hour) + ':');
   Result := Result + IfThen((Min = 0) and (Result = ''), '',
     char(48 + Min div 10) + char(48 + Min mod 10) + ':');
   Result := Result + IfThen((Sec = 0) and (Result = ''), '0',
     char(48 + Sec div 10) + char(48 + Sec mod 10));
-  if (MSec > 0) or full then
+  if (MSec > 0) and full then
     Result := Result + '.' + IfThen(MSec < 100, IfThen(MSec < 10, '00', '0'), '') +
       IntToStr(MSec);
 end;
@@ -469,7 +490,7 @@ begin
   s := ExtractFileName(Result);
   if s = '' then
   begin
-    if frmGUIta.chkCreateDosFN.Checked and mySetFileShortName(wfn) then
+    //if frmGUIta.chkCreateDosFN.Checked and mySetFileShortName(wfn) then
       Result := ExtractShortPathNameUTF8(wfn);
   end
   else
@@ -478,7 +499,7 @@ begin
     c := s[i];
     if (word(c) > 127) then //error of oem ansi converting
     begin
-      if frmGUIta.chkCreateDosFN.Checked and mySetFileShortName(wfn) then
+      //if frmGUIta.chkCreateDosFN.Checked and mySetFileShortName(wfn) then
         Result := ExtractShortPathNameUTF8(wfn);
       Break;
     end;
@@ -508,67 +529,139 @@ begin
   if myCheckAnsi(Result) then Exit;
   //maybe, network drive with no msdos file system
   //create symlink to network file and return as result
-  if frmGUIta.chkCreateSymLink.Checked then
-  begin
-    Result := myGenSymLnkNam(myExpandEnv('%TEMP%\'), wfn);
-    if myCreateSymLink(Result, wfn) then
-    begin
-      Result := ExtractShortPathNameUTF8(Result);
-      if myCheckAnsi(Result) then Exit;
-    end;
-  end;
+  //if frmGUIta.chkCreateSymLink.Checked then
+  //begin
+  //  Result := myGenSymLnkNam(myExpandEnv('%TEMP%\'), wfn);
+  //  if myCreateSymLink(Result, wfn) then
+  //  begin
+  //    Result := ExtractShortPathNameUTF8(Result);
+  //    if myCheckAnsi(Result) then Exit;
+  //  end;
+  //end;
   //surrender
-{$ELSE}
-function myGetAnsiFN(wfn: string): string;
-begin
-{$ENDIF}
   Result := wfn;
 end;
+{$ELSE}
+function myGetDesktopEnvironment: integer; //KDE or not
+const
+  a: array[0..1] of string = ('XDG_CURRENT_DESKTOP', 'DESKTOP_SESSION');
+var
+  i: Integer;
+  s: string;
+begin
+  Result := 0;
+  for i := Low(a) to High(a) do
+  begin
+    s := LowerCase(GetEnvironmentVariableUTF8(a[i]));
+    //if Pos('cinnamon', s) > 0 then Exit(1);
+    //if Pos('gnome', s) > 0 then Exit(2);
+    if Pos('kde', s) > 0 then Exit(3);
+    //if Pos('lxde', s) > 0 then Exit(4);
+    //if Pos('lxqt', s) > 0 then Exit(5);
+    //if Pos('mate', s) > 0 then Exit(6);
+    //if Pos('pantheon', s) > 0 then Exit(7); //if de_pantheon then download ffmpeg ffprobe ffplay xterm
+    //if Pos('xfce', s) > 0 then Exit(8);
+  end;
+  //if GetEnvironmentVariableUTF8('GNOME_DESKTOP_SESSION_ID') <> '' then Exit(2);
+  if GetEnvironmentVariableUTF8('KDE_FULL_SESSION') <> '' then Exit(3);
+  //if GetEnvironmentVariableUTF8('_LXSESSION_PID') <> '' then Exit(4);
+end;
+{$ENDIF}
 
-procedure myGetListFromStr(s, sep: string; List: TStrings);
+function myQuotedStr(Str: string): string;
+begin
+  if Pos(' ', Str) = 0 then
+    Result := Str
+  else
+{$IFDEF MSWINDOWS}
+    Result := UTF8QuotedStr(Str, '"');
+{$ELSE}
+  //if (Pos('/', Str) > 0) and (Pos('"', Str) = 0) then
+  //  Result := '"' + Str + '"'
+  //else
+  if Pos('''', Str) > 0 then
+    Result := UTF8QuotedStr(Str, '"')
+  else
+    Result := UTF8QuotedStr(Str, '''');
+{$ENDIF}
+end;
+
+procedure myStr2List(s, sep: string; List: TStrings; Clear: boolean = True);
 var
   i, j: integer;
-  s2: string;
 begin
-  s2 := s;
-  List.Clear;
-  i := Pos(sep, s2);
+  if Clear then
+    List.Clear;
+  i := Pos(sep, s);
   j := Length(sep);
   while (i > 0) do
   begin
-    List.Add(copy(s2, 1, i - 1));
-    Delete(s2, 1, i + j - 1);
-    i := Pos(sep, s2);
+    List.Add(copy(s, 1, i - 1));
+    Delete(s, 1, i + j - 1);
+    i := Pos(sep, s);
   end;
-  if s2 <> '' then
-    List.Add(s2);
+  if s <> '' then
+    List.Add(s);
+end;
+
+procedure my2lst(t, s: string; sl: TStrings);
+begin
+  if s = '' then Exit;
+  if t = '' then process.CommandToList(s, sl)
+  else begin sl.Add(t); sl.Add(s); end;
+end;
+
+function myList2Str(a: array of string): string;
+var
+  i: integer;
+begin
+  Result := '';
+  for i := Low(a) to High(a) do
+    Result += ' ' + myQuotedStr(a[i]);
+end;
+
+function myList2Str(sl: TStrings): string;
+var
+  i: integer;
+begin
+  Result := '';
+  for i := 0 to sl.Count - 1 do
+    Result += ' ' + myQuotedStr(sl[i]);
 end;
 
 function myGetOutFN(Dir, Inp, Ext: string): string;
 var
-  i: integer;
+  i, j: integer;
   s: string;
 begin
-  s := ChangeFileExt(ExtractFileName(Inp), '');
-  //if (Length(s) > 0) and (s[Length(s)] = ')') then
-  //begin
-  //  i := 1;
-  //  j := 0;
-  //  while i > 0 do
-  //  begin
-  //    i := PosEx(' (', s, i + 1);
-  //    if (i > 0) and (i + 1 < Length(s)) then
-  //      j := i;
-  //  end;
-  //  if j > 0 then
-  //  begin
-  //    i := StrToIntDef(Copy(s, j + 2, Length(s) - j - 2), 0);
-  //    if (i > 0) and (i < 1000) then
-  //      s := Copy(s, 1, j - 1);
-  //  end;
-  //end;
+  //s := ChangeFileExt(ExtractFileName(Inp), '');
+  s := Inp;
+  if (Length(s) > 0) and (s[Length(s)] = ')') then
+  begin
+    i := 1;
+    j := 0;
+    while i > 0 do
+    begin
+      i := PosEx(' (', s, i + 1);
+      if (i > 0) and (i + 1 < Length(s)) then
+        j := i;
+    end;
+    if j > 0 then
+    begin
+      i := StrToIntDef(Copy(s, j + 2, Length(s) - j - 2), 0);
+      if (i > 0) and (i < 1895) then //avoid (2019)
+        s := Copy(s, 1, j - 1);
+    end;
+  end;
   if Dir <> '' then
-    s := IncludeTrailingPathDelimiter(myExpandEnv(Dir)) + s;
+  begin
+    {$IFDEF MSWINDOWS}
+    {$ELSE}
+    if (Pos('~', Dir) = 1) then
+      Dir := StringReplace(Dir, '~', '$HOME', []);
+    {$ENDIF}
+    s := AppendPathDelim(myExpandEnv(Dir)) + s;
+  end;
   i := 0;
   Result := s + Ext;
   while FileExistsUTF8(myExpandEnv(Result)) do
@@ -578,31 +671,21 @@ begin
   end;
 end;
 
-{$IFDEF MSWINDOWS}
-function myGetOutFNa(Dir, Inp, Ext: string): string;
-begin
-  Result := myGetOutFN(myGetAnsiFN(myExpandEnv(Dir)), Inp, Ext);
-end;
-{$ENDIF}
-
 function myBetween(var s: string; const s1, s2: string): string;
 var
-  i, j: integer;
+  i, j, k, l: integer;
 begin
+  k := UTF8Length(s1);
+  l := UTF8Length(s2);
   Result := '';
-  i := Pos(s1, s);
+  i := UTF8Pos(s1, s);
   if i > 0 then
   begin
-    j := PosEx(s2, s, i + 1);
+    j := UTF8Pos(s2, s, i + k + 1);
     if j > 0 then
     begin
-      Result := Copy(s, i + Length(s1), j - i - Length(s1));
-      Delete(s, 1, j + Length(s2));
-    end
-    else
-    begin
-      Result := Copy(s, i + Length(s1), Length(s));
-      s := '';
+      Result := UTF8Copy(s, i + k, j - i - k);
+      UTF8Delete(s, 1, j + l - 1);
     end;
   end;
 end;
@@ -613,14 +696,34 @@ var
   i: integer;
 begin
   p := TProcessUTF8.Create(nil);
+  p.Executable := Path;
+  for i := Low(ComLine) to High(ComLine) do
+    p.Parameters.Add(ComLine[i]);
+  myExecProc(p, sw);
+end;
+
+procedure myExecProc(sl: TStrings; sw: TShowWindowOptions = swoShowNormal);
+var
+  p: TProcessUTF8;
+  i: integer;
+begin
+  if sl.Count = 0 then Exit;
+  p := TProcessUTF8.Create(nil);
+  p.Executable := sl[0];
+  for i := 1 to sl.Count - 1 do
+    p.Parameters.Add(sl[i]);
+  myExecProc(p, sw);
+end;
+
+procedure myExecProc(p: TProcessUTF8; sw: TShowWindowOptions = swoShowNormal);
+var
+  i: integer;
+begin
   try
     p.InheritHandles := False;
     p.Options := [];
     for i := 1 to GetEnvironmentVariableCount do
       p.Environment.Add(GetEnvironmentString(i));
-    p.Executable := Path;
-    for i := Low(ComLine) to High(ComLine) do
-      p.Parameters.Add(ComLine[i]);
     p.ShowWindow := sw;
     p.Execute;
   finally
@@ -673,6 +776,53 @@ begin
     Result := strcomp(PChar(List[Index1]), PChar(List[Index2]));
 end;
 
+function myCompareWH(List: TStringList; Index1, Index2: integer): integer;
+var
+  w1, w2, h1, h2: integer;
+  r1, r2: boolean;
+
+  function IsInt(AString: string; var i, j: integer): boolean;
+  var
+    Code: integer;
+    w, h: string;
+  begin
+    j := 0;
+    Val(AString, i, Code);
+    Result := (Code > 1);
+    if Result then
+    begin
+      w := Copy(AString, 1, Code - 1);
+      h := Copy(AString, Code + 1, 6);
+      Val(w, i, Code);
+      Val(h, j, Code);
+      Result := (Code > 1);
+      if Result then
+      begin
+        h := Copy(h, 1, Code - 1);
+        Val(h, j, Code);
+      end;
+    end;
+  end;
+
+begin
+  w1 := 0;
+  w2 := 0;
+  r1 := IsInt(List[Index1], w1, h1);
+  r2 := IsInt(List[Index2], w2, h2);
+  Result := Ord(r1 or r2);
+  if Result <> 0 then
+  begin
+    if (w1 < w2) or (w1 = w2) and (h1 < h2) then
+      Result := -1
+    else if (w1 > w2) or (w1 = w2) and (h1 > h2) then
+      Result := 1
+    else
+      Result := 0;
+  end
+  else
+    Result := strcomp(PChar(List[Index1]), PChar(List[Index2]));
+end;
+
 function myGetLocaleLanguage: string;
 {$IFDEF MSWINDOWS}
   function myGetLocaleInfo(Flag: integer): string;
@@ -684,19 +834,36 @@ function myGetLocaleLanguage: string;
     Result := pcLCA;
   end;
 begin
-  Result := myGetLocaleInfo(LOCALE_SENGLANGUAGE);
+  //Result := myGetLocaleInfo(LOCALE_SENGLANGUAGE);
+  Result := myGetLocaleInfo(LOCALE_SISO639LANGNAME);
 {$ELSE}
 begin
-  Result := Copy(SysUtils.GetEnvironmentVariable('LANG'), 1, 2);
+  Result := SysUtils.GetEnvironmentVariable('LANGUAGE');
+  if Result = '' then
+    Result := Copy(SysUtils.GetEnvironmentVariable('LANG'), 1, 2);
 {$ENDIF}
 end;
 
-function myDTtoStr(FormatStr: string; DateTime: TDateTime): string;
+function myGetDigit0(s: string): integer;
+var
+  i: integer;
+  t: string;
 begin
-  DateTimeToString(Result, FormatStr, DateTime);
+  t := '';
+  i := 0;
+  while i < Length(s) do
+  begin
+    inc(i);
+    case s[i] of
+      '0','1','2','3','4','5','6','7','8','9': t += s[i];
+    else
+      Break;
+    end;
+  end;
+  Result := StrToIntDef(t, 0);
 end;
 
-function myGetDigits(s: string): string;
+function myGetDigit1(s: string): string;
 var
   i: integer;
 begin
@@ -706,11 +873,127 @@ begin
   begin
     inc(i);
     case s[i] of
-      '0','1','2','3','4','5','6','7','8','9': Result := Result + s[i];
+      '0','1','2','3','4','5','6','7','8','9': Result += s[i];
     else
-      Exit;
+      Break;
     end;
   end;
+end;
+
+function myGetDigit2(s: string; out l: integer): string;
+var
+  i: integer;
+begin
+  Result := '';
+  l := 0;
+  i := 0;
+  while i < Length(s) do
+  begin
+    inc(i);
+    case s[i] of
+      '0','1','2','3','4','5','6','7','8','9': Result += s[i];
+    else
+      begin
+        l := StrToIntDef(Result, 0);
+        Result := '';
+      end;
+    end;
+  end;
+end;
+
+function myGetTempFileName(dir, pre, ext: string): string;
+var
+  i: integer;
+  s: string;
+begin
+  if (dir = '') then
+    s := GetTempDir
+  else
+    s := IncludeTrailingPathDelimiter(Dir);
+  if (pre = '') then
+    s += 'tmp'
+  else
+    s += pre;
+  i := 0;
+  repeat
+    Result := Format('%s%.5d%s', [s, i, ext]);
+    Inc(i);
+  until not FileExists(Result);
+end;
+
+function myShrinkPath(const PathToMince: string; cnv: TCanvas; MaxLen: Integer): string;
+//stolen from Double Commander, usage:
+//lblFileNameFrom.Caption := MinimizeFilePath(s, lblFileNameFrom.Canvas, lblFileNameFrom.Width);
+var
+  sl: TStringList;
+  sHelp, sFile,
+  sFirst: string;
+  iPos: Integer;
+begin
+  if MaxLen <= 0 then Exit;
+  sHelp := PathToMince;
+  iPos := Pos(PathDelim, sHelp);
+  if iPos = 0 Then
+    Result := PathToMince
+  else
+  begin
+    sl := TStringList.Create;
+    // Decode string
+    while iPos <> 0 Do
+    begin
+      sl.Add(Copy(sHelp, 1, (iPos - 1)));
+      sHelp := Copy(sHelp, (iPos + 1), Length(sHelp));
+      iPos := Pos(PathDelim, sHelp);
+    end;
+    if sHelp <> '' then sl.Add(sHelp);
+    // Encode string
+    sFirst := sl[0];
+    sFile := sl[sl.Count - 1];
+    sl.Delete(sl.Count - 1);
+    Result := '';
+    MaxLen := MaxLen - cnv.TextWidth('XXX');
+    if (sl.Count <> 0) and (cnv.TextWidth(Result + sl[0] + PathDelim + sFile) < MaxLen) then
+    begin
+      while (sl.Count <> 0) and (cnv.TextWidth(Result + sl[0] + PathDelim + sFile) < MaxLen) do
+      begin
+        Result += sl[0] + PathDelim;
+        sl.Delete(0);
+      end;
+      if sl.Count = 0 then
+        Result += sFile
+      else
+        Result += '..' + PathDelim + sFile;
+    end
+    else
+    if sl.Count = 0 then
+      Result := sFirst + PathDelim
+    else
+      Result := sFirst + PathDelim + '..' + PathDelim + sFile;
+    sl.Free;
+  end;
+  if cnv.TextWidth(Result) > MaxLen + cnv.TextWidth('XXX') then
+  begin
+    while (UTF8Length(Result) > 0) and (cnv.TextWidth(Result) > MaxLen) do
+      UTF8Delete(Result, UTF8Length(Result), 1);
+    Result := UTF8Copy(Result, 1, UTF8Length(Result) - 3) + '...';
+  end;
+end;
+
+function myValidFilename(s: string): string;
+const
+  //if fat ntfs then 0x00-0x1F 0x7F " * / : < > ? \ |
+  ForbiddenChars: set of Char = [#0..#31, #127, '"', '*', '/', ':', '<', '>', '?', '\', '|'];
+  //if btrfs ext2 ext3 ext4... then /,null
+  //ForbiddenChars: set of Char = ['/', #0];
+var
+  i: integer;
+begin
+  Result := '';
+  for i := 1 to Length(s) do
+    if s[i] in ForbiddenChars then
+      Result += '-'
+    else
+      Result += s[i];
 end;
 
 end.

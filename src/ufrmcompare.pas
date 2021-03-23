@@ -7,7 +7,7 @@ interface
 uses
   Classes, LazFileUtils, //FileUtil,
   SynMemo, Forms, Graphics,
-  ExtCtrls, StdCtrls, Math, IntfGraphics, LCLType, ComCtrls, Spin, fpImage;
+  ExtCtrls, StdCtrls, Math, IntfGraphics, LCLType, ComCtrls, Spin, fpImage, Controls;
 
 type
 
@@ -17,17 +17,27 @@ type
     Button1: TButton;
     Button2: TButton;
     Button3: TButton;
+    Button4: TButton;
     CheckBox1: TCheckBox;
+    Edit1: TEdit;
+    Edit2: TEdit;
+    Edit3: TEdit;
+    Edit4: TEdit;
     Image1: TImage;
     Image2: TImage;
     Image3: TImage;
-    LabeledEdit1: TLabeledEdit;
-    LabeledEdit2: TLabeledEdit;
-    LabeledEdit3: TLabeledEdit;
-    LabeledEdit4: TLabeledEdit;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
+    Label4: TLabel;
     Panel1: TPanel;
     Panel2: TPanel;
+    Panel3: TPanel;
+    Panel4: TPanel;
+    Panel5: TPanel;
+    Panel6: TPanel;
     ScrollBox1: TScrollBox;
+    Shape1: TShape;
     SpinEdit1: TSpinEdit;
     Splitter1: TSplitter;
     StatusBar1: TStatusBar;
@@ -37,10 +47,12 @@ type
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
+    procedure Button4Click(Sender: TObject);
     procedure CheckBox1Change(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
-    procedure LabeledEdit1Change(Sender: TObject);
+    procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure Edit1Change(Sender: TObject);
     procedure SpinEdit1Change(Sender: TObject);
     procedure UpDown1ChangingEx(Sender: TObject; var AllowChange: boolean;
       NewValue: smallint; Direction: TUpDownDirection);
@@ -65,17 +77,20 @@ uses ufrmguita, ubyutils, ujobinfo;
 
 procedure TfrmCompare.Button1Click(Sender: TObject);
 begin
+  Image1.Width := Image1.Picture.Bitmap.Width;
   Image1.Visible := True;
   Image2.Visible := False;
   Image3.Visible := False;
+  Shape1.Visible := False;
   Caption := Button1.Caption;
 end;
 
 procedure TfrmCompare.Button2Click(Sender: TObject);
 begin
-  Image2.Visible := True;
   Image1.Visible := False;
+  Image2.Visible := True;
   Image3.Visible := False;
+  Shape1.Visible := False;
   Caption := Button2.Caption;
 end;
 
@@ -86,19 +101,20 @@ var
   c3: TFPColor;
   i: integer;
 begin
-  Image3.Visible := True;
   Image1.Visible := False;
   Image2.Visible := False;
+  Image3.Visible := True;
+  Shape1.Visible := False;
   Caption := Button3.Caption;
   if b then
     Exit;
   Image3.Picture.Clear;
-  Image3.Picture.Bitmap.SetSize(Max(Image1.Width, Image2.Width),
-    Max(Image1.Height, Image2.Height));
+  Image3.Picture.Bitmap.SetSize(Max(Image1.Picture.Bitmap.Width, Image2.Picture.Bitmap.Width),
+    Max(Image1.Picture.Bitmap.Height, Image2.Picture.Bitmap.Height));
   t1 := Image1.Picture.Bitmap.CreateIntfImage;
   t2 := Image2.Picture.Bitmap.CreateIntfImage;
-  xMin := Min(Image1.Width, Image2.Width);
-  yMin := Min(Image1.Height, Image2.Height);
+  xMin := Min(Image1.Picture.Bitmap.Width, Image2.Picture.Bitmap.Width);
+  yMin := Min(Image1.Picture.Bitmap.Height, Image2.Picture.Bitmap.Height);
   t3 := TLazIntfImage.Create(0, 0);
   t3.LoadFromBitmap(Image3.Picture.Bitmap.Handle, Image3.Picture.Bitmap.MaskHandle);
   try
@@ -130,6 +146,17 @@ begin
   b := True;
 end;
 
+procedure TfrmCompare.Button4Click(Sender: TObject);
+begin
+  Image1.Width := Image1.Picture.Bitmap.Width div 2;
+  Image1.Visible := True;
+  Image2.Visible := True;
+  Image3.Visible := False;
+  Shape1.Height := Image1.Height;
+  Shape1.Visible := True;
+  Caption := Button4.Caption;
+end;
+
 procedure TfrmCompare.CheckBox1Change(Sender: TObject);
 begin
   Panel2.Visible := CheckBox1.Checked;
@@ -151,28 +178,49 @@ begin
     ScrollBox1.VertScrollBar.Position := ScrollBox1.VertScrollBar.Position - 120;
 end;
 
-procedure TfrmCompare.LabeledEdit1Change(Sender: TObject);
+procedure TfrmCompare.FormMouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  if Image1.Visible and Image2.Visible then
+  begin
+    Image1.Width := Min(Image1.Picture.Bitmap.Width, X);
+    Shape1.Left := X;
+  end;
+end;
+
+procedure TfrmCompare.Edit1Change(Sender: TObject);
 var
-  s: string;
+  s, t, u: string;
 begin
   b := False;
-  if Sender = LabeledEdit1 then
-    s := LabeledEdit3.Text
+  if Sender = Edit1 then
+  begin
+    s := Edit3.Text;
+    t := myRealToTimeStr(myTimeStrToReal(Edit1.Text));
+    u := Label1.Caption;
+  end
   else
-    s := LabeledEdit4.Text;
-  s := frmGUIta.myGetPic(TLabeledEdit(Sender).Text,
-    TLabeledEdit(Sender).EditLabel.Caption, s, SynMemo1, StatusBar1);
+  begin
+    s := Edit4.Text;
+    t := myRealToTimeStr(myTimeStrToReal(Edit2.Text));
+    u := Label2.Caption;
+  end;
+  s := frmGUIta.myGetPic(t, u, s, SynMemo1);
   if FileExistsUTF8(s) then
   begin
-    if Sender = LabeledEdit1 then
-      Image1.Picture.LoadFromFile(s)
+    if Sender = Edit1 then
+    begin
+      Image1.Picture.LoadFromFile(s);
+      Image1.Width := Image1.Picture.Bitmap.Width;
+      Image1.Height := Image1.Picture.Bitmap.Height;
+    end
     else
       Image2.Picture.LoadFromFile(s);
     DeleteFileUTF8(s);
   end
   else
   begin
-    if Sender = LabeledEdit1 then
+    if Sender = Edit1 then
       Image1.Picture.Clear
     else
       Image2.Picture.Clear;
@@ -191,7 +239,7 @@ end;
 procedure TfrmCompare.UpDown1ChangingEx(Sender: TObject; var AllowChange: boolean;
   NewValue: smallint; Direction: TUpDownDirection);
 var
-  ob: TLabeledEdit;
+  ob: TEdit;
   rd, r, r1: real;
   jo: TJob;
 begin
@@ -200,9 +248,9 @@ begin
   (Sender as TUpDown).Visible := False;
   AllowChange := False;
   if Sender = UpDown1 then
-    ob := LabeledEdit1
+    ob := Edit1
   else
-    ob := LabeledEdit2;
+    ob := Edit2;
   jo := TJob(frmGUIta.LVjobs.Selected.Data);
   rd := myTimeStrToReal(jo.f[0].getval('duration'));
   r1 := myTimeStrToReal(ob.Text);

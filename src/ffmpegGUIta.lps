@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <Version Value="11"/>
+    <BuildModes Active="Default"/>
+    <Units Count="17">
+      <Unit0>
+        <Filename Value="ffmpegGUIta.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos Y="29"/>
+        <UsageCount Value="201"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="ufrmguita.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmGUIta"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="ufrmGUIta"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="9541"/>
+        <CursorPos Y="9565"/>
+        <UsageCount Value="201"/>
+        <Bookmarks Count="10">
+          <Item0 Y="9153"/>
+          <Item1 Y="2242" ID="4"/>
+          <Item2 Y="3691" ID="9"/>
+          <Item3 Y="3153" ID="7"/>
+          <Item4 Y="2422" ID="5"/>
+          <Item5 Y="2790" ID="6"/>
+          <Item6 Y="3506" ID="8"/>
+          <Item7 Y="10490" ID="2"/>
+          <Item8 Y="6140" ID="3"/>
+          <Item9 Y="1620" ID="1"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="ubyutils.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ubyUtils"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="623"/>
+        <CursorPos Y="627"/>
+        <UsageCount Value="201"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="ufrmcompare.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmCompare"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="28"/>
+        <CursorPos Y="52"/>
+        <UsageCount Value="201"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="ujobinfo.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="86"/>
+        <CursorPos Y="114"/>
+        <UsageCount Value="201"/>
+        <Loaded Value="True"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="ufrmcrop.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmCrop"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="113"/>
+        <CursorPos Y="134"/>
+        <UsageCount Value="201"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="uthreadexec.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="57"/>
+        <CursorPos X="22" Y="241"/>
+        <UsageCount Value="201"/>
+        <Loaded Value="True"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="uniqueinstance2.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UniqueInstance2"/>
+        <UsageCount Value="201"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="ufrmmaskprof.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmMaskProf"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="201"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="utaversion.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="utaVersion"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos Y="20"/>
+        <UsageCount Value="201"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="tarevision.inc"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="4"/>
+        <CursorPos Y="2"/>
+        <UsageCount Value="201"/>
+        <Loaded Value="True"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="ucalcul.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uCalcul"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1292"/>
+        <CursorPos Y="1318"/>
+        <UsageCount Value="201"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="ufrmtrack.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmTrack"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="201"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="urun.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="225"/>
+        <CursorPos X="3" Y="243"/>
+        <UsageCount Value="201"/>
+        <Loaded Value="True"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="ufrmgendb.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmGenDB"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="20"/>
+        <CursorPos X="32" Y="43"/>
+        <UsageCount Value="201"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="/usr/lib/lazarus/2.0.10/lcl/graphics.pp"/>
+        <UnitName Value="Graphics"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="227"/>
+        <CursorPos X="13" Y="294"/>
+        <UsageCount Value="4"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="mediainfodll.pas"/>
+        <UnitName Value="MediaInfoDll"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="73"/>
+        <CursorPos Y="99"/>
+        <UsageCount Value="29"/>
+      </Unit16>
+    </Units>
+    <JumpHistory Count="29" HistoryIndex="28">
+      <Position1>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="2"/>
+      </Position1>
+      <Position2>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="6911" Column="25" TopLine="6887"/>
+      </Position2>
+      <Position3>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="7217" Column="28" TopLine="7204"/>
+      </Position3>
+      <Position4>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="7218" Column="28" TopLine="7204"/>
+      </Position4>
+      <Position5>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="7219" Column="28" TopLine="7204"/>
+      </Position5>
+      <Position6>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="8285" TopLine="8253"/>
+      </Position6>
+      <Position7>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="8545" TopLine="8518"/>
+      </Position7>
+      <Position8>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="8950" Column="54" TopLine="8922"/>
+      </Position8>
+      <Position9>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9145" Column="33" TopLine="9117"/>
+      </Position9>
+      <Position10>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9146" Column="33" TopLine="9136"/>
+      </Position10>
+      <Position11>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9152" Column="33" TopLine="9136"/>
+      </Position11>
+      <Position12>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9153" Column="33" TopLine="9136"/>
+      </Position12>
+      <Position13>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9159" Column="33" TopLine="9136"/>
+      </Position13>
+      <Position14>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9161" Column="33" TopLine="9136"/>
+      </Position14>
+      <Position15>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9162" Column="33" TopLine="9136"/>
+      </Position15>
+      <Position16>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9166" Column="33" TopLine="9139"/>
+      </Position16>
+      <Position17>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9167" Column="33" TopLine="9140"/>
+      </Position17>
+      <Position18>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9168" Column="33" TopLine="9141"/>
+      </Position18>
+      <Position19>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9173" Column="33" TopLine="9146"/>
+      </Position19>
+      <Position20>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9174" Column="33" TopLine="9147"/>
+      </Position20>
+      <Position21>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9175" Column="33" TopLine="9148"/>
+      </Position21>
+      <Position22>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9176" Column="33" TopLine="9152"/>
+      </Position22>
+      <Position23>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9537" Column="23" TopLine="9525"/>
+      </Position23>
+      <Position24>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9545" Column="26" TopLine="9525"/>
+      </Position24>
+      <Position25>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9547" Column="26" TopLine="9525"/>
+      </Position25>
+      <Position26>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9551" Column="32" TopLine="9525"/>
+      </Position26>
+      <Position27>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9552" Column="23" TopLine="9525"/>
+      </Position27>
+      <Position28>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9559" Column="23" TopLine="9541"/>
+      </Position28>
+      <Position29>
+        <Filename Value="ufrmguita.pas"/>
+        <Caret Line="9564" Column="22" TopLine="9541"/>
+      </Position29>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes Count="0" ActiveMode="default"/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>

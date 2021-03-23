@@ -1,23 +1,22 @@
-unit ufrmmaskprof;
+unit ufrmtrack;
 
 {$mode objfpc}{$H+}
 
 interface
 
 uses
-  Forms, StdCtrls,
-  Buttons, ExtCtrls;
+  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
+  Buttons, ExtCtrls, ufrmguita;
 
 type
 
-  { TfrmMaskProf }
+  { TfrmTrack }
 
-  TfrmMaskProf = class(TForm)
+  TfrmTrack = class(TForm)
     BitBtn1: TBitBtn;
     BitBtn2: TBitBtn;
     ComboBox1: TComboBox;
-    ComboBox2: TComboBox;
-    ComboBox3: TComboBox;
+    Label1: TLabel;
     Panel1: TPanel;
   private
     { private declarations }
@@ -26,11 +25,13 @@ type
   end;
 
 var
-  frmMaskProf: TfrmMaskProf;
+  frmTrack: TfrmTrack;
 
 implementation
 
 {$R *.lfm}
+
+{ TfrmTrack }
 
 end.
 

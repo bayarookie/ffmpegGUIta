@@ -1314,7 +1314,8 @@ function TCalcul.calc: string;
           fErrText := '';
           s := c(t^.l);
           ms := c(t^.r);
-          j := AnsiCompareStr(s, ms);
+          //j := AnsiCompareStr(s, ms);
+          j := CompareStr(s, ms);
           case t^.num of
             221: if j < 0 then
                 c := '1'
@@ -1421,11 +1422,11 @@ begin
     begin
       fResultType := PCalc_TREE(Tree)^.typ;
       Result := sss;
-      if fResultType = 2 then
-      begin
-        if not IsString(sss) then
-          Result := '"' + Result + '"';
-      end;
+      //if fResultType = 2 then
+      //begin
+      //  if not IsString(sss) then
+      //    Result := '"' + Result + '"';
+      //end;
     end;
   except
     Error('');

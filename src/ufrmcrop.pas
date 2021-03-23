@@ -18,33 +18,32 @@ type
   TfrmCrop = class(TForm)
     BitBtn1: TBitBtn;
     BitBtn2: TBitBtn;
-    btnH: TBitBtn;
-    btnW: TBitBtn;
-    btnY: TBitBtn;
-    btnX: TBitBtn;
     CheckBox1: TCheckBox;
+    Edit1: TEdit;
+    Edit2: TEdit;
     Image1: TImage;
     Label1: TLabel;
-    LabeledEdit1: TLabeledEdit;
-    LabeledEdit2: TLabeledEdit;
+    Label2: TLabel;
     Panel1: TPanel;
     Panel2: TPanel;
+    btnY: TPanel;
+    btnX: TPanel;
+    btnH: TPanel;
+    btnW: TPanel;
+    Panel3: TPanel;
     ScrollBox1: TScrollBox;
     Splitter1: TSplitter;
     StatusBar1: TStatusBar;
     SynMemo1: TSynMemo;
     UpDown1: TUpDown;
-    procedure btnHMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
-    procedure btnWMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
-    procedure btnXMouseDown(Sender: TObject; Button: TMouseButton;
+    procedure btnYMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
-    procedure btnXMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
-    procedure btnXMouseUp(Sender: TObject; Button: TMouseButton;
+    procedure btnYMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
-    procedure btnYMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
     procedure CheckBox1Change(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure LabeledEdit1Change(Sender: TObject);
+    procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure Edit2Change(Sender: TObject);
     procedure UpDown1ChangingEx(Sender: TObject; var AllowChange: boolean;
       NewValue: smallint; Direction: TUpDownDirection);
   private
@@ -60,6 +59,7 @@ var
   frmCrop: TfrmCrop;
   bMove: boolean;
   x0, y0: integer;
+  btn: TPanel;
 
 implementation
 
@@ -67,67 +67,20 @@ uses ufrmguita, ubyutils, ujobinfo;
 
 {$R *.lfm}
 
-procedure TfrmCrop.btnXMouseDown(Sender: TObject; Button: TMouseButton;
+procedure TfrmCrop.btnYMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
 begin
-  if Button <> mbLeft then
-    bMove := False
-  else
-  begin
-    bMove := True;
-    x0 := x;
-    y0 := y;
-  end;
+  bMove := True;
+  x0 := x;
+  y0 := y;
+  btn := TPanel(Sender);
 end;
 
-procedure TfrmCrop.btnWMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
-begin
-  if bMove then
-  begin
-    btnW.Left := btnW.Left + x - x0;
-    btnW.Top := btnW.Top + y - y0;
-    myCrop;
-  end;
-end;
-
-procedure TfrmCrop.btnHMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
-begin
-  if bMove then
-  begin
-    btnH.Left := btnH.Left + x - x0;
-    btnH.Top := btnH.Top + y - y0;
-    myCrop;
-  end;
-end;
-
-procedure TfrmCrop.btnXMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
-begin
-  if bMove then
-  begin
-    btnX.Left := btnX.Left + x - x0;
-    btnX.Top := btnX.Top + y - y0;
-    btnW.Left := btnW.Left + x - x0;
-    btnW.Top := btnW.Top + y - y0;
-    myCrop;
-  end;
-end;
-
-procedure TfrmCrop.btnXMouseUp(Sender: TObject; Button: TMouseButton;
+procedure TfrmCrop.btnYMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
 begin
   bMove := False;
-end;
-
-procedure TfrmCrop.btnYMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
-begin
-  if bMove then
-  begin
-    btnY.Left := btnY.Left + x - x0;
-    btnY.Top := btnY.Top + y - y0;
-    btnH.Left := btnH.Left + x - x0;
-    btnH.Top := btnH.Top + y - y0;
-    myCrop;
-  end;
+  btn := nil;
 end;
 
 procedure TfrmCrop.CheckBox1Change(Sender: TObject);
@@ -138,16 +91,26 @@ end;
 
 procedure TfrmCrop.FormCreate(Sender: TObject);
 begin
-  Label1.Caption := '';
   fd := 0;
 end;
 
-procedure TfrmCrop.LabeledEdit1Change(Sender: TObject);
-var
-  s: string;
+procedure TfrmCrop.FormMouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
 begin
-  s := frmGUIta.myGetPic(TLabeledEdit(Sender).Text,
-    TLabeledEdit(Sender).EditLabel.Caption, LabeledEdit2.Text, SynMemo1, StatusBar1);
+  if bMove and (btn <> nil) then
+  begin
+    btn.Left := btn.Left + x - x0;
+    btn.Top := btn.Top + y - y0;
+    myCrop;
+  end;
+end;
+
+procedure TfrmCrop.Edit2Change(Sender: TObject);
+var
+  s, t: string;
+begin
+  t := myRealToTimeStr(myTimeStrToReal(Edit2.Text));
+  s := frmGUIta.myGetPic(t, Label2.Caption, Edit1.Text, SynMemo1);
   if FileExistsUTF8(s) then
   begin
     Image1.Picture.LoadFromFile(s);
@@ -160,21 +123,21 @@ end;
 procedure TfrmCrop.UpDown1ChangingEx(Sender: TObject; var AllowChange: boolean;
   NewValue: smallint; Direction: TUpDownDirection);
 var
-  ob: TLabeledEdit;
+  ob: TEdit;
   rd, r, r1: real;
   jo: TJob;
 begin
-  (Sender as TUpDown).Enabled := False;
-  AllowChange := False;
   if frmGUIta.LVjobs.Selected = nil then
     Exit;
-  ob := LabeledEdit1;
+  (Sender as TUpDown).Visible := False;
+  AllowChange := False;
+  ob := Edit2;
   jo := TJob(frmGUIta.LVjobs.Selected.Data);
-  rd := myTimeStrToReal(jo.getval('duration'));
+  rd := myTimeStrToReal(jo.f[0].getval('duration'));
   r1 := myTimeStrToReal(ob.Text);
   if fd = 0 then
   begin
-    fd := frmGUIta.myGetFPS(jo, frmGUIta.LVstreams.Selected.Caption);
+    fd := frmGUIta.myGetFPS(jo, '');
     fd := 1 / fd;
   end;
   if NewValue < TUpDown(Sender).Position then
@@ -186,7 +149,7 @@ begin
   if r > rd then
     r := rd;
   ob.Text := myRealToTimeStr(r);
-  (Sender as TUpDown).Enabled := True;
+  (Sender as TUpDown).Visible := True;
 end;
 
 procedure TfrmCrop.HandleMessages(var Msg: tMsg; var Handled: boolean);
@@ -197,7 +160,7 @@ begin
     [VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT]) then
   begin
     c := ActiveControl;
-    if (c is TBitBtn) and ((c.Name = btnX.Name) or (c.Name = btnY.Name) or
+    if (c is TBitBtn) and ((c.Name = btnY.Name) or (c.Name = btnX.Name) or
       (c.Name = btnW.Name) or (c.Name = btnH.Name)) then
     begin
       case Msg.wParam of
@@ -213,35 +176,12 @@ begin
 end;
 
 procedure TfrmCrop.myCrop;
-var
-  w, h: integer;
-  s: string;
 begin
-  w := btnW.Left + btnW.Width - btnX.Left;
-  h := btnH.Top + btnH.Height - btnY.Top;
-  Caption := IntToStr(w) + ':' + IntToStr(h) + ':' + IntToStr(btnX.Left) +
-    ':' + IntToStr(btnY.Top);
-  btnW.Caption := IntToStr(w);
-  btnH.Caption := IntToStr(h);
+  btnW.Caption := IntToStr(btnW.Left + btnW.Width - btnX.Left);
+  btnH.Caption := IntToStr(btnH.Top + btnH.Height - btnY.Top);
   btnX.Caption := IntToStr(btnX.Left);
   btnY.Caption := IntToStr(btnY.Top);
-  if (w mod 16) <> 0 then
-    s := mes[22] + ' ' + mes[24];
-  if (h mod 16) <> 0 then
-  begin
-    if (s <> '') then
-      s := s + ', ';
-    s := s + mes[23] + ' ' + mes[24];
-  end;
-  Label1.Caption := s;
+  Caption := btnW.Caption + ':' + btnH.Caption + ':' + btnX.Caption + ':' + btnY.Caption;
 end;
 
 end.
-
-
-
-
-
-
-
-
