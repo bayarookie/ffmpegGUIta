@@ -1,12 +1,13 @@
 #!/bin/bash
 ### create file ~/.netrc
-#machine github.com
+#machine gitlab.com
 #       login mylogin
 #       password mypassword
 ### git config
 #git config --global user.email "name@server"
 #git config --global user.name "name"
 
+if [ -t 0 ] ; then
 git status
 echo ---------------------------------------------------------------------------
 read -r -p "git add . > Run? [Y/n]" yesno
@@ -31,4 +32,7 @@ if [[ $yesno =~ ^(yes|y| ) ]] | [ -z $yesno ]; then
       git push
     fi
   fi
+fi
+else
+  /usr/bin/kdialog --title="Не пойдёт" --msgbox="запускать в терминале"
 fi

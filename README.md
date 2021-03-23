@@ -5,14 +5,16 @@ ffmpegGUIta
 
 Dificult to use. Only for commandliners.
 
-http://bayarookie.wallst.ru/eng.html
+ffmpeg, ffprobe, ffplay 4.2.4
 
+https://www.ffmpeg.org/download.html
 
-ffmpeg, ffprobe, ffplay 3.4.1
+[Free Pascal 3.0.4 - Lazarus 2.0.6](http://www.lazarus-ide.org/)
 
-linux - https://launchpad.net/~mc3man/+archive/ubuntu/xerus-media - ppa:mc3man/xerus-media
+![output](./ffmpegGUIta_01.png "Output")
 
-windows - http://ffmpeg.zeranoe.com/builds/
+![video](./ffmpegGUIta_02.png "Video")
 
+![audio](./ffmpegGUIta_03.png "Audio")
 
-[Free Pascal 3.0.4 - Lazarus 1.8.0](http://www.lazarus-ide.org/)
+![settings](./ffmpegGUIta_04.png "Settings")

@@ -3,23 +3,55 @@
 один раз настроить и потом только закидывать файлы и нажимать кнопку старт.
 Но, как всегда, получилось не так как хотелось, вы должны понимать что вы делаете.
 Это скорее дополнение для тех, кто работает с командной строки.
-В винде решает проблему с файлами с юникод символами, получая DOS имена файлов.
 
 
 Для работы нужны в windows:
-ffmpeg.exe, ffprobe.exe, ffplay.exe 3.4.1 - http://ffmpeg.zeranoe.com/builds/
-mediainfo.exe или mediainfo.dll - http://sourceforge.net/projects/mediainfo/files/binary/mediainfo-gui/
+ffmpeg.exe, ffprobe.exe, ffplay.exe 4.2.4 - https://ffmpeg.zeranoe.com/builds/
+и можно установить дополнительно
+mediainfo.exe или mediainfo.dll - https://sourceforge.net/projects/mediainfo/files/binary/mediainfo-gui/
 Разрядность mediainfo.dll должна соответствовать исполняемому ffmpegGUIta.exe (вроде логично, но спрашивают)
-Дополнительно, но не обязательно, можно использовать:
-Avisynth - http://sourceforge.net/projects/avisynth2/
-плагин для Avisynth - https://github.com/ffms/ffms2
 
 Для работы нужны в linux:
-ffmpeg, ffprobe, ffplay 3.4.1 - https://launchpad.net/~mc3man/+archive/ubuntu/xerus-media - ppa:mc3man/xerus-media
+ffmpeg, ffprobe, ffplay 4.2.4 - https://www.ffmpeg.org/download.html
+обычно уже есть во всех дистрибутивах.
+и можно дополнительно установить mediainfo-gui или libmediainfo
+pacman -S libmediainfo mediainfo-gui
+или
+apt-get install libmediainfo mediainfo-gui
+
 
 Ключи:
 -o:"D:\Путь\к папке\назначения"
+-p:"профиль.ini"
 -start
+
+Пример кнопки для Double Commander:
+DOUBLECMD#TOOLBAR#XMLDATA<?xml version="1.0" encoding="UTF-8"?>
+<doublecmd>
+  <Program>
+    <Icon>$HOME/My/Projects/ffmpegGUIta/ffmpegGUIta.svg</Icon>
+    <Hint>ffmpegGUIta: video to gif</Hint>
+    <Command>$HOME/My/Projects/ffmpegGUIta/ffmpegGUIta</Command>
+    <Params>-p:"video to gif.ini" -o:%Dt %p</Params>
+    <StartPath>$HOME/My/Projects/ffmpegGUIta/</StartPath>
+  </Program>
+</doublecmd>
+
+
+Переменные в формулах вычисления битрэйта
+
+для видеобитрэйта:
+fps     частота кадров
+w       ширина кадра в пикселях
+h       высота
+$koefv  условный коэффициент
+example: round(w*h*fps*$koefv/ln(w*h/96/64)/865000)
+
+для аудиобитрэйта:
+srate   частота дискретизации
+ch      количество каналов
+$koefa  условный коэффициент
+example: round(srate*ch*$koefa/1600000)*16
 
 
 ФАК Ю - Фсе Атветы Каторые знаЮ
@@ -52,7 +84,11 @@ ffmpeg, ffprobe, ffplay 3.4.1 - https://launchpad.net/~mc3man/+archive/ubuntu/xe
 Ответ: Выбрать видео дорожку на которую хотите наложить логотип.
   Добавить файл png в потоки, чтобы не писать путь к нему вручную.
   В поле "Ещё видеофильтры" написать:
-    movie=$inpu1 [logo];[in] [logo] overlay=16:16 [out]
+    movie=$inpu1 [logo]; [0][logo] overlay=16:16 [v]
   или, например, чуть сложнее:
-    [in] scale=720:400, hqdn3d=2:1.5:3 [main];movie=$inpu1 [logo];[main] [logo] overlay=16:16 [out]
+    [0] scale=720:-2, hqdn3d=2:1.5:3 [main]; movie=$inpu1 [logo]; [main][logo] overlay=16:16 [v]
   Остальные поля видеофильтров (Обрезать кадр, Изменить размер, Добавить поля, Шумопонижение, Соотношение сторон, Повернуть кадр) должны быть пустыми
+  или, проще:
+    [0:0][1:0]overlay=16:16[v]
+  А если файлов много, то можно прописать полный путь к логотипу и сохранить как свой профиль:
+    movie=/mnt/upload/logo.png[logo]; [0:v][logo]overlay=16:16[v]

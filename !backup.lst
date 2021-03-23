@@ -1,0 +1,17 @@
+src/*.lpi
+src/*.lpr
+src/*.lfm
+src/*.pas
+src/*.inc
+src/*.ico
+src/*.png
+*.txt
+*.lng
+*.ini
+*.cmd
+*.lst
+*.sh
+*.png
+*.svg
+*.db
+README.md
